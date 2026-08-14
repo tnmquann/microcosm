@@ -193,7 +193,7 @@ workflow READ_BASED_SINGLERUN {
                         params.readbased_postprocess,
                         true,
                         true,
-                        params.postprocess_options ?: ' ',
+                        params.readbased_postprocess_options ?: ' ',
                         merged_sourmash_yacht
                     ]
                 }
@@ -240,7 +240,7 @@ workflow READ_BASED_SINGLERUN {
                         params.readbased_postprocess,
                         false,
                         true,
-                        params.postprocess_options ?: ' ',
+                        params.readbased_postprocess_options ?: ' ',
                         merged_sourmash_yacht,
                         rgi_dirs
                     ]

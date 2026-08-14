@@ -96,8 +96,7 @@ nextflow run main.nf \
     --input_format csv \
     --outdir /path/to/project_A \
     --enable_readbase \
-    --readbased_postprocess all \
-    --postprocess_options "--min_coverage 0.05"
+    --readbased_postprocess all
 ```
 
 Valid modes are `all`, `phyloseq`, `taxburst`, and `rgi_bwt`. The explicit `rgi_bwt` mode requires `--enable_rgi_bwt`. With `all`, the pipeline also writes the standard default processed CSV; RGI-BWT results are included only when RGI-BWT is enabled, otherwise the pipeline warns, skips that output group, and continues with default, phyloseq, and taxburst.
@@ -144,7 +143,7 @@ it) is skipped when several databases are given.
 and `--enable_copyintermediate` (YACHT tables, collected read CSV) turn the
 publishing of those intermediate files on or off.
 
-`--postprocess_options` accepts one shell-style option string and safely tokenizes it before invoking `post_processing.py`. For example, the general form `--postprocess_options "--params_1 abc def --params_2 sss ddd"` is passed as the corresponding argument sequence. Use only options supported by the current Python script; a current valid example is `--postprocess_options "--min_coverage 0.05 --use_average"`. If one individual value contains spaces, quote that value inside the outer option string.
+Read-based post-processing defaults to `--min_coverage 0.05`. `--readbased_postprocess_options` accepts one shell-style option string and safely tokenizes it before invoking `post_processing.py`; provide it explicitly to override the default, for example `--readbased_postprocess_options "--min_coverage 0.1 --use_average"`. If one individual value contains spaces, quote that value inside the outer option string.
 
 A MultiQC report is written to `${outdir}/MultiQC/<prefix>_multiqc_report.html`
 (turn off with `--skip_multiqc`), styled by `assets/multiqc_config.yml` with the

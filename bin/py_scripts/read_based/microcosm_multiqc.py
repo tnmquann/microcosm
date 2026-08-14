@@ -8,7 +8,7 @@ like MultiQC's sylph-tax module. Values are percent of weighted k-mers
 (f_weighted_at_rank); per rank the --top taxa by summed abundance are shown,
 the rest of the classified part is "Other", and "Unclassified" stays separate.
 One bar per sample at one YACHT min_coverage level (--min_coverage, the level post-processing
-was asked for; the pipeline passes the --min_coverage of --postprocess_options, default 0.05):
+was asked for; the pipeline passes the --min_coverage of --readbased_postprocess_options, default 0.05):
 a genome's min_coverage cell lists every level it passes ("min_coverage0.1 | min_coverage0.05"),
 so it is kept when that list holds the level. Unclassified = 100 - classified share; with
 --remove_unclassified it is left out and the classified taxa are rescaled to 100 %.

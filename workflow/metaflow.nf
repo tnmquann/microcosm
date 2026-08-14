@@ -150,7 +150,7 @@ workflow METAFLOW {
         // Normalize nullable option strings before nf-schema validation.
         def readbased_postprocess = params.readbased_postprocess?.toString()?.trim()
         params.readbased_postprocess = readbased_postprocess ?: null
-        params.postprocess_options = params.postprocess_options?.toString()?.trim() ?: ''
+        params.readbased_postprocess_options = params.readbased_postprocess_options?.toString()?.trim() ?: ''
         params.genome_input = params.genome_input?.toString()?.trim() ?: null
         params.virulencefinder_db = params.virulencefinder_db?.toString()?.trim() ?: null
 
