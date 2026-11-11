@@ -1,0 +1,6 @@
+name: "bacterial_amr_analysis"
+description: "Run explicit-database AMR tools and supported harmonization on canonical bacterial genomes."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

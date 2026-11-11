@@ -4,7 +4,7 @@ nextflow.enable.dsl = 2
 include { METAFLOW } from './workflow/metaflow'
 
 workflow {
-    if (!(workflow.preview && !params.input && !params.assembly_input)) {
+    if (!(workflow.preview && !params.input && !params.assembly_input && !params.genome_input)) {
         METAFLOW()
     }
 }

@@ -10,12 +10,12 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": ["outdir"],
             "properties": {
                 "input": {
                     "type": "string",
                     "exists": true,
-                    "description": "Path to an input CSV file with a required non-empty sample_id column, or a directory containing paired FASTQ files"
+                    "description": "Path to an input CSV file with a required non-empty sample_id column, or a directory containing paired FASTQ files. Optional only when --genome_input is supplied."
                 },
                 "outdir": {
                     "type": "string",
@@ -40,6 +40,19 @@
                     "exists": true,
                     "description": "Path to CSV file containing pre-computed assemblies (optional). Skips preprocessing and assembly steps. Required columns: sample_id, run_id, group, assembler, fasta",
                     "help_text": "When supplied, only binning and downstream workflows are run. Must be used with --input_format csv. Reads must also be provided via --input parameter"
+                },
+                "genome_input": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Standalone genome CSV for bacterial downstream analysis. Required headers: sample_id,fasta. Optional headers: run_id,group,assembler,lineage.",
+                    "help_text": "Rows with a valid GTDB-style lineage bypass classification. Rows with blank lineage require --sourmash_database and --sourmash_taxonomy_csv and are classified through the existing BIN_CLASSIFICATION subworkflow. This input is mutually exclusive with --input and --assembly_input."
+                },
+                "pipeline_root": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Internal repository-root override for focused workflow tests.",
+                    "hidden": true
                 }
             }
         },
@@ -53,20 +66,200 @@
                     "pattern": "^.+$",
                     "exists": true,
                     "description": "Path to Sourmash database (.rocksdb, .zip, or directory)",
-                    "help_text": "Required for bin classification and read-based profiling"
+                    "help_text": "Required for bin classification, read-based profiling, and --genome_input rows whose lineage field is blank"
                 },
                 "sourmash_taxonomy_csv": {
                     "type": "string",
                     "format": "file-path",
                     "exists": true,
                     "description": "Path to taxonomy lineages CSV file for Sourmash",
-                    "help_text": "Required when running workflows that use SOURMASH_TAXANNOTATE (READ_BASED, READ_BASED_SINGLERUN, BIN_CLASSIFICATION). The pipeline will error if missing."
+                    "help_text": "Required when running workflows that use SOURMASH_TAXANNOTATE (READ_BASED, READ_BASED_SINGLERUN, BIN_CLASSIFICATION), including --genome_input rows whose lineage field is blank."
                 },
                 "yacht_database": {
                     "type": "string",
                     "format": "file-path",
                     "description": "Path to YACHT database configuration file",
                     "help_text": "Required only if using read-based profiling workflow"
+                },
+                "amrfinderplus_db": {
+                    "type": "string",
+                    "exists": true,
+                    "description": "Read-only AMRFinderPlus database directory or tar archive.",
+                    "help_text": "Optional. When unset, AMRFinderPlus is skipped because this wrapper does not automatically set up a default database."
+                },
+                "amrfinderplus_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to AMRFinderPlus."
+                },
+                "abricate_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Optional read-only custom ABRicate data directory.",
+                    "help_text": "Leave unset to use the database bundled with the installed ABRicate container. When set, the directory must contain --abricate_db_id."
+                },
+                "abricate_db_id": {
+                    "type": "string",
+                    "default": "ncbi",
+                    "pattern": "^[A-Za-z0-9._-]+$",
+                    "description": "ABRicate database identifier passed with --db."
+                },
+                "abricate_db_version": {
+                    "type": "string",
+                    "default": "2021-Mar-27",
+                    "pattern": "^.+$",
+                    "description": "Explicit ABRicate database version label recorded by hAMRonization."
+                },
+                "abricate_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to ABRicate after the configured --db value."
+                },
+                "rgi_load_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to rgi load."
+                },
+                "rgi_main_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to rgi main after required contig-mode flags."
+                },
+                "resfinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Read-only acquired-gene ResFinder database directory.",
+                    "help_text": "Optional. When unset, ResFinder and PointFinder are skipped because this wrapper does not automatically set up a default database."
+                },
+                "resfinder_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to ResFinder after required acquired-gene/species flags."
+                },
+                "pointfinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Read-only PointFinder database directory.",
+                    "help_text": "Optional. PointFinder runs only when both ResFinder and PointFinder databases are supplied and parsed lineage species/genus maps to a usable database directory."
+                },
+                "deeparg_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Read-only DeepARG database/model bundle.",
+                    "help_text": "Optional. When unset, DeepARG is skipped because this workflow does not download databases automatically. The bundle must contain sibling database and model directories when supplied."
+                },
+                "deeparg_db_version": {
+                    "type": "string",
+                    "default": "1",
+                    "pattern": "^.+$",
+                    "description": "Explicit DeepARG database version recorded by hAMRonization."
+                },
+                "deeparg_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to DeepARG predict."
+                },
+                "virulencefinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Read-only VirulenceFinder database directory.",
+                    "help_text": "Optional. When unset, VirulenceFinder is skipped because this wrapper does not automatically set up a default database."
+                },
+                "virulencefinder_min_coverage": {
+                    "type": "number",
+                    "default": 0.6,
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "description": "Minimum breadth-of-coverage threshold for VirulenceFinder."
+                },
+                "virulencefinder_min_identity": {
+                    "type": "number",
+                    "default": 0.9,
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "description": "Minimum identity threshold for VirulenceFinder."
+                },
+                "virulencefinder_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to VirulenceFinder."
+                },
+                "plasmidfinder_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to PlasmidFinder."
+                },
+                "mlst_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to MLST."
+                },
+                "bacterial_blast_reference": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "User-supplied nucleotide reference FASTA for general bacterial BLASTN typing.",
+                    "help_text": "Optional. Provide at most one of bacterial_blast_reference or bacterial_blast_db. When neither is supplied, BLASTN is skipped."
+                },
+                "bacterial_blast_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "User-supplied prebuilt nucleotide BLAST database directory.",
+                    "help_text": "Optional. Provide at most one of bacterial_blast_reference or bacterial_blast_db. The directory must expose one logical nucleotide database."
+                },
+                "bacterial_blast_db_label": {
+                    "type": "string",
+                    "pattern": "^\\S(?:.*\\S)?$",
+                    "description": "Explicit provenance label for the user-supplied BLAST reference/database.",
+                    "help_text": "Required only when bacterial_blast_reference or bacterial_blast_db is supplied. Recorded verbatim in each manifest; it is not treated as a biological conclusion."
+                },
+                "bacterial_blast_min_identity": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 100.0,
+                    "description": "Minimum percent identity for retained bacterial BLASTN hits.",
+                    "help_text": "Required when bacterial_blast_reference or bacterial_blast_db is supplied. No implicit biological threshold is assumed."
+                },
+                "bacterial_blast_min_coverage": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 100.0,
+                    "description": "Minimum percent reference-subject coverage for retained bacterial BLASTN hits.",
+                    "help_text": "Required when bacterial_blast_reference or bacterial_blast_db is supplied. Coverage is alignment length divided by subject length and capped at 100 percent."
+                },
+                "bacterial_blast_overlap_bp": {
+                    "type": "integer",
+                    "default": 1,
+                    "minimum": 1,
+                    "description": "Minimum shared query bases used to resolve overlapping hits to the same reference subject deterministically."
+                },
+                "bacterial_blastn_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to BLASTN after the default tabular outfmt."
+                },
+                "kleborate_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to Kleborate."
+                },
+                "seqsero2_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to SeqSero2 after the default mode/thread flags."
+                },
+                "sistr_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to SISTR."
+                },
+                "mykrobe_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to Mykrobe predict."
+                },
+                "paratype_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to Paratype."
+                },
+                "paratype_bundle": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Read-only user-supplied Paratype v1.1-compatible bundle.",
+                    "help_text": "Required only when SeqSero2 explicitly identifies Paratyphi A. The directory must contain paratype.py, SParatyphiAKU12601.fasta, SParatyphiA_genotype_specific_alleles.txt, and SParatyphiA_gene_mutation_codons.txt. The pipeline stages and validates it without modifying it."
                 }
             }
         },
@@ -136,6 +329,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enable per-sample processing mode using SOURMASH_SKETCH and SOURMASH_GATHER instead of batch processing with SOURMASH_MANYSKETCH and SOURMASH_FASTMULTIGATHER. Useful for HPC environments where per-sample job control is needed."
+                },
+                "enable_bacterial_downstream": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Route assembly-produced bins with resolved d__Bacteria lineage into bacterial downstream analysis.",
+                    "help_text": "This switch is for the ordinary assembly/binning route. Supplying --genome_input activates the same downstream routing contract automatically."
                 },
                 "readbased_postprocess": {
                     "type": "string",
@@ -740,7 +939,8 @@
                 "rgi_include_wildcard": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Include wildcard variants in RGI"
+                    "description": "Include wildcard variants in RGI",
+                    "help_text": "When a bacterial-genome RGI database is supplied, WildCARD files are required only when this option is enabled."
                 },
                 "rgi_include_other_models": {
                     "type": "boolean",
@@ -755,7 +955,8 @@
                 "rgi_preparecarddb_dir": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Directory for RGI database"
+                    "description": "Read-only processed CARD database directory.",
+                    "help_text": "Optional for bacterial-genome AMR. When unset, RGI is skipped because this workflow does not automatically prepare CARD. When supplied, validation requires card.json and processed card_database files; WildCARD files are also required when --rgi_include_wildcard is enabled."
                 }
             }
         },

@@ -1,0 +1,45 @@
+name: "summarize_general_typing"
+description: "Write source-preserving general-typing evidence and MLST summaries."
+keywords:
+  - typing
+  - mlst
+  - reporting
+tools:
+  - "python":
+      description: "Python standard library runtime."
+      homepage: "https://www.python.org/"
+      licence:
+        - "PSF-2.0"
+input:
+  - virulencefinder:
+      type: file
+      description: "VirulenceFinder TSV or explicit skipped report."
+  - plasmidfinder:
+      type: file
+      description: "PlasmidFinder TSV."
+  - mlst:
+      type: file
+      description: "Raw headerless MLST TSV."
+  - blastn_filtered:
+      type: file
+      description: "Filtered BLASTN TSV or explicit skipped report."
+  - summary_script:
+      type: file
+      description: "Repository-local source-preserving summarizer."
+output:
+  evidence:
+    - "*.general_typing_evidence.tsv":
+        type: file
+        description: "Long reporting table retaining normalized and raw identifiers by source tool."
+  mlst_summary:
+    - "*.mlst_summary.tsv":
+        type: file
+        description: "MLST scheme, sequence type, allele profile, and explicit clonal-complex lookup state."
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Software versions."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

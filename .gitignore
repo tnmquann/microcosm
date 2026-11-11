@@ -3,9 +3,13 @@
 .nf-test/
 .nf-test.*
 work/
+work_*/
 __pycache__/
+**/tests/out/
+**/tests/out_*/
 # Hidden files
 .nextflow*
+.module.log*
 .vscode*
 .vscode/
 # But keep .gitignore

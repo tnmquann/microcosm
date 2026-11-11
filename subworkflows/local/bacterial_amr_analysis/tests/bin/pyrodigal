@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+echo "pyrodigal v3.6.3"

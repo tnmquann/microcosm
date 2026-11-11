@@ -1,0 +1,47 @@
+name: "argnorm_local"
+description: "Normalize supported AMR calls with ARGnorm using deterministic local version and stub outputs."
+keywords:
+  - amr
+  - antimicrobial resistance
+  - normalization
+tools:
+  - "argnorm":
+      description: "Normalize antibiotic resistance genes using the CARD ARO ontology."
+      homepage: "https://argnorm.readthedocs.io/en/latest/"
+      documentation: "https://argnorm.readthedocs.io/en/latest/"
+      tool_dev_url: "https://github.com/BigDataBiology/argNorm"
+      licence:
+        - "MIT"
+input:
+  - - meta:
+        type: map
+        description: "Canonical sample metadata."
+    - input_tsv:
+        type: file
+        description: "Supported hAMRonization TSV input."
+        pattern: "*.tsv"
+  - tool:
+      type: string
+      description: "ARG annotation tool identifier."
+  - db:
+      type: string
+      description: "ARG annotation database identifier."
+output:
+  tsv:
+    - - meta:
+        type: map
+        description: "Canonical sample metadata."
+      - "*.tsv":
+        type: file
+        description: "ARGnorm normalized output."
+        pattern: "*.tsv"
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Software versions."
+        pattern: "versions.yml"
+authors:
+  - "@Vedanth-Ramji"
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

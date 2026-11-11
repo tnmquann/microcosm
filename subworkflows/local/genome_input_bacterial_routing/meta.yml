@@ -1,0 +1,6 @@
+name: "genome_input_bacterial_routing"
+description: "Validate standalone genomes or resolve classified bins into canonical bacterial and exclusion routes."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

@@ -1,0 +1,2 @@
+qseqid	sseqid	pident	length	mismatch	gapopen	qstart	qend	sstart	send	evalue	bitscore	slen	subject_coverage
+contig1	blaTEM-1	99	100	0	0	1	100	1	100	1e-30	60	100	100

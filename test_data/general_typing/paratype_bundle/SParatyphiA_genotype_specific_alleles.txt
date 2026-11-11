@@ -1,0 +1,2 @@
+gene	allele	genotype
+fixture_gene	fixture_allele	fixture_genotype

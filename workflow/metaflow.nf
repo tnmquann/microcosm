@@ -18,6 +18,11 @@ include {
 } from '../subworkflows/local/domain_classification/main'
 include { BIN_ANNOTATION } from '../subworkflows/local/bin_annotation/main'
 include { BIN_CLASSIFICATION } from '../subworkflows/local/bin_classification/main'
+include { GENOME_INPUT_AND_BACTERIAL_ROUTING } from '../subworkflows/local/genome_input_bacterial_routing/main'
+include { BACTERIAL_AMR_ANALYSIS } from '../subworkflows/local/bacterial_amr_analysis/main'
+include { BACTERIAL_GENERAL_TYPING } from '../subworkflows/local/bacterial_general_typing/main'
+include { KLEBSIELLA_TYPING } from '../subworkflows/local/klebsiella_typing/main'
+include { SALMONELLA_TYPING } from '../subworkflows/local/salmonella_typing/main'
 include { GUNZIP as GUNZIP_ASSEMBLIES } from '../modules/nf-core/gunzip/main'
 
 // Import modules for database setup
@@ -101,6 +106,11 @@ workflow METAFLOW {
         def readbased_postprocess = params.readbased_postprocess?.toString()?.trim()
         params.readbased_postprocess = readbased_postprocess ?: null
         params.postprocess_options = params.postprocess_options?.toString()?.trim() ?: ''
+        params.genome_input = params.genome_input?.toString()?.trim() ?: null
+        params.virulencefinder_db = params.virulencefinder_db?.toString()?.trim() ?: null
+        params.bacterial_blast_reference = params.bacterial_blast_reference?.toString()?.trim() ?: null
+        params.bacterial_blast_db = params.bacterial_blast_db?.toString()?.trim() ?: null
+        params.bacterial_blast_db_label = params.bacterial_blast_db_label?.toString()?.trim() ?: null
 
         // Parameter validation using UTILS_NFSCHEMA_PLUGIN
         UTILS_NFSCHEMA_PLUGIN (
@@ -115,6 +125,34 @@ workflow METAFLOW {
             '',
             true
         )
+
+        // Preflight: require one supported entry route.
+        if (!workflow.preview && !params.input && !params.genome_input) {
+            exit 1, 'ERROR: Provide --input for read/assembly workflows or --genome_input for standalone bacterial-genome downstream analysis.'
+        }
+
+        // Preflight: validate standalone genome-input usage.
+        if (params.genome_input) {
+            if (params.input || params.assembly_input) {
+                exit 1, 'ERROR: --genome_input is mutually exclusive with --input and --assembly_input.'
+            }
+            if (params.enable_readbase) {
+                exit 1, 'ERROR: --genome_input cannot be combined with read-based profiling (--enable_readbase).'
+            }
+        }
+
+        // Preflight: validate assembly-produced bacterial downstream routing.
+        if (params.enable_bacterial_downstream && !params.genome_input) {
+            if (params.enable_readbase) {
+                exit 1, 'ERROR: --enable_bacterial_downstream is available only for assembly-based workflows.'
+            }
+            if (params.skip_binning || params.skip_binning_bamabund) {
+                exit 1, 'ERROR: --enable_bacterial_downstream requires binning and binning abundance/mapping.'
+            }
+            if (params.skip_bin_classification) {
+                exit 1, 'ERROR: --enable_bacterial_downstream requires BIN_CLASSIFICATION; disable --skip_bin_classification.'
+            }
+        }
 
         // Preflight: validate optional read-based post-processing dependencies.
         if (params.readbased_postprocess) {
@@ -153,8 +191,8 @@ workflow METAFLOW {
         if (!checkm2_db) {
             params.checkm2_db = null
             // Only show warning if user is actually using CheckM2 or Binette
-            def needs_checkm2_db = (!params.enable_readbase && params.binqc_tool == 'checkm2' && !params.skip_binqc) || 
-                                   (!params.enable_readbase && params.refine_tool == 'binette' && !params.skip_binning_refinement)
+            def needs_checkm2_db = (!params.genome_input && !params.enable_readbase && params.binqc_tool == 'checkm2' && !params.skip_binqc) ||
+                                   (!params.genome_input && !params.enable_readbase && params.refine_tool == 'binette' && !params.skip_binning_refinement)
             if (needs_checkm2_db && !params.skip_binning && !params.skip_binning_bamabund) {
                 log.warn "⚠️  Parameter --checkm2_db not provided; CheckM2 database will be downloaded automatically for CheckM2/Binette steps."
             }
@@ -165,7 +203,7 @@ workflow METAFLOW {
             "${params.input}/*_{1,2}*.{fastq,fastq.gz,fq,fq.gz}",
             "${params.input}/*_R{1,2}*.{fastq,fastq.gz,fq,fq.gz}"
         ]
-        input_ch = workflow.preview && !params.input ? channel.empty() : params.input_format == 'csv' ?
+        input_ch = !params.input ? channel.empty() : params.input_format == 'csv' ?
             createCsvInputChannel(params.input) :
             channel.fromFilePairs(directory_pair_patterns)
                 .map { sample_id, reads ->
@@ -179,7 +217,9 @@ workflow METAFLOW {
         def assembly_metaspades_contigs_ch = channel.empty()
         def assembly_versions_ch = channel.empty()
 
-        if (params.assembly_input) {
+        if (params.genome_input) {
+            cleaned_reads_source = channel.empty()
+        } else if (params.assembly_input) {
             // Use pre-computed assemblies - skip preprocessing
             cleaned_reads_source = input_ch
             
@@ -234,9 +274,44 @@ workflow METAFLOW {
         def binannotation_multiqc_ch = channel.empty()
         def binclassification_versions_ch = channel.empty()
         def binclassification_summary_ch = channel.empty()
+        def bacterial_downstream_versions_ch = channel.empty()
+        def bacterial_genomes_ch = channel.empty()
+        def excluded_genomes_ch = channel.empty()
+        def unresolved_genomes_ch = channel.empty()
+        def bacterial_routing_report_ch = channel.empty()
+        def excluded_routing_report_ch = channel.empty()
+        def unresolved_routing_report_ch = channel.empty()
+        def bacterial_amr_versions_ch = channel.empty()
+        def bacterial_amr_database_validation_ch = channel.empty()
+        def bacterial_amr_manifest_ch = channel.empty()
+        def bacterial_amr_hamronization_summary_ch = channel.empty()
+        def bacterial_amr_hamronized_ch = channel.empty()
+        def bacterial_amr_normalized_ch = channel.empty()
+        def bacterial_general_typing_versions_ch = channel.empty()
+        def bacterial_general_typing_database_validation_ch = channel.empty()
+        def bacterial_general_typing_manifest_ch = channel.empty()
+        def bacterial_virulencefinder_tsv_ch = channel.empty()
+        def bacterial_plasmidfinder_tsv_ch = channel.empty()
+        def bacterial_mlst_tsv_ch = channel.empty()
+        def bacterial_blastn_ch = channel.empty()
+        def bacterial_blastn_filtered_ch = channel.empty()
+        def bacterial_blastn_summary_ch = channel.empty()
+        def bacterial_general_typing_evidence_ch = channel.empty()
+        def bacterial_mlst_summary_ch = channel.empty()
+        def bacterial_klebsiella_versions_ch = channel.empty()
+        def bacterial_kleborate_report_ch = channel.empty()
+        def bacterial_klebsiella_summary_ch = channel.empty()
+        def bacterial_salmonella_versions_ch = channel.empty()
+        def bacterial_salmonella_evidence_ch = channel.empty()
+        def bacterial_salmonella_summary_ch = channel.empty()
+        def bacterial_salmonella_routing_ch = channel.empty()
+        def bacterial_genotyphi_ch = channel.empty()
+        def bacterial_paratype_ch = channel.empty()
 
         // Use cleaned_reads_source for downstream workflows
-        if (params.enable_readbase) {
+        if (params.genome_input) {
+            log.info 'Standalone genome input supplied; read preprocessing, assembly, binning, and existing post-binning branches are skipped.'
+        } else if (params.enable_readbase) {
             // Check if single-sample processing mode is enabled
             if (params.enable_singlesketch) {
                 // Use READ_BASED_SINGLERUN for per-sample processing
@@ -478,13 +553,68 @@ workflow METAFLOW {
             }
         }
 
+        // Converge standalone genomes and assembly-produced classified bins on
+        // one canonical bacterial-genome contract in a dedicated subworkflow.
+        if (params.genome_input || params.enable_bacterial_downstream) {
+            GENOME_INPUT_AND_BACTERIAL_ROUTING(
+                binning_bins_ch,
+                binclassification_summary_ch
+            )
+            bacterial_downstream_versions_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.versions ?: channel.empty()
+            bacterial_genomes_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.bacterial_genomes ?: channel.empty()
+            excluded_genomes_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.excluded_genomes ?: channel.empty()
+            unresolved_genomes_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.unresolved_genomes ?: channel.empty()
+            bacterial_routing_report_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.bacterial_report ?: channel.empty()
+            excluded_routing_report_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.excluded_report ?: channel.empty()
+            unresolved_routing_report_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.unresolved_report ?: channel.empty()
+
+            BACTERIAL_AMR_ANALYSIS(bacterial_genomes_ch)
+            bacterial_amr_versions_ch = BACTERIAL_AMR_ANALYSIS.out.versions ?: channel.empty()
+            bacterial_amr_database_validation_ch = BACTERIAL_AMR_ANALYSIS.out.database_validation ?: channel.empty()
+            bacterial_amr_manifest_ch = BACTERIAL_AMR_ANALYSIS.out.manifests ?: channel.empty()
+            bacterial_amr_hamronization_summary_ch = BACTERIAL_AMR_ANALYSIS.out.hamronization_summary ?: channel.empty()
+            bacterial_amr_hamronized_ch = BACTERIAL_AMR_ANALYSIS.out.hamronized ?: channel.empty()
+            bacterial_amr_normalized_ch = BACTERIAL_AMR_ANALYSIS.out.normalized ?: channel.empty()
+
+            BACTERIAL_GENERAL_TYPING(bacterial_genomes_ch)
+            bacterial_general_typing_versions_ch = BACTERIAL_GENERAL_TYPING.out.versions ?: channel.empty()
+            bacterial_general_typing_database_validation_ch = BACTERIAL_GENERAL_TYPING.out.database_validation ?: channel.empty()
+            bacterial_general_typing_manifest_ch = BACTERIAL_GENERAL_TYPING.out.manifests ?: channel.empty()
+            bacterial_virulencefinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.virulencefinder_tsv ?: channel.empty()
+            bacterial_plasmidfinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.plasmidfinder_tsv ?: channel.empty()
+            bacterial_mlst_tsv_ch = BACTERIAL_GENERAL_TYPING.out.mlst_tsv ?: channel.empty()
+            bacterial_blastn_ch = BACTERIAL_GENERAL_TYPING.out.blastn ?: channel.empty()
+            bacterial_blastn_filtered_ch = BACTERIAL_GENERAL_TYPING.out.blastn_filtered ?: channel.empty()
+            bacterial_blastn_summary_ch = BACTERIAL_GENERAL_TYPING.out.blastn_summary ?: channel.empty()
+            bacterial_general_typing_evidence_ch = BACTERIAL_GENERAL_TYPING.out.evidence ?: channel.empty()
+            bacterial_mlst_summary_ch = BACTERIAL_GENERAL_TYPING.out.mlst_summary ?: channel.empty()
+
+            KLEBSIELLA_TYPING(bacterial_genomes_ch)
+            bacterial_klebsiella_versions_ch = KLEBSIELLA_TYPING.out.versions ?: channel.empty()
+            bacterial_kleborate_report_ch = KLEBSIELLA_TYPING.out.report ?: channel.empty()
+            bacterial_klebsiella_summary_ch = KLEBSIELLA_TYPING.out.summary ?: channel.empty()
+
+            SALMONELLA_TYPING(bacterial_genomes_ch)
+            bacterial_salmonella_versions_ch = SALMONELLA_TYPING.out.versions ?: channel.empty()
+            bacterial_salmonella_evidence_ch = SALMONELLA_TYPING.out.evidence ?: channel.empty()
+            bacterial_salmonella_summary_ch = SALMONELLA_TYPING.out.summary ?: channel.empty()
+            bacterial_salmonella_routing_ch = SALMONELLA_TYPING.out.routing ?: channel.empty()
+            bacterial_genotyphi_ch = SALMONELLA_TYPING.out.genotyphi_tsv ?: channel.empty()
+            bacterial_paratype_ch = SALMONELLA_TYPING.out.paratype_report ?: channel.empty()
+        }
+
         def combined_versions = channel.empty()
         combined_versions = combined_versions.mix(assembly_versions_ch ?: channel.empty())
         combined_versions = combined_versions.mix(read_based_versions_ch ?: channel.empty())
         combined_versions = combined_versions.mix(binning_versions_ch ?: channel.empty())
+        combined_versions = combined_versions.mix(bacterial_downstream_versions_ch ?: channel.empty())
+        combined_versions = combined_versions.mix(bacterial_amr_versions_ch ?: channel.empty())
+        combined_versions = combined_versions.mix(bacterial_general_typing_versions_ch ?: channel.empty())
+        combined_versions = combined_versions.mix(bacterial_klebsiella_versions_ch ?: channel.empty())
+        combined_versions = combined_versions.mix(bacterial_salmonella_versions_ch ?: channel.empty())
 
         // Optional cleanup
-        if (params.cleanup) {
+        if (params.cleanup && !params.genome_input) {
             def cleanup_sources = []
             if (params.enable_readbase) {
                 cleanup_sources << read_based_results_ch
@@ -522,10 +652,32 @@ workflow METAFLOW {
         binqc_multiqc = binqc_multiqc_ch.ifEmpty(null)
         binannotation_multiqc = binannotation_multiqc_ch.ifEmpty(null)
         binclassification_summary = binclassification_summary_ch.ifEmpty(null)
-}
-
-workflow {
-    if (!(workflow.preview && !params.input && !params.assembly_input)) {
-        METAFLOW()
-    }
+        bacterial_genomes = bacterial_genomes_ch.ifEmpty(null)
+        excluded_genomes = excluded_genomes_ch.ifEmpty(null)
+        unresolved_genomes = unresolved_genomes_ch.ifEmpty(null)
+        bacterial_routing_report = bacterial_routing_report_ch.ifEmpty(null)
+        excluded_routing_report = excluded_routing_report_ch.ifEmpty(null)
+        unresolved_routing_report = unresolved_routing_report_ch.ifEmpty(null)
+        bacterial_amr_database_validation = bacterial_amr_database_validation_ch.ifEmpty(null)
+        bacterial_amr_manifests = bacterial_amr_manifest_ch.ifEmpty(null)
+        bacterial_amr_hamronization_summary = bacterial_amr_hamronization_summary_ch.ifEmpty(null)
+        bacterial_amr_hamronized = bacterial_amr_hamronized_ch.ifEmpty(null)
+        bacterial_amr_normalized = bacterial_amr_normalized_ch.ifEmpty(null)
+        bacterial_general_typing_database_validation = bacterial_general_typing_database_validation_ch.ifEmpty(null)
+        bacterial_general_typing_manifests = bacterial_general_typing_manifest_ch.ifEmpty(null)
+        bacterial_virulencefinder_tsv = bacterial_virulencefinder_tsv_ch.ifEmpty(null)
+        bacterial_plasmidfinder_tsv = bacterial_plasmidfinder_tsv_ch.ifEmpty(null)
+        bacterial_mlst_tsv = bacterial_mlst_tsv_ch.ifEmpty(null)
+        bacterial_blastn = bacterial_blastn_ch.ifEmpty(null)
+        bacterial_blastn_filtered = bacterial_blastn_filtered_ch.ifEmpty(null)
+        bacterial_blastn_summary = bacterial_blastn_summary_ch.ifEmpty(null)
+        bacterial_general_typing_evidence = bacterial_general_typing_evidence_ch.ifEmpty(null)
+        bacterial_mlst_summary = bacterial_mlst_summary_ch.ifEmpty(null)
+        bacterial_kleborate_report = bacterial_kleborate_report_ch.ifEmpty(null)
+        bacterial_klebsiella_summary = bacterial_klebsiella_summary_ch.ifEmpty(null)
+        bacterial_salmonella_evidence = bacterial_salmonella_evidence_ch.ifEmpty(null)
+        bacterial_salmonella_summary = bacterial_salmonella_summary_ch.ifEmpty(null)
+        bacterial_salmonella_routing = bacterial_salmonella_routing_ch.ifEmpty(null)
+        bacterial_genotyphi = bacterial_genotyphi_ch.ifEmpty(null)
+        bacterial_paratype = bacterial_paratype_ch.ifEmpty(null)
 }

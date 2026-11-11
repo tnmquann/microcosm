@@ -1,0 +1,7 @@
+tool	path	status	details
+AMRFinderPlus	/test/amrfinder	validated	database_version=2024-07-22.1
+ABRicate	bundled	validated	container database id=ncbi
+RGI	/test/card	validated	database_version=3.2.9
+ResFinder	/test/resfinder	validated	acquired-gene database
+PointFinder	/test/pointfinder	validated	supported_taxa=1
+DeepARG	/test/deeparg	validated	database_version=1

@@ -1,0 +1,6 @@
+name: "klebsiella_typing"
+description: "Route canonical Klebsiella genomes to the reused nf-core Kleborate module."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

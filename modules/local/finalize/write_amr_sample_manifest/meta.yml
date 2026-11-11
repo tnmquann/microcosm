@@ -1,0 +1,45 @@
+name: "write_amr_sample_manifest"
+description: "Write per-genome AMR execution, harmonization, and normalization status."
+keywords:
+  - amr
+  - reporting
+  - provenance
+tools:
+  - "python":
+      description: "Python standard library runtime."
+      homepage: "https://www.python.org/"
+      licence:
+        - "PSF-2.0"
+input:
+  - reports:
+      type: file
+      description: "Mandatory raw outputs from the five AMR execution tasks."
+  - abricate_normalizable:
+      type: boolean
+      description: "Whether the selected ABRicate database is supported by ARGnorm."
+  - manifest_script:
+      type: file
+      description: "Repository-local manifest writer."
+      pattern: "*.py"
+  - database_validation:
+      type: file
+      description: "Validator-produced database provenance for all requested AMR tools."
+      pattern: "amr_database_validation.tsv"
+output:
+  manifest:
+    - - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*.amr_manifest.tsv":
+          type: file
+          description: "Per-genome AMR status manifest."
+          pattern: "*.tsv"
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Software versions."
+        pattern: "versions.yml"
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

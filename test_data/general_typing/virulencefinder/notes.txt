@@ -1,0 +1,1 @@
+test_gene: Minimal test virulence determinant

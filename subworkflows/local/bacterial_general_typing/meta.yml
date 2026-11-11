@@ -1,0 +1,6 @@
+name: "bacterial_general_typing"
+description: "Run general bacterial typing tools on canonical bacterial genomes."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

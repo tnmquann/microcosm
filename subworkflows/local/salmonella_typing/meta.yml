@@ -1,0 +1,6 @@
+name: "salmonella_typing"
+description: "Route canonical Salmonella genomes through SeqSero2, SISTR, Mykrobe, and evidence-gated follow-up tools."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

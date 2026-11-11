@@ -1,0 +1,48 @@
+name: "parse_salmonella_typing"
+description: "Parse explicit SeqSero2, SISTR, and Mykrobe routing evidence for Salmonella follow-up."
+keywords:
+  - salmonella
+  - typing
+  - routing
+tools:
+  - "python":
+      description: "Python standard-library parser runtime."
+      homepage: "https://www.python.org/"
+      licence:
+        - "PSF-2.0"
+input:
+  - meta:
+      type: map
+      description: "Canonical bacterial-genome metadata including sample_id and genome_id."
+  - seqsero2_tsv:
+      type: file
+      description: "SeqSero2 tab-delimited result."
+  - mykrobe_json:
+      type: file
+      description: "Mykrobe JSON result generated with the Typhi panel."
+  - sistr_tsv:
+      type: file
+      description: "SISTR tab-delimited prediction result."
+  - parser_script:
+      type: file
+      description: "Repository-local explicit-evidence parser."
+      pattern: "*.py"
+output:
+  evidence:
+    - "*.salmonella_evidence.tsv":
+        type: file
+        description: "One structured evidence row per routing tool."
+        pattern: "*.tsv"
+  routing:
+    - "*.salmonella_routing.tsv":
+        type: file
+        description: "Exact Typhi/Paratyphi A routing decision and conflict state."
+        pattern: "*.tsv"
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Parser and Python versions."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"
