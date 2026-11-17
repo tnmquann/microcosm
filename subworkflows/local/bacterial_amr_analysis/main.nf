@@ -76,6 +76,8 @@ workflow BACTERIAL_AMR_ANALYSIS {
     ch_versions = ch_versions.mix(GUNZIP_AMR.out.versions_gunzip)
 
     // ---- Databases: supplied, or downloaded into the run work directory ----
+    // shortcut: AMRFINDERPLUS_UPDATE and DEEPARG_DOWNLOADDATA (nf-core) take no input, so they
+    // run even when no bacterial genome reaches this subworkflow; gate them if that matters.
     if (params.amrfinderplus_db) {
         ch_amrfinder_db = channel.value(file(params.amrfinderplus_db, checkIfExists: true))
     } else {
@@ -86,7 +88,7 @@ workflow BACTERIAL_AMR_ANALYSIS {
     if (params.rgi_preparecarddb_dir) {
         ch_card_db = channel.value(file(params.rgi_preparecarddb_dir, checkIfExists: true))
     } else {
-        RGI_PREPARECARDDB_AMR([])
+        RGI_PREPARECARDDB_AMR(ch_amr_genomes.first().map { _genome -> [] })
         ch_card_db = RGI_PREPARECARDDB_AMR.out.db
         ch_versions = ch_versions.mix(RGI_PREPARECARDDB_AMR.out.versions)
     }
