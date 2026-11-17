@@ -3,6 +3,10 @@ process MERGE_READBASED_POSTPROCESS_INPUTS {
     label 'process_low'
 
     conda "conda-forge::python=3.12 conda-forge::pandas=2.2.3"
+    // python + pandas/openpyxl/biopython + gzip/zip/unzip for container profiles (Seqera Wave, frozen)
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'oras://community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:f9da7bb46b36d191' :
+        'community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:e8608291079924c4' }"
 
     input:
     tuple val(meta), path(merged_inputs, stageAs: 'merged_inputs/*', arity: '1..*')

@@ -10,14 +10,9 @@ include { VIRULENCEFINDER_DOWNLOADDB_LOCAL } from '../../../modules/local/virule
 include { VIRULENCEFINDER_RUN as VIRULENCEFINDER_TYPING } from '../../../modules/local/virulencefinder/main'
 include { PLASMIDFINDER as PLASMIDFINDER_TYPING } from '../../../modules/nf-core/plasmidfinder/main'
 
-// virulencefinder_db revision downloaded when --virulencefinder_db is not set
-// (tag virulencefinder-3.2.1, matching the VirulenceFinder 3.2.1 container).
-def virulencefinderDbRevision() {
-    return '065b8d1'
-}
-
 // Steps of playground/modular/2_general_bac.sh for every d__Bacteria genome:
 // MLST, VirulenceFinder and PlasmidFinder (container-bundled database).
+// Each tool can be turned off with --skip_mlst / --skip_virulencefinder / --skip_plasmidfinder.
 workflow BACTERIAL_GENERAL_TYPING {
     take:
     bacterial_genomes_ch
@@ -34,32 +29,55 @@ workflow BACTERIAL_GENERAL_TYPING {
         .mix(ch_genome_splits.uncompressed)
     ch_versions = ch_versions.mix(GUNZIP_GENERAL_TYPING.out.versions_gunzip)
 
-    if (params.virulencefinder_db) {
-        ch_virulencefinder_db = channel.value(file(params.virulencefinder_db, checkIfExists: true))
-    } else {
-        VIRULENCEFINDER_DOWNLOADDB_LOCAL(
-            ch_typing_genomes.first().map { _genome -> virulencefinderDbRevision() }
-        )
-        ch_virulencefinder_db = VIRULENCEFINDER_DOWNLOADDB_LOCAL.out.db
-        ch_versions = ch_versions.mix(VIRULENCEFINDER_DOWNLOADDB_LOCAL.out.versions)
+    ch_mlst_tsv = channel.empty()
+    ch_vf_json = channel.empty()
+    ch_vf_legacy_json = channel.empty()
+    ch_vf_tsv = channel.empty()
+    ch_vf_txt = channel.empty()
+    ch_pf_json = channel.empty()
+    ch_pf_txt = channel.empty()
+    ch_pf_tsv = channel.empty()
+
+    if (!params.skip_mlst) {
+        MLST_TYPING(ch_typing_genomes)
+        ch_mlst_tsv = MLST_TYPING.out.tsv
+        ch_versions = ch_versions.mix(MLST_TYPING.out.versions_mlst)
     }
 
-    MLST_TYPING(ch_typing_genomes)
-    VIRULENCEFINDER_TYPING(ch_typing_genomes, ch_virulencefinder_db)
-    PLASMIDFINDER_TYPING(ch_typing_genomes)
-    ch_versions = ch_versions
-        .mix(MLST_TYPING.out.versions_mlst)
-        .mix(VIRULENCEFINDER_TYPING.out.versions)
-        .mix(PLASMIDFINDER_TYPING.out.versions_plasmidfinder)
+    if (!params.skip_virulencefinder) {
+        if (params.virulencefinder_db) {
+            ch_virulencefinder_db = channel.value(file(params.virulencefinder_db, checkIfExists: true))
+        } else {
+            VIRULENCEFINDER_DOWNLOADDB_LOCAL(
+                ch_typing_genomes.first().map { _genome -> params.virulencefinder_db_revision }
+            )
+            ch_virulencefinder_db = VIRULENCEFINDER_DOWNLOADDB_LOCAL.out.db
+            ch_versions = ch_versions.mix(VIRULENCEFINDER_DOWNLOADDB_LOCAL.out.versions)
+        }
+        VIRULENCEFINDER_TYPING(ch_typing_genomes, ch_virulencefinder_db)
+        ch_vf_json = VIRULENCEFINDER_TYPING.out.json
+        ch_vf_legacy_json = VIRULENCEFINDER_TYPING.out.legacy_json
+        ch_vf_tsv = VIRULENCEFINDER_TYPING.out.tsv
+        ch_vf_txt = VIRULENCEFINDER_TYPING.out.txt
+        ch_versions = ch_versions.mix(VIRULENCEFINDER_TYPING.out.versions)
+    }
+
+    if (!params.skip_plasmidfinder) {
+        PLASMIDFINDER_TYPING(ch_typing_genomes)
+        ch_pf_json = PLASMIDFINDER_TYPING.out.json
+        ch_pf_txt = PLASMIDFINDER_TYPING.out.txt
+        ch_pf_tsv = PLASMIDFINDER_TYPING.out.tsv
+        ch_versions = ch_versions.mix(PLASMIDFINDER_TYPING.out.versions_plasmidfinder)
+    }
 
     emit:
-    mlst_tsv = MLST_TYPING.out.tsv
-    virulencefinder_json = VIRULENCEFINDER_TYPING.out.json
-    virulencefinder_legacy_json = VIRULENCEFINDER_TYPING.out.legacy_json
-    virulencefinder_tsv = VIRULENCEFINDER_TYPING.out.tsv
-    virulencefinder_txt = VIRULENCEFINDER_TYPING.out.txt
-    plasmidfinder_json = PLASMIDFINDER_TYPING.out.json
-    plasmidfinder_txt = PLASMIDFINDER_TYPING.out.txt
-    plasmidfinder_tsv = PLASMIDFINDER_TYPING.out.tsv
+    mlst_tsv = ch_mlst_tsv
+    virulencefinder_json = ch_vf_json
+    virulencefinder_legacy_json = ch_vf_legacy_json
+    virulencefinder_tsv = ch_vf_tsv
+    virulencefinder_txt = ch_vf_txt
+    plasmidfinder_json = ch_pf_json
+    plasmidfinder_txt = ch_pf_txt
+    plasmidfinder_tsv = ch_pf_tsv
     versions = ch_versions.unique()
 }

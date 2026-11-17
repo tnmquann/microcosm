@@ -21,7 +21,7 @@ process PARSE_SALMONELLA_TYPING {
     python ${parser_script} \\
         --sample-id "${meta.sample_id}" \\
         --genome-id "${meta.genome_id}" \\
-        --seqsero2-tsv ${seqsero2_tsv} \\
+        ${seqsero2_tsv ? "--seqsero2-tsv ${seqsero2_tsv}" : ''} \\
         --sistr-tsv ${sistr_tsv} \\
         --evidence-output "${meta.genome_id}.salmonella_evidence.tsv" \\
         --routing-output "${meta.genome_id}.salmonella_routing.tsv"

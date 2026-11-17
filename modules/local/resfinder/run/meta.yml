@@ -1,5 +1,5 @@
 name: resfinder_run_local
-description: Run ResFinder 4.7 (`python -m resfinder`) with ResFinder, PointFinder and DisinFinder databases on one assembly, as in playground/modular/5_amr.sh.
+description: Run ResFinder 4.7 (`python -m resfinder`) with ResFinder, PointFinder and DisinFinder databases on one assembly, as in playground/modular/5_amr.sh. Tool flags such as --acquired/--disinfectant come from task.ext.args.
 keywords: [amr, resfinder, pointfinder, disinfinder]
 tools:
   - resfinder:

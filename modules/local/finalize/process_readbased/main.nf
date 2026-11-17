@@ -3,6 +3,10 @@ process PROCESS_READBASED_RESULTS {
     label 'process_medium'
 
     conda "conda-forge::pandas=2.2.3 openpyxl=3.1.5"
+    // python + pandas/openpyxl/biopython + gzip/zip/unzip for container profiles (Seqera Wave, frozen)
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'oras://community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:f9da7bb46b36d191' :
+        'community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:e8608291079924c4' }"
 
     publishDir "${params.processed_results_dir}",
         mode: params.publish_dir_mode,

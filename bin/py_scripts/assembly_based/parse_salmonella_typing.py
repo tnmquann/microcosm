@@ -66,7 +66,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sample-id", required=True)
     parser.add_argument("--genome-id", required=True)
-    parser.add_argument("--seqsero2-tsv", required=True, type=Path)
+    parser.add_argument("--seqsero2-tsv", type=Path, help="omit when SeqSero2 was skipped")
     parser.add_argument("--sistr-tsv", required=True, type=Path)
     parser.add_argument("--evidence-output", required=True, type=Path)
     parser.add_argument("--routing-output", required=True, type=Path)
@@ -110,8 +110,10 @@ def read_single_tsv(path: Path, label: str) -> dict[str, str] | None:
     return rows[0]
 
 
-def parse_seqsero2(path: Path) -> tuple[str, str]:
+def parse_seqsero2(path: Path | None) -> tuple[str, str]:
     """Read SeqSero2's named prediction and status columns from one TSV row."""
+    if path is None:
+        return "", "not_run"
     row = read_single_tsv(path, "SeqSero2")
     if row is None:
         return "", "empty_result"
@@ -145,7 +147,7 @@ def write_tsv(path: Path, fields: tuple[str, ...], rows: list[dict[str, str]]) -
 def build_reports(
     sample_id: str,
     genome_id: str,
-    seqsero2_tsv: Path,
+    seqsero2_tsv: Path | None,
     sistr_tsv: Path,
 ) -> tuple[list[dict[str, str]], dict[str, str]]:
     """Build normalized evidence and the SISTR-only route decision."""
@@ -168,7 +170,7 @@ def build_reports(
             "predicted_serovar_or_lineage": prediction,
             "normalized_prediction": normalized,
             "confidence_or_status": status,
-            "raw_result_path": path.name,
+            "raw_result_path": path.name if path else "",
         }
         for tool, prediction, normalized, status, path in (
             ("seqsero2", seqsero2_prediction, seqsero2_normalized, seqsero2_status, seqsero2_tsv),

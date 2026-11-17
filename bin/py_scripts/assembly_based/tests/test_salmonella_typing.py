@@ -69,6 +69,14 @@ class SalmonellaTypingTests(unittest.TestCase):
         self.assertEqual([row["tool"] for row in evidence], ["seqsero2", "sistr"])
         self.assertEqual(evidence[1]["normalized_prediction"], "Typhi")
 
+    def test_skipped_seqsero2_still_routes_from_sistr(self) -> None:
+        sistr = self.root / "sistr.tsv"
+        sistr.write_text("serovar\tserogroup\nTyphi\tD1\n", encoding="utf-8")
+        evidence, routing = parser.build_reports("sample", "genome", None, sistr)
+        self.assertEqual(routing["route_genotyphi"], "true")
+        self.assertEqual(evidence[0]["confidence_or_status"], "not_run")
+        self.assertEqual(evidence[0]["raw_result_path"], "")
+
     def test_duplicate_columns_are_rejected(self) -> None:
         duplicate_tsv = self.root / "duplicate.tsv"
         duplicate_tsv.write_text(

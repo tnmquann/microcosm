@@ -89,7 +89,16 @@
                 },
                 "amrfinderplus_args": {
                     "type": "string",
-                    "description": "Additional arguments appended to AMRFinderPlus."
+                    "default": "--plus",
+                    "description": "AMRFinderPlus run arguments.",
+                    "help_text": "Default --plus as in 5_amr.sh. Replaces the default when set, so keep --plus if you want it. --organism is added per genome from --amrfinderplus_organism_map."
+                },
+                "amrfinderplus_organism_map": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "TSV mapping GTDB lineage to AMRFinderPlus --organism.",
+                    "help_text": "Columns lineage_pattern, organism. The first row whose lineage_pattern occurs in the genome lineage wins; no match = no --organism. Default: assets/amrfinderplus_organisms.tsv (the 5_amr.sh list)."
                 },
                 "abricate_db": {
                     "type": "string",
@@ -120,7 +129,9 @@
                 },
                 "rgi_main_args": {
                     "type": "string",
-                    "description": "Additional arguments appended to rgi main after required contig-mode flags."
+                    "default": "--clean -g PYRODIGAL",
+                    "description": "rgi main arguments.",
+                    "help_text": "Default as in 5_amr.sh. --input_type contig and --local are always added."
                 },
                 "resfinder_db": {
                     "type": "string",
@@ -131,7 +142,14 @@
                 },
                 "resfinder_args": {
                     "type": "string",
-                    "description": "Additional arguments appended to ResFinder after required acquired-gene/species flags."
+                    "default": "--acquired --disinfectant",
+                    "description": "ResFinder arguments.",
+                    "help_text": "Default as in 5_amr.sh. --point --species is added when the genome species or genus has a PointFinder folder."
+                },
+                "resfinder_db_revision": {
+                    "type": "string",
+                    "default": "resfinder-4.7.2",
+                    "description": "CGE git tag/commit downloaded for resfinder_db, pointfinder_db and disinfinder_db when they are not supplied."
                 },
                 "pointfinder_db": {
                     "type": "string",
@@ -164,12 +182,26 @@
                     "type": "string",
                     "description": "Additional arguments appended to DeepARG predict."
                 },
+                "deeparg_model": {
+                    "type": "string",
+                    "default": "SS",
+                    "enum": [
+                        "SS",
+                        "LS"
+                    ],
+                    "description": "DeepARG model: SS (short sequences, 5_amr.sh) or LS (long sequences, e.g. predicted genes)."
+                },
                 "virulencefinder_db": {
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
                     "description": "VirulenceFinder database directory (must contain config and notes.txt).",
                     "help_text": "Optional. When unset, virulencefinder_db is downloaded at a fixed revision into the run work directory."
+                },
+                "virulencefinder_db_revision": {
+                    "type": "string",
+                    "default": "065b8d1",
+                    "description": "virulencefinder_db commit/tag downloaded when --virulencefinder_db is not set (065b8d1 = virulencefinder-3.2.1)."
                 },
                 "virulencefinder_min_coverage": {
                     "type": "number",
@@ -195,15 +227,24 @@
                 },
                 "mlst_args": {
                     "type": "string",
-                    "description": "Additional arguments appended to MLST."
+                    "description": "Additional arguments appended to MLST (e.g. --scheme klebsiella)."
                 },
                 "kleborate_args": {
                     "type": "string",
                     "description": "Additional arguments appended to Kleborate."
                 },
+                "kleborate_preset_map": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "TSV mapping GTDB lineage to a Kleborate v3 preset and module list.",
+                    "help_text": "Columns lineage_pattern, preset (may be empty), modules. The first row whose lineage_pattern occurs in the genome lineage wins; genomes with no match skip Kleborate. Default: assets/kleborate_presets.tsv (the 3_kleb.sh rules)."
+                },
                 "seqsero2_args": {
                     "type": "string",
-                    "description": "Additional arguments appended to SeqSero2 after the default mode/thread flags."
+                    "default": "-m k -t 4",
+                    "description": "SeqSero2 arguments.",
+                    "help_text": "Default as in 4_sal.sh (k-mer mode, assembly input)."
                 },
                 "sistr_args": {
                     "type": "string",
@@ -223,6 +264,11 @@
                     "exists": true,
                     "description": "Optional local Paratype checkout (github.com/CHRF-Genomics/Paratype).",
                     "help_text": "Used only for genomes whose SISTR serovar is Paratyphi A. If not set, Paratype is cloned at a fixed commit when such a genome is found. The directory must contain paratype.py, SParatyphiAKU12601.fasta, SParatyphiA_genotype_specific_alleles.txt and SParatyphiA_gene_mutation_codons.txt; it is copied into each task and never modified."
+                },
+                "paratype_revision": {
+                    "type": "string",
+                    "default": "099db9b4de828e9c993fe76164f85731f6368e86",
+                    "description": "Paratype (github.com/CHRF-Genomics/Paratype) commit cloned when --paratype_bundle is not set."
                 }
             }
         },
@@ -888,6 +934,84 @@
                 }
             }
         },
+        "bacterial_downstream_skip_options": {
+            "title": "Bacterial downstream tool switches",
+            "type": "object",
+            "fa_icon": "fas fa-toggle-on",
+            "description": "Turn off single tools of the bacterial downstream analysis (--genome_input or --enable_bacterial_downstream).",
+            "properties": {
+                "skip_mlst": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip MLST in the bacterial downstream analysis."
+                },
+                "skip_virulencefinder": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip VirulenceFinder in the bacterial downstream analysis."
+                },
+                "skip_plasmidfinder": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip PlasmidFinder in the bacterial downstream analysis."
+                },
+                "skip_kleborate": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip Kleborate in the bacterial downstream analysis."
+                },
+                "skip_sistr": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip SISTR (also stops GenoTyphi and Paratype, which are routed by the SISTR serovar) in the bacterial downstream analysis."
+                },
+                "skip_seqsero2": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip SeqSero2 in the bacterial downstream analysis."
+                },
+                "skip_genotyphi": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip Mykrobe + GenoTyphi for SISTR Typhi genomes in the bacterial downstream analysis."
+                },
+                "skip_paratype": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip Paratype for SISTR Paratyphi A genomes in the bacterial downstream analysis."
+                },
+                "skip_amrfinderplus": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip AMRFinderPlus in the bacterial downstream analysis."
+                },
+                "skip_abricate": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip ABRicate in the bacterial downstream analysis."
+                },
+                "skip_rgi": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip RGI in the bacterial downstream analysis."
+                },
+                "skip_resfinder": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip ResFinder/PointFinder/DisinFinder in the bacterial downstream analysis."
+                },
+                "skip_deeparg": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip DeepARG in the bacterial downstream analysis."
+                },
+                "skip_argnorm": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip ARGnorm in the bacterial downstream analysis."
+                }
+            }
+        },
         "rgi_options": {
             "title": "RGI options",
             "type": "object",
@@ -1153,6 +1277,7 @@
         { "$ref": "#/$defs/bin_qc_options" },
         { "$ref": "#/$defs/bin_annotation_options" },
         { "$ref": "#/$defs/bin_classification_options" },
+        { "$ref": "#/$defs/bacterial_downstream_skip_options" },
         { "$ref": "#/$defs/rgi_options" },
         { "$ref": "#/$defs/pyrodigal_options" },
         { "$ref": "#/$defs/prokka_options" },

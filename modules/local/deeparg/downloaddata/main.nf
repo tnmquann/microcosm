@@ -1,4 +1,6 @@
-process DEEPARG_DOWNLOADDATA {
+// nf-core deeparg/downloaddata with a trigger input, so the download runs only
+// when a bacterial genome needs it (the nf-core process has no input).
+process DEEPARG_DOWNLOADDATA_LOCAL {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
@@ -15,6 +17,9 @@ process DEEPARG_DOWNLOADDATA {
         : "${workflow.containerEngine}" == 'docker'
             ? '-v $(which bash):/usr/local/lib/python2.7/site-packages/Theano-0.8.2-py2.7.egg-info/PKG-INFO'
             : ''}"
+
+    input:
+    val trigger
 
     output:
     path "db/", emit: db

@@ -172,7 +172,7 @@ uses the same layer when `--enable_bacterial_downstream` is set.
 
 Each `d__Bacteria` genome then goes through:
 
-- General typing: MLST (`--full`), VirulenceFinder and PlasmidFinder.
+- General typing: MLST, VirulenceFinder and PlasmidFinder.
 - AMR: AMRFinderPlus (`--plus`, with `--organism` chosen from the lineage),
   ABRicate, RGI (contig mode), ResFinder with PointFinder and DisinFinder, and
   DeepARG (model `SS`); every report is converted with hAMRonization, summarised,
@@ -187,7 +187,22 @@ Database parameters (`--amrfinderplus_db`, `--rgi_preparecarddb_dir`,
 `--virulencefinder_db`, `--paratype_bundle`) are optional. When one is not set,
 the database is downloaded into the run work directory at a fixed version
 (AMRFinderPlus uses the current release). PlasmidFinder and ABRicate use the
-databases bundled with their containers.
+databases bundled with their containers. Nothing is downloaded when no
+bacterial genome reaches the downstream layer.
+
+Every step can be customised with parameters (see `nextflow_schema.json`):
+
+| What | Parameters |
+|---|---|
+| Turn a tool off | `--skip_mlst`, `--skip_virulencefinder`, `--skip_plasmidfinder`, `--skip_kleborate`, `--skip_sistr`, `--skip_seqsero2`, `--skip_genotyphi`, `--skip_paratype`, `--skip_amrfinderplus`, `--skip_abricate`, `--skip_rgi`, `--skip_resfinder`, `--skip_deeparg`, `--skip_argnorm` |
+| Tool arguments | `--<tool>_args` (e.g. `--mlst_args`, `--kleborate_args`, `--sistr_args`). Defaults taken from the reference scripts are part of the value and are replaced when you set it: `amrfinderplus_args='--plus'`, `resfinder_args='--acquired --disinfectant'`, `rgi_main_args='--clean -g PYRODIGAL'`, `seqsero2_args='-m k -t 4'` |
+| Lineage rules | `--kleborate_preset_map` (default `assets/kleborate_presets.tsv`), `--amrfinderplus_organism_map` (default `assets/amrfinderplus_organisms.tsv`): TSV files; the first `lineage_pattern` found in the GTDB lineage wins |
+| Database versions downloaded | `--virulencefinder_db_revision`, `--resfinder_db_revision`, `--paratype_revision` |
+| Other | `--deeparg_model` (`SS` or `LS`), `--deeparg_db_version`, `--abricate_db_id`, `--virulencefinder_min_coverage`, `--virulencefinder_min_identity` |
+
+SISTR alone routes Salmonella follow-up, so `--skip_sistr` also stops
+GenoTyphi and Paratype. CPUs/memory per tool are set with the usual
+`process.withName` selectors in a custom config.
 
 Results are published below
 `${outdir}/Assembly/Downstream_Bacterial_Analysis/`: routing reports,

@@ -15,11 +15,6 @@
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
             "installed_by": ["modules"]
           },
-          "amrfinderplus/update": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-            "installed_by": ["modules"]
-          },
           "bakta/bakta": {
             "branch": "master",
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
@@ -125,11 +120,6 @@
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
             "installed_by": ["modules"]
           },
-          "deeparg/downloaddata": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-            "installed_by": ["modules"]
-          },
           "deeparg/predict": {
             "branch": "master",
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
@@ -218,8 +208,7 @@
           "mlst": {
             "branch": "master",
             "git_sha": "ddeeb1c3b5090dc65cce55ff1a69e87f26c053f1",
-            "installed_by": ["modules"],
-            "patch": "modules/nf-core/mlst/mlst.diff"
+            "installed_by": ["modules"]
           },
           "multiqc": {
             "branch": "master",

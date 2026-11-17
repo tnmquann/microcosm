@@ -24,6 +24,7 @@ process RESFINDER_RUN_LOCAL {
     script:
     def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}.resfinder"
+    // 5_amr.sh flags --acquired --disinfectant come from task.ext.args (--resfinder_args).
     // PointFinder species key as in 5_amr.sh: GTDB species, else genus, lower case with '_'.
     def species_key = (meta.species ?: '').toString().replaceFirst('^s__', '').trim().toLowerCase().replaceAll('\\s+', '_')
     def genus_key = (meta.genus ?: '').toString().replaceFirst('^g__', '').trim().toLowerCase().replaceAll('\\s+', '_')
@@ -40,8 +41,6 @@ process RESFINDER_RUN_LOCAL {
         -o ${prefix} \\
         -j ${prefix}.json \\
         --kma_threads ${task.cpus} \\
-        --acquired \\
-        --disinfectant \\
         \$point_args \\
         --db_path_point ${db_point} \\
         --db_path_disinf ${db_disinf} \\

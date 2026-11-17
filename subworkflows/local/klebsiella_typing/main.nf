@@ -5,41 +5,31 @@ nextflow.enable.dsl = 2
 // Maintainers: @tnmquann (co-maintainer)
 
 include { KLEBORATE_V3_RUN as KLEBORATE_TYPING } from '../../../modules/local/kleborate/v3run/main'
+include { readLineageMap; lookupLineage } from '../utils_bacterial_lineage/main'
 
-// Kleborate v3 preset and module list per GTDB lineage (playground/modular/3_kleb.sh).
-// Order matters: species complexes first, then Escherichia, then any other
-// Klebsiella/Raoultella genome with the generic Enterobacterales modules.
-def kleborateMode(lineage) {
-    def text = lineage ?: ''
-    def kpsc = ['pneumoniae', 'quasipneumoniae', 'variicola', 'quasivariicola', 'africana']
-    def kosc = ['oxytoca', 'grimontii', 'michiganensis', 'pasteurii', 'huaxiensis', 'spallanzanii']
-    if (kpsc.any { name -> text.contains("s__Klebsiella ${name}") }) {
-        return ['kpsc', 'general__contig_stats']
-    }
-    if (kosc.any { name -> text.contains("s__Klebsiella ${name}") }) {
-        return ['kosc', 'general__contig_stats']
-    }
-    if (text.contains('g__Escherichia')) {
-        return ['escherichia', 'general__contig_stats']
-    }
-    if (text.contains('g__Klebsiella') || text.contains('g__Raoultella')) {
-        return ['', 'enterobacterales__species,general__contig_stats']
-    }
-    return null
-}
-
+// Kleborate v3 preset and module list per GTDB lineage (playground/modular/3_kleb.sh);
+// the table is --kleborate_preset_map (default assets/kleborate_presets.tsv).
 workflow KLEBSIELLA_TYPING {
     take:
     bacterial_genomes_ch
 
     main:
+    pipeline_root = params.pipeline_root ?: projectDir
+    preset_rows = readLineageMap(
+        params.kleborate_preset_map ?: "${pipeline_root}/assets/kleborate_presets.tsv",
+        ['preset', 'modules'],
+        ['modules']
+    )
+
     ch_kleborate_input = bacterial_genomes_ch
-        .map { meta, genome -> tuple(meta, kleborateMode(meta.lineage), genome) }
-        .filter { _meta, mode, _genome -> mode != null }
-        .map { meta, mode, genome ->
+        .map { meta, genome ->
+            tuple(meta, lookupLineage(preset_rows, meta.lineage), genome)
+        }
+        .filter { _meta, row, _genome -> row != null }
+        .map { meta, row, genome ->
             def meta_new = meta.clone()
-            meta_new.kleborate_preset = mode[0]
-            tuple(meta_new, mode[0], mode[1], genome)
+            meta_new.kleborate_preset = row.preset?.trim() ?: ''
+            tuple(meta_new, meta_new.kleborate_preset, row.modules.trim(), genome)
         }
 
     KLEBORATE_TYPING(ch_kleborate_input)

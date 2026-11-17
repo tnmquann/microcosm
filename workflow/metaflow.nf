@@ -556,30 +556,38 @@ workflow METAFLOW {
             excluded_routing_report_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.excluded_report ?: channel.empty()
             unresolved_routing_report_ch = GENOME_INPUT_AND_BACTERIAL_ROUTING.out.unresolved_report ?: channel.empty()
 
-            BACTERIAL_AMR_ANALYSIS(bacterial_genomes_ch)
-            bacterial_amr_versions_ch = BACTERIAL_AMR_ANALYSIS.out.versions ?: channel.empty()
-            bacterial_amr_hamronization_summary_ch = BACTERIAL_AMR_ANALYSIS.out.hamronization_summary ?: channel.empty()
-            bacterial_amr_hamronized_ch = BACTERIAL_AMR_ANALYSIS.out.hamronized ?: channel.empty()
-            bacterial_amr_normalized_ch = BACTERIAL_AMR_ANALYSIS.out.normalized ?: channel.empty()
+            if (![params.skip_amrfinderplus, params.skip_abricate, params.skip_rgi, params.skip_resfinder, params.skip_deeparg].every()) {
+                BACTERIAL_AMR_ANALYSIS(bacterial_genomes_ch)
+                bacterial_amr_versions_ch = BACTERIAL_AMR_ANALYSIS.out.versions ?: channel.empty()
+                bacterial_amr_hamronization_summary_ch = BACTERIAL_AMR_ANALYSIS.out.hamronization_summary ?: channel.empty()
+                bacterial_amr_hamronized_ch = BACTERIAL_AMR_ANALYSIS.out.hamronized ?: channel.empty()
+                bacterial_amr_normalized_ch = BACTERIAL_AMR_ANALYSIS.out.normalized ?: channel.empty()
+            }
 
-            BACTERIAL_GENERAL_TYPING(bacterial_genomes_ch)
-            bacterial_general_typing_versions_ch = BACTERIAL_GENERAL_TYPING.out.versions ?: channel.empty()
-            bacterial_virulencefinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.virulencefinder_tsv ?: channel.empty()
-            bacterial_plasmidfinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.plasmidfinder_tsv ?: channel.empty()
-            bacterial_mlst_tsv_ch = BACTERIAL_GENERAL_TYPING.out.mlst_tsv ?: channel.empty()
+            if (![params.skip_mlst, params.skip_virulencefinder, params.skip_plasmidfinder].every()) {
+                BACTERIAL_GENERAL_TYPING(bacterial_genomes_ch)
+                bacterial_general_typing_versions_ch = BACTERIAL_GENERAL_TYPING.out.versions ?: channel.empty()
+                bacterial_virulencefinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.virulencefinder_tsv ?: channel.empty()
+                bacterial_plasmidfinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.plasmidfinder_tsv ?: channel.empty()
+                bacterial_mlst_tsv_ch = BACTERIAL_GENERAL_TYPING.out.mlst_tsv ?: channel.empty()
+            }
 
-            KLEBSIELLA_TYPING(bacterial_genomes_ch)
-            bacterial_klebsiella_versions_ch = KLEBSIELLA_TYPING.out.versions ?: channel.empty()
-            bacterial_kleborate_report_ch = KLEBSIELLA_TYPING.out.report ?: channel.empty()
-            bacterial_klebsiella_summary_ch = KLEBSIELLA_TYPING.out.summary ?: channel.empty()
+            if (!params.skip_kleborate) {
+                KLEBSIELLA_TYPING(bacterial_genomes_ch)
+                bacterial_klebsiella_versions_ch = KLEBSIELLA_TYPING.out.versions ?: channel.empty()
+                bacterial_kleborate_report_ch = KLEBSIELLA_TYPING.out.report ?: channel.empty()
+                bacterial_klebsiella_summary_ch = KLEBSIELLA_TYPING.out.summary ?: channel.empty()
+            }
 
-            SALMONELLA_TYPING(bacterial_genomes_ch)
-            bacterial_salmonella_versions_ch = SALMONELLA_TYPING.out.versions ?: channel.empty()
-            bacterial_salmonella_evidence_ch = SALMONELLA_TYPING.out.evidence ?: channel.empty()
-            bacterial_salmonella_summary_ch = SALMONELLA_TYPING.out.summary ?: channel.empty()
-            bacterial_salmonella_routing_ch = SALMONELLA_TYPING.out.routing ?: channel.empty()
-            bacterial_genotyphi_ch = SALMONELLA_TYPING.out.genotyphi_tsv ?: channel.empty()
-            bacterial_paratype_ch = SALMONELLA_TYPING.out.paratype_report ?: channel.empty()
+            if (!(params.skip_sistr && params.skip_seqsero2)) {
+                SALMONELLA_TYPING(bacterial_genomes_ch)
+                bacterial_salmonella_versions_ch = SALMONELLA_TYPING.out.versions ?: channel.empty()
+                bacterial_salmonella_evidence_ch = SALMONELLA_TYPING.out.evidence ?: channel.empty()
+                bacterial_salmonella_summary_ch = SALMONELLA_TYPING.out.summary ?: channel.empty()
+                bacterial_salmonella_routing_ch = SALMONELLA_TYPING.out.routing ?: channel.empty()
+                bacterial_genotyphi_ch = SALMONELLA_TYPING.out.genotyphi_tsv ?: channel.empty()
+                bacterial_paratype_ch = SALMONELLA_TYPING.out.paratype_report ?: channel.empty()
+            }
         }
 
         def combined_versions = channel.empty()
