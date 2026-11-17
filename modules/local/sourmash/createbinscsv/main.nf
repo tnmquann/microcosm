@@ -23,11 +23,11 @@ process CREATE_BINS_CSV {
     
     # Process all bin files directly in the working directory
     # Nextflow stages files as symlinks in the current directory or subdirectories
-    for bin_file in *.fa *.fasta *.fa.gz *.fasta.gz *.fastq.gz *.fq *.fastq *.fq.gz; do
+    for bin_file in *.fa *.fasta *.fna *.fas *.fa.gz *.fasta.gz *.fna.gz *.fas.gz *.fastq.gz *.fq *.fastq *.fq.gz; do
         # Check if file exists (glob might not match anything)
         if [ -f "\${bin_file}" ]; then
             # Extract just the filename without path and extensions (including .gz)
-            bin_name=\$(basename "\${bin_file}" | sed 's/\\.fa\\.gz\$//' | sed 's/\\.fasta\\.gz\$//' | sed 's/\\.fa\$//' | sed 's/\\.fasta\$//' | sed 's/\\.fq\\.gz\$//' | sed 's/\\.fastq\\.gz\$//' | sed 's/\\.fq\$//' | sed 's/\\.fastq\$//')
+            bin_name=\$(basename "\${bin_file}" | sed 's/\\.fa\\.gz\$//' | sed 's/\\.fasta\\.gz\$//' | sed 's/\\.fna\\.gz\$//' | sed 's/\\.fna\$//' | sed 's/\\.fas\\.gz\$//' | sed 's/\\.fas\$//' | sed 's/\\.fa\$//' | sed 's/\\.fasta\$//' | sed 's/\\.fq\\.gz\$//' | sed 's/\\.fastq\\.gz\$//' | sed 's/\\.fq\$//' | sed 's/\\.fastq\$//')
             # Get full path to the bin file (resolve symlinks)
             full_path=\$(realpath "\${bin_file}")
             # Add entry to CSV (protein_filename column left empty as per requirement)

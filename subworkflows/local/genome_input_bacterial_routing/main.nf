@@ -106,8 +106,12 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
     } else {
         ch_classification_candidates = assembly_genomes_ch.map { meta, genome ->
             def meta_new = meta.clone()
+            // Same name CREATE_BINS_CSV gives the sketch (x.fa.gz -> x), i.e. sourmash query_name.
+            def bin_name = genome.name.replaceFirst('\\.gz$', '').replaceFirst('\\.(fa|fasta|fna|fas)$', '')
             meta_new.sample_id = meta.sample_id ?: meta.id
-            meta_new.genome_id = meta.bin_id ?: genome.baseName
+            meta_new.genome_id = meta.bin_id
+                ? meta.bin_id.toString().replaceFirst('\\.gz$', '').replaceFirst('\\.(fa|fasta|fna|fas)$', '')
+                : bin_name
             meta_new.run_id = meta.containsKey('run_id') ? meta.run_id : null
             meta_new.group = meta.containsKey('group') ? meta.group : null
             meta_new.assembler = meta.containsKey('assembler') ? meta.assembler : null
@@ -121,7 +125,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
             meta_new.species = ''
             meta_new.lineage_source = 'classified'
             meta_new.source_route = 'assembly_bins'
-            meta_new.classification_key = genome.baseName
+            meta_new.classification_key = bin_name
             meta_new.classification_status = ''
             tuple(meta_new, genome)
         }
@@ -151,6 +155,8 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
     ch_candidate_records = ch_classification_candidates
         .map { meta, genome -> tuple(meta.classification_key, meta, genome) }
         .join(ch_resolved_classification_rows, by: 0, remainder: true)
+        // Drop classification rows with no matching candidate genome.
+        .filter { record -> record[1] != null }
         .branch { record ->
             resolved: record.size() == 4 && record[3]?.lineage
             unresolved: true
