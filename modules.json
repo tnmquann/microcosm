@@ -20,11 +20,6 @@
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
             "installed_by": ["modules"]
           },
-          "argnorm": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-            "installed_by": ["modules"]
-          },
           "bakta/bakta": {
             "branch": "master",
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
@@ -190,31 +185,6 @@
             "git_sha": "0902eac3012baaf4f9ab6513c8c55acc9353c96c",
             "installed_by": ["modules"]
           },
-          "hamronization/abricate": {
-            "branch": "master",
-            "git_sha": "56f42bcdc5030d479f9a694355e5ed7fb64d4c5f",
-            "installed_by": ["modules"]
-          },
-          "hamronization/amrfinderplus": {
-            "branch": "master",
-            "git_sha": "56f42bcdc5030d479f9a694355e5ed7fb64d4c5f",
-            "installed_by": ["modules"]
-          },
-          "hamronization/deeparg": {
-            "branch": "master",
-            "git_sha": "56f42bcdc5030d479f9a694355e5ed7fb64d4c5f",
-            "installed_by": ["modules"]
-          },
-          "hamronization/rgi": {
-            "branch": "master",
-            "git_sha": "56f42bcdc5030d479f9a694355e5ed7fb64d4c5f",
-            "installed_by": ["modules"]
-          },
-          "hamronization/summarize": {
-            "branch": "master",
-            "git_sha": "56f42bcdc5030d479f9a694355e5ed7fb64d4c5f",
-            "installed_by": ["modules"]
-          },
           "hostile/clean": {
             "branch": "master",
             "git_sha": "a0961c41021561ac7cf139f86bd7812a2f99e994",
@@ -274,21 +244,6 @@
           "pyrodigal": {
             "branch": "master",
             "git_sha": "0ca6ca6c6e068635d01f979d0aed2f59c5d7cec4",
-            "installed_by": ["modules"]
-          },
-          "resfinder/run": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-            "installed_by": ["modules"]
-          },
-          "rgi/cardannotation": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-            "installed_by": ["modules"]
-          },
-          "rgi/main": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
             "installed_by": ["modules"]
           },
           "samtools/coverage": {

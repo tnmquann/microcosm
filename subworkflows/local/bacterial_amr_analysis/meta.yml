@@ -1,5 +1,5 @@
 name: "bacterial_amr_analysis"
-description: "Run explicit-database AMR tools and supported harmonization on canonical bacterial genomes."
+description: "AMRFinderPlus, ABRicate, RGI, ResFinder (with PointFinder and DisinFinder) and DeepARG per bacterial genome, then hAMRonization and ARGnorm (playground/modular/5_amr.sh, 6_hamr.sh). Unset databases are downloaded."
 authors:
   - "@tnmquann"
 maintainers:

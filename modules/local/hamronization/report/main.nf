@@ -1,6 +1,6 @@
 /*
  * Local consolidation of the nf-core/modules hAMRonization report wrappers
- * for AMRFinderPlus, ABRicate, RGI, and DeepARG.
+ * for AMRFinderPlus, ABRicate, RGI, DeepARG and ResFinder.
  *
  * The installed upstream modules remain unchanged. This adapter keeps their
  * command semantics while using a Python version compatible with
@@ -35,9 +35,14 @@ process HAMRONIZATION_REPORT_LOCAL {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def input_file_arg = include_input_file_name
-        ? "--input_file_name ${prefix}"
+        ? "--input_file_name ${meta.genome_id ?: prefix}"
         : ''
-    if (!(tool in ['amrfinderplus', 'abricate', 'rgi', 'deeparg'])) {
+    // ResFinder JSON carries its own software/database versions; hamronize
+    // resfinder rejects the version options (playground/modular/6_hamr.sh).
+    def version_args = software_version
+        ? "--analysis_software_version ${software_version} --reference_database_version ${reference_db_version}"
+        : ''
+    if (!(tool in ['amrfinderplus', 'abricate', 'rgi', 'deeparg', 'resfinder'])) {
         error("Unsupported hAMRonization report tool: ${tool}")
     }
     if (!(format in ['tsv', 'json'])) {
@@ -50,10 +55,9 @@ process HAMRONIZATION_REPORT_LOCAL {
         ${report} \\
         ${args} \\
         --format ${format} \\
-        --analysis_software_version ${software_version} \\
-        --reference_database_version ${reference_db_version} \\
+        ${version_args} \\
         ${input_file_arg} \\
-        > ${prefix}.${format}
+        --output ${prefix}.${format}
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
@@ -63,7 +67,7 @@ process HAMRONIZATION_REPORT_LOCAL {
 
     stub:
     def prefix = task.ext.prefix ?: "${meta.id}"
-    if (!(tool in ['amrfinderplus', 'abricate', 'rgi', 'deeparg'])) {
+    if (!(tool in ['amrfinderplus', 'abricate', 'rgi', 'deeparg', 'resfinder'])) {
         error("Unsupported hAMRonization report tool: ${tool}")
     }
     if (!(format in ['tsv', 'json'])) {

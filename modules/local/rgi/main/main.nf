@@ -2,7 +2,7 @@
  * Local adaptation of nf-core/modules rgi/main.
  *
  * The installed upstream process is retained unchanged under modules/nf-core.
- * This process keeps the RGI 6.0.5 command and output contract while using a
+ * This process keeps the RGI 6.0.8 command and output contract while using a
  * locally controlled Conda environment that resolves against conda-forge and
  * bioconda without the incompatible defaults channel.
  */
@@ -12,8 +12,8 @@ process RGI_MAIN_LOCAL {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/rgi:6.0.5--pyh05cac1d_0'
-        : 'quay.io/biocontainers/rgi:6.0.5--pyh05cac1d_0'}"
+        ? 'https://depot.galaxyproject.org/singularity/rgi:6.0.8--pyh05cac1d_0'
+        : 'quay.io/biocontainers/rgi:6.0.8--pyh05cac1d_0'}"
 
     input:
     tuple val(meta), path(fasta)
@@ -65,7 +65,7 @@ process RGI_MAIN_LOCAL {
     rgi \\
         main \\
         ${args2} \\
-        --num_threads ${task.cpus} \\
+        -n ${task.cpus} \\
         --output_file ${prefix} \\
         --input_sequence ${fasta}
 
@@ -88,7 +88,7 @@ process RGI_MAIN_LOCAL {
     touch ${prefix}.json
     touch ${prefix}.txt
 
-    RGI_VERSION=6.0.5
+    RGI_VERSION=6.0.8
     DB_VERSION=stub_version
 
     cat <<-END_VERSIONS > versions.yml

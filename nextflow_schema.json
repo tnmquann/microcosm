@@ -84,8 +84,8 @@
                 "amrfinderplus_db": {
                     "type": "string",
                     "exists": true,
-                    "description": "Read-only AMRFinderPlus database directory or tar archive.",
-                    "help_text": "Optional. When unset, AMRFinderPlus is skipped because this wrapper does not automatically set up a default database."
+                    "description": "AMRFinderPlus 4.x database directory (a dated version folder or its latest link).",
+                    "help_text": "Optional. When unset, amrfinder_update downloads the current database into the run work directory. A database made for AMRFinderPlus 3.x is not compatible."
                 },
                 "amrfinderplus_args": {
                     "type": "string",
@@ -126,8 +126,8 @@
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
-                    "description": "Read-only acquired-gene ResFinder database directory.",
-                    "help_text": "Optional. When unset, ResFinder and PointFinder are skipped because this wrapper does not automatically set up a default database."
+                    "description": "resfinder_db directory for ResFinder 4.7.2.",
+                    "help_text": "Optional. When resfinder_db, pointfinder_db or disinfinder_db is unset, the missing ones are downloaded at tag resfinder-4.7.2 into the run work directory."
                 },
                 "resfinder_args": {
                     "type": "string",
@@ -137,21 +137,28 @@
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
-                    "description": "Read-only PointFinder database directory.",
-                    "help_text": "Optional. PointFinder runs only when both ResFinder and PointFinder databases are supplied and parsed lineage species/genus maps to a usable database directory."
+                    "description": "pointfinder_db directory for ResFinder 4.7.2.",
+                    "help_text": "Optional; downloaded when unset. PointFinder runs when the genome species (else genus) has a folder in this database, as in 5_amr.sh."
+                },
+                "disinfinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "disinfinder_db directory for ResFinder 4.7.2.",
+                    "help_text": "Optional; downloaded at tag resfinder-4.7.2 when unset."
                 },
                 "deeparg_db": {
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
-                    "description": "Read-only DeepARG database/model bundle.",
-                    "help_text": "Optional. When unset, DeepARG is skipped because this workflow does not download databases automatically. The bundle must contain sibling database and model directories when supplied."
+                    "description": "DeepARG data folder (contains database/ and model/).",
+                    "help_text": "Optional. When unset, deeparg download_data fetches it into the run work directory (about 1 GB, slow)."
                 },
                 "deeparg_db_version": {
                     "type": "string",
-                    "default": "1",
+                    "default": "2",
                     "pattern": "^.+$",
-                    "description": "Explicit DeepARG database version recorded by hAMRonization."
+                    "description": "DeepARG database version recorded by hAMRonization."
                 },
                 "deeparg_args": {
                     "type": "string",
