@@ -2,6 +2,11 @@ process WRITE_AMR_SAMPLE_MANIFEST {
     tag "${meta.sample_id}:${meta.genome_id}"
     label 'process_low'
 
+    // Standard-library Python helper.
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/python:3.11' :
+        'quay.io/biocontainers/python:3.11' }"
+
     input:
     tuple val(meta), path(amrfinder_report), path(abricate_report), path(rgi_report), path(resfinder_report), path(deeparg_report)
     val abricate_normalizable

@@ -1,10 +1,9 @@
-"""Focused tests for exact Salmonella Typhi/Paratyphi routing evidence."""
+"""Tests for SISTR-only Salmonella follow-up routing (playground/modular/4_sal.sh)."""
 
 from __future__ import annotations
 
 import csv
 import importlib.util
-import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,73 +26,50 @@ class SalmonellaTypingTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary_directory.cleanup()
 
-    def reports(self, serovar: str, mykrobe_species: dict[str, object], sistr_serovar: str = "") -> dict[str, str]:
+    def reports(self, seqsero2_serovar: str, sistr_serovar: str) -> dict[str, str]:
         seqsero2 = self.root / "seqsero2.tsv"
-        with seqsero2.open("w", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(
-                handle,
-                fieldnames=["Predicted serotype", "Note"],
-                delimiter="\t",
-            )
-            writer.writeheader()
-            writer.writerow({"Predicted serotype": serovar, "Note": "test"})
-        mykrobe = self.root / "mykrobe.json"
-        mykrobe.write_text(json.dumps({"species": mykrobe_species}), encoding="utf-8")
+        seqsero2.write_text(f"Predicted serotype\tNote\n{seqsero2_serovar}\ttest\n", encoding="utf-8")
         sistr = self.root / "sistr.tsv"
-        with sistr.open("w", encoding="utf-8", newline="") as handle:
-            writer = csv.DictWriter(handle, fieldnames=["serovar", "serogroup"], delimiter="\t")
-            writer.writeheader()
-            writer.writerow({"serovar": sistr_serovar, "serogroup": "test"})
-        _evidence, routing = parser.build_reports("sample", "genome", seqsero2, mykrobe, sistr)
+        sistr.write_text(f"serovar\tserogroup\n{sistr_serovar}\ttest\n", encoding="utf-8")
+        _evidence, routing = parser.build_reports("sample", "genome", seqsero2, sistr)
         return routing
 
-    def test_seqsero2_typhi_routes_genotyphi(self) -> None:
-        routing = self.reports("Typhi", {})
+    def test_sistr_typhi_routes_genotyphi_despite_seqsero2_conflict(self) -> None:
+        routing = self.reports("Typhimurium", "Typhi")
         self.assertEqual(routing["route_genotyphi"], "true")
         self.assertEqual(routing["route_paratype"], "false")
-
-    def test_mykrobe_typhi_coverage_routes_genotyphi(self) -> None:
-        routing = self.reports("Typhimurium", {"salmonella_typhi": {"percent_coverage": 99.1}})
-        self.assertEqual(routing["route_genotyphi"], "true")
         self.assertEqual(routing["tool_conflict"], "true")
 
-    def test_typhimurium_never_routes_genotyphi(self) -> None:
-        routing = self.reports("Typhimurium", {})
+    def test_sistr_paratyphi_a_routes_paratype_despite_seqsero2_conflict(self) -> None:
+        routing = self.reports("Typhi", "Paratyphi A")
         self.assertEqual(routing["route_genotyphi"], "false")
-        self.assertEqual(routing["route_paratype"], "false")
+        self.assertEqual(routing["route_paratype"], "true")
 
-    def test_only_paratyphi_a_routes_paratype(self) -> None:
-        paratyphi_a = self.reports("Paratyphi A", {})
-        paratyphi_b = self.reports("Paratyphi B", {})
-        paratyphi_c = self.reports("Paratyphi C", {})
-        self.assertEqual(paratyphi_a["route_paratype"], "true")
-        self.assertEqual(paratyphi_b["route_paratype"], "false")
-        self.assertEqual(paratyphi_c["route_paratype"], "false")
+    def test_seqsero2_alone_never_routes(self) -> None:
+        for seqsero2 in ("Typhi", "Paratyphi A"):
+            with self.subTest(seqsero2=seqsero2):
+                routing = self.reports(seqsero2, "Enteritidis")
+                self.assertEqual(routing["route_genotyphi"], "false")
+                self.assertEqual(routing["route_paratype"], "false")
 
-    def test_sistr_evidence_is_preserved_but_does_not_route_follow_up(self) -> None:
+    def test_other_or_missing_sistr_serovar_routes_nothing(self) -> None:
+        for sistr in ("Typhimurium", "Paratyphi B", "typhi", ""):
+            with self.subTest(sistr=sistr):
+                routing = self.reports("Typhi", sistr)
+                self.assertEqual(routing["route_genotyphi"], "false")
+                self.assertEqual(routing["route_paratype"], "false")
+        self.assertEqual(self.reports("Typhi", "")["routing_reason"].split(";")[0], "sistr_serovar_missing")
+
+    def test_evidence_rows_are_seqsero2_then_sistr(self) -> None:
         seqsero2 = self.root / "seqsero2.tsv"
         seqsero2.write_text("Predicted serotype\tNote\nTyphimurium\ttest\n", encoding="utf-8")
-        mykrobe = self.root / "mykrobe.json"
-        mykrobe.write_text(json.dumps({"species": {}}), encoding="utf-8")
         sistr = self.root / "sistr.tsv"
         sistr.write_text("serovar\tserogroup\nTyphi\tD1\n", encoding="utf-8")
-        evidence, routing = parser.build_reports("sample", "genome", seqsero2, mykrobe, sistr)
-        self.assertEqual([row["tool"] for row in evidence], ["seqsero2", "sistr", "mykrobe"])
+        evidence, _routing = parser.build_reports("sample", "genome", seqsero2, sistr)
+        self.assertEqual([row["tool"] for row in evidence], ["seqsero2", "sistr"])
         self.assertEqual(evidence[1]["normalized_prediction"], "Typhi")
-        self.assertEqual(routing["route_genotyphi"], "false")
-        self.assertEqual(routing["tool_conflict"], "true")
-        self.assertIn("tool_conflict_preserved", routing["routing_reason"])
 
-    def test_structured_inputs_reject_duplicate_keys_and_columns(self) -> None:
-        duplicate_json = self.root / "duplicate.json"
-        duplicate_json.write_text(
-            '{"species": {"typhi": {"percent_coverage": 1}, '
-            '"typhi": {"percent_coverage": 2}}}',
-            encoding="utf-8",
-        )
-        with self.assertRaisesRegex(ValueError, "duplicate key"):
-            parser.parse_mykrobe(duplicate_json)
-
+    def test_duplicate_columns_are_rejected(self) -> None:
         duplicate_tsv = self.root / "duplicate.tsv"
         duplicate_tsv.write_text(
             "Predicted serotype\tPredicted serotype\nTyphi\tTyphimurium\n",
@@ -101,11 +77,6 @@ class SalmonellaTypingTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "duplicate column"):
             parser.parse_seqsero2(duplicate_tsv)
-
-    def test_nonfinite_coverage_is_not_positive(self) -> None:
-        for value in ("NaN", "Infinity", "-Infinity"):
-            with self.subTest(value=value):
-                self.assertIsNone(parser.numeric_coverage(value))
 
     def test_bundle_validator_requires_every_upstream_resource(self) -> None:
         validator_spec = importlib.util.spec_from_file_location(

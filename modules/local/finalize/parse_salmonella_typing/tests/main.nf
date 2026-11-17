@@ -8,7 +8,6 @@ workflow {
         channel.of(tuple(
             [id: 'SALMONELLA_TEST', sample_id: 'SALMONELLA_TEST', genome_id: 'SALMONELLA_TEST'],
             file("${projectDir}/data/seqsero2_typhi.tsv", checkIfExists: true),
-            file("${projectDir}/data/mykrobe_typhi.json", checkIfExists: true),
             file("${projectDir}/data/sistr_typhi.tsv", checkIfExists: true)
         )),
         file(

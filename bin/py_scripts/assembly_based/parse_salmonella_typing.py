@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-"""Normalize explicit Salmonella typing evidence for safe follow-up routing.
+"""Normalize SeqSero2/SISTR Salmonella evidence and route follow-up tools.
 
-The script deliberately reads only documented, named result fields.  It does
-not scan arbitrary text for the word ``Typhi``: this prevents a Typhimurium
-call from activating the Typhi-only GenoTyphi workflow.
+Routing follows playground/modular/4_sal.sh: only the SISTR ``serovar`` column
+decides follow-up, by exact value: ``Typhi`` -> Mykrobe + GenoTyphi,
+``Paratyphi A`` -> Paratype, anything else -> none.  SeqSero2 is evidence only.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
-import json
-import math
 import sys
 from pathlib import Path
 from typing import Any
 
 
-VERSION = "1.0.0"
+VERSION = "2.0.0"
 EVIDENCE_FIELDS = (
     "sample_id",
     "genome_id",
@@ -31,11 +29,11 @@ ROUTING_FIELDS = (
     "routing_key",
     "sample_id",
     "genome_id",
+    "sistr_serovar",
+    "seqsero2_prediction",
     "route_genotyphi",
     "route_paratype",
     "tool_conflict",
-    "seqsero2_prediction",
-    "mykrobe_prediction",
     "routing_reason",
 )
 
@@ -62,14 +60,6 @@ SEQSERO2_SEROVAR_FIELDS = (
 SEQSERO2_STATUS_FIELDS = ("Note", "note", "Status", "status")
 SISTR_SEROVAR_FIELDS = ("serovar", "Serovar", "predicted_serovar", "Predicted serovar")
 SISTR_STATUS_FIELDS = ("serogroup", "Serogroup", "cgmlst_subspecies", "cgmlst_ST")
-MYKROBE_TYPHI_SPECIES_KEYS = {
-    "typhi",
-    "salmonella typhi",
-    "salmonella_typhi",
-    "salmonella enterica serovar typhi",
-    "salmonella_enterica_serovar_typhi",
-}
-
 
 def parse_args() -> argparse.Namespace:
     """Parse the fixed, staged-input command-line contract."""
@@ -77,7 +67,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sample-id", required=True)
     parser.add_argument("--genome-id", required=True)
     parser.add_argument("--seqsero2-tsv", required=True, type=Path)
-    parser.add_argument("--mykrobe-json", required=True, type=Path)
     parser.add_argument("--sistr-tsv", required=True, type=Path)
     parser.add_argument("--evidence-output", required=True, type=Path)
     parser.add_argument("--routing-output", required=True, type=Path)
@@ -136,83 +125,13 @@ def parse_seqsero2(path: Path) -> tuple[str, str]:
 
 
 def parse_sistr(path: Path) -> tuple[str, str]:
-    """Preserve SISTR's named serovar field without using it for follow-up gates."""
+    """Read SISTR's named serovar field; it is the only routing input."""
     row = read_single_tsv(path, "SISTR")
     if row is None:
         return "", "empty_result"
     prediction = first_named_value(row, SISTR_SEROVAR_FIELDS)
     status = first_named_value(row, SISTR_STATUS_FIELDS)
     return prediction, status or ("reported" if prediction else "prediction_not_reported")
-
-
-def sample_payload(payload: Any) -> dict[str, Any]:
-    """Return Mykrobe's result object without guessing from arbitrary nesting."""
-    if not isinstance(payload, dict):
-        raise ValueError("Mykrobe JSON root must be an object")
-    if "species" in payload or "phylogenetics" in payload:
-        return payload
-    object_values = [value for value in payload.values() if isinstance(value, dict)]
-    if len(payload) == 1 and len(object_values) == 1:
-        return object_values[0]
-    raise ValueError(
-        "Mykrobe JSON must contain a result object with 'species' or 'phylogenetics'"
-    )
-
-
-def numeric_coverage(value: Any) -> float | None:
-    """Coerce a documented coverage value while rejecting malformed values."""
-    try:
-        numeric = float(value)
-    except (TypeError, ValueError):
-        return None
-    return numeric if math.isfinite(numeric) else None
-
-
-def unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    """Build a JSON object while rejecting duplicate keys at every level."""
-    result: dict[str, Any] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"Mykrobe JSON contains duplicate key {key!r}")
-        result[key] = value
-    return result
-
-
-def parse_mykrobe(path: Path) -> tuple[str, str]:
-    """Extract Typhi evidence from the structured Mykrobe species object.
-
-    Mykrobe is run with its Typhi panel, so a panel name alone is not enough
-    evidence.  An exact Typhi species key must additionally report positive
-    ``percent_coverage`` (or ``median_depth`` in older output variants).
-    """
-    with path.open(encoding="utf-8") as handle:
-        result = sample_payload(json.load(handle, object_pairs_hook=unique_json_object))
-    species = result.get("species")
-    if not isinstance(species, dict):
-        return "", "species_not_reported"
-
-    matching_entries = []
-    for key, metrics in species.items():
-        canonical_key = " ".join(str(key).replace("_", " ").split()).casefold()
-        if canonical_key in MYKROBE_TYPHI_SPECIES_KEYS:
-            matching_entries.append((key, metrics))
-    if not matching_entries:
-        return "", "typhi_species_not_reported"
-    if len(matching_entries) > 1:
-        keys = ", ".join(repr(key) for key, _metrics in matching_entries)
-        raise ValueError(f"Mykrobe JSON contains multiple matching species keys: {keys}")
-
-    _key, metrics = matching_entries[0]
-    if not isinstance(metrics, dict):
-        return "", "typhi_species_entry_malformed"
-    coverage = numeric_coverage(metrics.get("percent_coverage"))
-    metric_name = "percent_coverage"
-    if coverage is None:
-        coverage = numeric_coverage(metrics.get("median_depth"))
-        metric_name = "median_depth"
-    if coverage is not None and coverage > 0:
-        return "Typhi", f"{metric_name}={coverage:g}"
-    return "", f"{metric_name}_not_positive"
 
 
 def write_tsv(path: Path, fields: tuple[str, ...], rows: list[dict[str, str]]) -> None:
@@ -227,73 +146,54 @@ def build_reports(
     sample_id: str,
     genome_id: str,
     seqsero2_tsv: Path,
-    mykrobe_json: Path,
     sistr_tsv: Path,
 ) -> tuple[list[dict[str, str]], dict[str, str]]:
-    """Build normalized evidence and route decisions from exact parsed fields."""
+    """Build normalized evidence and the SISTR-only route decision."""
     seqsero2_prediction, seqsero2_status = parse_seqsero2(seqsero2_tsv)
-    mykrobe_prediction, mykrobe_status = parse_mykrobe(mykrobe_json)
     sistr_prediction, sistr_status = parse_sistr(sistr_tsv)
     seqsero2_normalized = canonical_serovar(seqsero2_prediction)
-    mykrobe_normalized = canonical_serovar(mykrobe_prediction)
     sistr_normalized = canonical_serovar(sistr_prediction)
-    normalized_predictions = [
-        value
-        for value in (seqsero2_normalized, sistr_normalized, mykrobe_normalized)
-        if value
-    ]
-    conflict = len(set(normalized_predictions)) > 1
-    typhi_evidence = seqsero2_normalized == "Typhi" or mykrobe_normalized == "Typhi"
-    paratyphi_a_evidence = seqsero2_normalized == "Paratyphi A"
-    routing_key = f"{sample_id}::{genome_id}"
+    conflict = bool(
+        seqsero2_normalized and sistr_normalized and seqsero2_normalized != sistr_normalized
+    )
+    # Exact match on the raw SISTR value, as `case "$serovar"` in 4_sal.sh.
+    route_genotyphi = sistr_prediction == "Typhi"
+    route_paratype = sistr_prediction == "Paratyphi A"
 
     evidence = [
         {
             "sample_id": sample_id,
             "genome_id": genome_id,
-            "tool": "seqsero2",
-            "predicted_serovar_or_lineage": seqsero2_prediction,
-            "normalized_prediction": seqsero2_normalized,
-            "confidence_or_status": seqsero2_status,
-            "raw_result_path": seqsero2_tsv.name,
-        },
-        {
-            "sample_id": sample_id,
-            "genome_id": genome_id,
-            "tool": "sistr",
-            "predicted_serovar_or_lineage": sistr_prediction,
-            "normalized_prediction": sistr_normalized,
-            "confidence_or_status": sistr_status,
-            "raw_result_path": sistr_tsv.name,
-        },
-        {
-            "sample_id": sample_id,
-            "genome_id": genome_id,
-            "tool": "mykrobe",
-            "predicted_serovar_or_lineage": mykrobe_prediction,
-            "normalized_prediction": mykrobe_normalized,
-            "confidence_or_status": mykrobe_status,
-            "raw_result_path": mykrobe_json.name,
-        },
+            "tool": tool,
+            "predicted_serovar_or_lineage": prediction,
+            "normalized_prediction": normalized,
+            "confidence_or_status": status,
+            "raw_result_path": path.name,
+        }
+        for tool, prediction, normalized, status, path in (
+            ("seqsero2", seqsero2_prediction, seqsero2_normalized, seqsero2_status, seqsero2_tsv),
+            ("sistr", sistr_prediction, sistr_normalized, sistr_status, sistr_tsv),
+        )
     ]
-    reasons = []
-    if typhi_evidence:
-        reasons.append("explicit_Typhi_evidence")
-    if paratyphi_a_evidence:
-        reasons.append("explicit_Paratyphi_A_from_SeqSero2")
+    if route_genotyphi:
+        reasons = ["sistr_serovar_Typhi"]
+    elif route_paratype:
+        reasons = ["sistr_serovar_Paratyphi_A"]
+    elif sistr_prediction:
+        reasons = ["sistr_serovar_has_no_follow_up"]
+    else:
+        reasons = ["sistr_serovar_missing"]
     if conflict:
-        reasons.append("tool_conflict_preserved")
-    if not reasons:
-        reasons.append("no_follow_up_evidence")
+        reasons.append("seqsero2_sistr_conflict_preserved")
     routing = {
-        "routing_key": routing_key,
+        "routing_key": f"{sample_id}::{genome_id}",
         "sample_id": sample_id,
         "genome_id": genome_id,
-        "route_genotyphi": str(typhi_evidence).lower(),
-        "route_paratype": str(paratyphi_a_evidence).lower(),
-        "tool_conflict": str(conflict).lower(),
+        "sistr_serovar": sistr_prediction,
         "seqsero2_prediction": seqsero2_normalized or seqsero2_prediction,
-        "mykrobe_prediction": mykrobe_normalized or mykrobe_prediction,
+        "route_genotyphi": str(route_genotyphi).lower(),
+        "route_paratype": str(route_paratype).lower(),
+        "tool_conflict": str(conflict).lower(),
         "routing_reason": ";".join(reasons),
     }
     return evidence, routing
@@ -307,12 +207,11 @@ def main() -> int:
             args.sample_id,
             args.genome_id,
             args.seqsero2_tsv,
-            args.mykrobe_json,
             args.sistr_tsv,
         )
         write_tsv(args.evidence_output, EVIDENCE_FIELDS, evidence)
         write_tsv(args.routing_output, ROUTING_FIELDS, [routing])
-    except (OSError, csv.Error, json.JSONDecodeError, ValueError) as error:
+    except (OSError, csv.Error, ValueError) as error:
         print(f"ERROR: {error}", file=sys.stderr)
         return 2
     return 0

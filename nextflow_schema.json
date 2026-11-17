@@ -161,8 +161,8 @@
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
-                    "description": "Read-only VirulenceFinder database directory.",
-                    "help_text": "Optional. When unset, VirulenceFinder is skipped because this wrapper does not automatically set up a default database."
+                    "description": "VirulenceFinder database directory (must contain config and notes.txt).",
+                    "help_text": "Optional. When unset, virulencefinder_db is downloaded at a fixed revision into the run work directory."
                 },
                 "virulencefinder_min_coverage": {
                     "type": "number",
@@ -190,50 +190,6 @@
                     "type": "string",
                     "description": "Additional arguments appended to MLST."
                 },
-                "bacterial_blast_reference": {
-                    "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "description": "User-supplied nucleotide reference FASTA for general bacterial BLASTN typing.",
-                    "help_text": "Optional. Provide at most one of bacterial_blast_reference or bacterial_blast_db. When neither is supplied, BLASTN is skipped."
-                },
-                "bacterial_blast_db": {
-                    "type": "string",
-                    "format": "directory-path",
-                    "exists": true,
-                    "description": "User-supplied prebuilt nucleotide BLAST database directory.",
-                    "help_text": "Optional. Provide at most one of bacterial_blast_reference or bacterial_blast_db. The directory must expose one logical nucleotide database."
-                },
-                "bacterial_blast_db_label": {
-                    "type": "string",
-                    "pattern": "^\\S(?:.*\\S)?$",
-                    "description": "Explicit provenance label for the user-supplied BLAST reference/database.",
-                    "help_text": "Required only when bacterial_blast_reference or bacterial_blast_db is supplied. Recorded verbatim in each manifest; it is not treated as a biological conclusion."
-                },
-                "bacterial_blast_min_identity": {
-                    "type": "number",
-                    "minimum": 0.0,
-                    "maximum": 100.0,
-                    "description": "Minimum percent identity for retained bacterial BLASTN hits.",
-                    "help_text": "Required when bacterial_blast_reference or bacterial_blast_db is supplied. No implicit biological threshold is assumed."
-                },
-                "bacterial_blast_min_coverage": {
-                    "type": "number",
-                    "minimum": 0.0,
-                    "maximum": 100.0,
-                    "description": "Minimum percent reference-subject coverage for retained bacterial BLASTN hits.",
-                    "help_text": "Required when bacterial_blast_reference or bacterial_blast_db is supplied. Coverage is alignment length divided by subject length and capped at 100 percent."
-                },
-                "bacterial_blast_overlap_bp": {
-                    "type": "integer",
-                    "default": 1,
-                    "minimum": 1,
-                    "description": "Minimum shared query bases used to resolve overlapping hits to the same reference subject deterministically."
-                },
-                "bacterial_blastn_args": {
-                    "type": "string",
-                    "description": "Additional arguments appended to BLASTN after the default tabular outfmt."
-                },
                 "kleborate_args": {
                     "type": "string",
                     "description": "Additional arguments appended to Kleborate."
@@ -258,8 +214,8 @@
                     "type": "string",
                     "format": "directory-path",
                     "exists": true,
-                    "description": "Read-only user-supplied Paratype v1.1-compatible bundle.",
-                    "help_text": "Required only when SeqSero2 explicitly identifies Paratyphi A. The directory must contain paratype.py, SParatyphiAKU12601.fasta, SParatyphiA_genotype_specific_alleles.txt, and SParatyphiA_gene_mutation_codons.txt. The pipeline stages and validates it without modifying it."
+                    "description": "Optional local Paratype checkout (github.com/CHRF-Genomics/Paratype).",
+                    "help_text": "Used only for genomes whose SISTR serovar is Paratyphi A. If not set, Paratype is cloned at a fixed commit when such a genome is found. The directory must contain paratype.py, SParatyphiAKU12601.fasta, SParatyphiA_genotype_specific_alleles.txt and SParatyphiA_gene_mutation_codons.txt; it is copied into each task and never modified."
                 }
             }
         },

@@ -1,0 +1,13 @@
+name: virulencefinder_downloaddb_local
+description: Download the VirulenceFinder database at a fixed revision into the task directory when --virulencefinder_db is not supplied.
+keywords: [virulence, database, download]
+tools:
+  - virulencefinder:
+      description: Identifies virulence genes in total or partial sequenced isolates of bacteria.
+      homepage: https://bitbucket.org/genomicepidemiology/virulencefinder_db
+input:
+  - revision: {type: string, description: Bitbucket tag or commit of virulencefinder_db}
+output:
+  - db: {type: directory, description: "virulencefinder_db with config and notes.txt"}
+  - versions: {type: file, description: versions.yml with the database revision}
+authors: ["@tnmquann"]

@@ -2,6 +2,11 @@ process VALIDATE_PARATYPE_BUNDLE {
     tag 'Paratype bundle'
     label 'process_low'
 
+    // Standard-library Python helper.
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/python:3.11' :
+        'quay.io/biocontainers/python:3.11' }"
+
     input:
     path paratype_bundle
     path validator_script

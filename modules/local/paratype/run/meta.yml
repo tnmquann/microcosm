@@ -17,13 +17,13 @@ input:
       description: "Uncompressed Paratyphi A assembly FASTA."
   - paratype_bundle:
       type: directory
-      description: "Validated, staged read-only Paratype source/reference bundle."
+      description: "Validated Paratype checkout; copied into the task before running."
 output:
   report:
-    - "*.paratype.txt":
+    - "*.tsv":
         type: file
-        description: "Paratype genotype and mutation report."
-        pattern: "*.txt"
+        description: "Paratype genotype and mutation report (<genome_id>.tsv, as in 4_sal.sh)."
+        pattern: "*.tsv"
   versions:
     - "versions.yml":
         type: file

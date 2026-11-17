@@ -4,8 +4,10 @@ channels:
   - bioconda
   - nodefaults
 dependencies:
-  - python=3.11
-  - biopython=1.83
+  # samtools 1.13 does not solve with python 3.11; biopython 1.81 has no py37 conda build.
+  - python=3.9
+  - biopython=1.81
   - bwa=0.7.17
   - samtools=1.13
   - bcftools=1.13
+  - git

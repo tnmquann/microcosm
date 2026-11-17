@@ -108,9 +108,6 @@ workflow METAFLOW {
         params.postprocess_options = params.postprocess_options?.toString()?.trim() ?: ''
         params.genome_input = params.genome_input?.toString()?.trim() ?: null
         params.virulencefinder_db = params.virulencefinder_db?.toString()?.trim() ?: null
-        params.bacterial_blast_reference = params.bacterial_blast_reference?.toString()?.trim() ?: null
-        params.bacterial_blast_db = params.bacterial_blast_db?.toString()?.trim() ?: null
-        params.bacterial_blast_db_label = params.bacterial_blast_db_label?.toString()?.trim() ?: null
 
         // Parameter validation using UTILS_NFSCHEMA_PLUGIN
         UTILS_NFSCHEMA_PLUGIN (
@@ -288,16 +285,9 @@ workflow METAFLOW {
         def bacterial_amr_hamronized_ch = channel.empty()
         def bacterial_amr_normalized_ch = channel.empty()
         def bacterial_general_typing_versions_ch = channel.empty()
-        def bacterial_general_typing_database_validation_ch = channel.empty()
-        def bacterial_general_typing_manifest_ch = channel.empty()
         def bacterial_virulencefinder_tsv_ch = channel.empty()
         def bacterial_plasmidfinder_tsv_ch = channel.empty()
         def bacterial_mlst_tsv_ch = channel.empty()
-        def bacterial_blastn_ch = channel.empty()
-        def bacterial_blastn_filtered_ch = channel.empty()
-        def bacterial_blastn_summary_ch = channel.empty()
-        def bacterial_general_typing_evidence_ch = channel.empty()
-        def bacterial_mlst_summary_ch = channel.empty()
         def bacterial_klebsiella_versions_ch = channel.empty()
         def bacterial_kleborate_report_ch = channel.empty()
         def bacterial_klebsiella_summary_ch = channel.empty()
@@ -578,16 +568,9 @@ workflow METAFLOW {
 
             BACTERIAL_GENERAL_TYPING(bacterial_genomes_ch)
             bacterial_general_typing_versions_ch = BACTERIAL_GENERAL_TYPING.out.versions ?: channel.empty()
-            bacterial_general_typing_database_validation_ch = BACTERIAL_GENERAL_TYPING.out.database_validation ?: channel.empty()
-            bacterial_general_typing_manifest_ch = BACTERIAL_GENERAL_TYPING.out.manifests ?: channel.empty()
             bacterial_virulencefinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.virulencefinder_tsv ?: channel.empty()
             bacterial_plasmidfinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.plasmidfinder_tsv ?: channel.empty()
             bacterial_mlst_tsv_ch = BACTERIAL_GENERAL_TYPING.out.mlst_tsv ?: channel.empty()
-            bacterial_blastn_ch = BACTERIAL_GENERAL_TYPING.out.blastn ?: channel.empty()
-            bacterial_blastn_filtered_ch = BACTERIAL_GENERAL_TYPING.out.blastn_filtered ?: channel.empty()
-            bacterial_blastn_summary_ch = BACTERIAL_GENERAL_TYPING.out.blastn_summary ?: channel.empty()
-            bacterial_general_typing_evidence_ch = BACTERIAL_GENERAL_TYPING.out.evidence ?: channel.empty()
-            bacterial_mlst_summary_ch = BACTERIAL_GENERAL_TYPING.out.mlst_summary ?: channel.empty()
 
             KLEBSIELLA_TYPING(bacterial_genomes_ch)
             bacterial_klebsiella_versions_ch = KLEBSIELLA_TYPING.out.versions ?: channel.empty()
@@ -663,16 +646,9 @@ workflow METAFLOW {
         bacterial_amr_hamronization_summary = bacterial_amr_hamronization_summary_ch.ifEmpty(null)
         bacterial_amr_hamronized = bacterial_amr_hamronized_ch.ifEmpty(null)
         bacterial_amr_normalized = bacterial_amr_normalized_ch.ifEmpty(null)
-        bacterial_general_typing_database_validation = bacterial_general_typing_database_validation_ch.ifEmpty(null)
-        bacterial_general_typing_manifests = bacterial_general_typing_manifest_ch.ifEmpty(null)
         bacterial_virulencefinder_tsv = bacterial_virulencefinder_tsv_ch.ifEmpty(null)
         bacterial_plasmidfinder_tsv = bacterial_plasmidfinder_tsv_ch.ifEmpty(null)
         bacterial_mlst_tsv = bacterial_mlst_tsv_ch.ifEmpty(null)
-        bacterial_blastn = bacterial_blastn_ch.ifEmpty(null)
-        bacterial_blastn_filtered = bacterial_blastn_filtered_ch.ifEmpty(null)
-        bacterial_blastn_summary = bacterial_blastn_summary_ch.ifEmpty(null)
-        bacterial_general_typing_evidence = bacterial_general_typing_evidence_ch.ifEmpty(null)
-        bacterial_mlst_summary = bacterial_mlst_summary_ch.ifEmpty(null)
         bacterial_kleborate_report = bacterial_kleborate_report_ch.ifEmpty(null)
         bacterial_klebsiella_summary = bacterial_klebsiella_summary_ch.ifEmpty(null)
         bacterial_salmonella_evidence = bacterial_salmonella_evidence_ch.ifEmpty(null)

@@ -1,5 +1,5 @@
 name: "parse_salmonella_typing"
-description: "Parse explicit SeqSero2, SISTR, and Mykrobe routing evidence for Salmonella follow-up."
+description: "Record SeqSero2/SISTR evidence and route Salmonella follow-up from the SISTR serovar only (Typhi -> GenoTyphi, Paratyphi A -> Paratype)."
 keywords:
   - salmonella
   - typing
@@ -17,9 +17,6 @@ input:
   - seqsero2_tsv:
       type: file
       description: "SeqSero2 tab-delimited result."
-  - mykrobe_json:
-      type: file
-      description: "Mykrobe JSON result generated with the Typhi panel."
   - sistr_tsv:
       type: file
       description: "SISTR tab-delimited prediction result."
@@ -36,7 +33,7 @@ output:
   routing:
     - "*.salmonella_routing.tsv":
         type: file
-        description: "Exact Typhi/Paratyphi A routing decision and conflict state."
+        description: "SISTR-only Typhi/Paratyphi A routing decision; SeqSero2 conflict recorded."
         pattern: "*.tsv"
   versions:
     - "versions.yml":

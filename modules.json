@@ -35,16 +35,6 @@
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
             "installed_by": ["modules"]
           },
-          "blast/blastn": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-            "installed_by": ["modules"]
-          },
-          "blast/makeblastdb": {
-            "branch": "master",
-            "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
-            "installed_by": ["modules"]
-          },
           "bowtie2/align": {
             "branch": "master",
             "git_sha": "a0961c41021561ac7cf139f86bd7812a2f99e994",
@@ -235,11 +225,6 @@
             "git_sha": "6d46786420b4d7bc88eba026eb389c0c5535d120",
             "installed_by": ["modules"]
           },
-          "kleborate": {
-            "branch": "master",
-            "git_sha": "273e0dd4a6a0a542effc0fd0b11fa28d7f89d7a8",
-            "installed_by": ["modules"]
-          },
           "maxbin2": {
             "branch": "master",
             "git_sha": "0853ee37feb67f35fb7432e805def5fed7c2ee3d",
@@ -263,7 +248,8 @@
           "mlst": {
             "branch": "master",
             "git_sha": "ddeeb1c3b5090dc65cce55ff1a69e87f26c053f1",
-            "installed_by": ["modules"]
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/mlst/mlst.diff"
           },
           "multiqc": {
             "branch": "master",
