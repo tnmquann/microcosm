@@ -7,7 +7,10 @@ graph that has a tab per rank (Strain = genome, Species ... Domain), laid out
 like MultiQC's sylph-tax module. Values are percent of weighted k-mers
 (f_weighted_at_rank); per rank the --top taxa by summed abundance are shown,
 the rest of the classified part is "Other", and "Unclassified" stays separate.
-When the table holds several YACHT min_coverage levels, each level is its own bar.
+When the table holds several YACHT min_coverage levels, each level is its own bar. A genome's
+min_coverage cell lists every level it passes ("min_coverage0.1 | min_coverage0.05 | ..."), so it
+joins each of those bars; Unclassified of a level bar is 100 - its classified share (the
+untagged unclassified rows of the table cannot be assigned to a level).
 """
 
 from __future__ import annotations
@@ -19,22 +22,21 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-VERSION = "2.0.0"
+VERSION = "2.1.0"
 # tab label -> lineage index (None = genome / match_name)
 RANKS = [("Strain", None), ("Species", 6), ("Genus", 5), ("Family", 4), ("Order", 3), ("Class", 2), ("Phylum", 1), ("Domain", 0)]
 OTHER, UNCLASSIFIED = "zzy_other", "zzz_unclassified"
 
 
-def expand_levels(rows: list[dict]) -> list[tuple[str, dict]]:
-    """(bar label, row) pairs; rows without min_coverage (synthetic unclassified) join every level."""
-    levels = sorted({row.get("min_coverage", "") for row in rows} - {""})
-    if len(levels) <= 1:
-        return [(row["sample_name"], row) for row in rows]
-    pairs = []
-    for row in rows:
-        for level in [row["min_coverage"]] if row.get("min_coverage") else levels:
-            pairs.append((f"{row['sample_name']} ({level})", row))
-    return pairs
+def row_levels(row: dict) -> list[str]:
+    return [level.strip() for level in (row.get("min_coverage") or "").split("|") if level.strip()]
+
+
+def expand_levels(rows: list[dict]) -> tuple[list[tuple[str, dict]], bool]:
+    """(bar label, row) pairs and whether bars are per level (then untagged unclassified rows are dropped)."""
+    if len({level for row in rows for level in row_levels(row)}) <= 1:
+        return [(row["sample_name"], row) for row in rows], False
+    return [(f"{row['sample_name']} ({level})", row) for row in rows for level in row_levels(row)], True
 
 
 def taxon(row: dict, index: int | None) -> str | None:
@@ -52,13 +54,19 @@ def taxon(row: dict, index: int | None) -> str | None:
 
 
 def build(rows: list[dict], top: int) -> tuple[list[dict], list[dict], list[str]]:
-    pairs = expand_levels(rows)
+    pairs, per_level = expand_levels(rows)
+    remainder: dict[str, float] = defaultdict(lambda: 100.0)
+    if per_level:
+        for bar, row in pairs:
+            remainder[bar] -= float(row.get("f_weighted_at_rank") or 0) * 100
     datasets, categories, labels = [], [], []
     for label, index in RANKS:
         values: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
         for bar, row in pairs:
             name = taxon(row, index)
             values[bar][name or UNCLASSIFIED] += float(row.get("f_weighted_at_rank") or 0) * 100
+        for bar in remainder:
+            values[bar][UNCLASSIFIED] += max(remainder[bar], 0.0)
         totals: dict[str, float] = defaultdict(float)
         for sample in values.values():
             for name, value in sample.items():

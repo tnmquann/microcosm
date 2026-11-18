@@ -30,6 +30,7 @@ include { paramsSummaryMap } from 'plugin/nf-schema'
 include { yachtSkipped; readbasedTaxotools; binqcTools } from '../subworkflows/local/utils_microcosm/main'
 include { READ_BASED_SYLPH } from '../subworkflows/local/read_based_sylph/main'
 include { MICROCOSM_MULTIQC_TABLES } from '../modules/local/finalize/microcosm_multiqc_tables/main'
+include { BIN_MULTIQC_TABLES } from '../modules/local/finalize/bin_multiqc_tables/main'
 include { GUNZIP as GUNZIP_ASSEMBLIES } from '../modules/nf-core/gunzip/main'
 
 // Import modules for database setup
@@ -306,11 +307,12 @@ workflow METAFLOW {
                 PREPROCESS(input_ch)
                 cleaned_reads_source = PREPROCESS.out.cleaned_reads
                 preprocess_versions_ch = PREPROCESS.out.versions
+                // FastQC raw + after host removal (the trimmed-read FastQC is left out: fastp reports it)
                 multiqc_files_ch = multiqc_files_ch.mix(
                     PREPROCESS.out.fastqc_raw_zip.map { _meta, zip -> zip },
-                    PREPROCESS.out.fastqc_trimmed_zip.map { _meta, zip -> zip },
                     PREPROCESS.out.fastqc_rmhost_zip.map { _meta, zip -> zip },
-                    PREPROCESS.out.fastp_reports.map { report -> report[1] }
+                    PREPROCESS.out.fastp_reports.map { report -> report[1] },
+                    PREPROCESS.out.hostile_clean_json.map { _meta, json -> json }
                 )
             } else {
                 // When skip_preprocess is true, use raw input reads directly
@@ -337,6 +339,7 @@ workflow METAFLOW {
         def binannotation_multiqc_ch = channel.empty()
         def binclassification_versions_ch = channel.empty()
         def binclassification_summary_ch = channel.empty()
+        def binclassification_taxgenome_ch = channel.empty()
         def bacterial_downstream_versions_ch = channel.empty()
         def bacterial_genomes_ch = channel.empty()
         def excluded_genomes_ch = channel.empty()
@@ -407,6 +410,7 @@ workflow METAFLOW {
                 assembly_versions_ch = ASSEMBLY_BASED.out.versions ?: channel.empty()
                 assembly_megahit_contigs_ch = ASSEMBLY_BASED.out.megahit_contigs ?: channel.empty()
                 assembly_metaspades_contigs_ch = ASSEMBLY_BASED.out.metaspades_contigs ?: channel.empty()
+                multiqc_files_ch = multiqc_files_ch.mix(ASSEMBLY_BASED.out.multiqc_files)
             }
 
             def all_assemblies = assembly_megahit_contigs_ch.mix(assembly_metaspades_contigs_ch)
@@ -415,6 +419,7 @@ workflow METAFLOW {
                 BINNING_BAMABUND(all_assemblies, cleaned_reads_source)
                 binning_bam_ch = BINNING_BAMABUND.out.bam_bai ?: channel.empty()
                 binning_versions_ch = binning_versions_ch.mix(BINNING_BAMABUND.out.versions ?: channel.empty())
+                multiqc_files_ch = multiqc_files_ch.mix(BINNING_BAMABUND.out.multiqc_files)
 
                 // Run BINNING with outputs from BINNING_BAMABUND
                 if (!params.skip_binning && !params.skip_binning_bamabund) {
@@ -613,6 +618,7 @@ workflow METAFLOW {
                         BIN_CLASSIFICATION(ch_bins_for_classification)
                         binclassification_versions_ch = BIN_CLASSIFICATION.out.versions ?: channel.empty()
                         binclassification_summary_ch = BIN_CLASSIFICATION.out.genome_classification ?: channel.empty()
+                        binclassification_taxgenome_ch = BIN_CLASSIFICATION.out.combined_taxgenome.map { _meta, csv_file -> csv_file }
                         binning_versions_ch = binning_versions_ch.mix(binclassification_versions_ch)
                     }
                 }
@@ -732,7 +738,20 @@ workflow METAFLOW {
                 bacterial_amr_hamronization_summary_ch.ifEmpty([]),
                 file("${projectDir}/bin/py_scripts/bacterial_analysis/bacterial_multiqc.py", checkIfExists: true)
             )
+            // Bins: sourmash taxonomy plot, per-bin summary table and the QUAST bin report (no MultiQC module
+            // reads sourmash tax genome or the transposed QUAST summary); runs only when bin results exist
+            def bin_mqc_inputs = binclassification_taxgenome_ch.map { csv_file -> ['taxgenome', csv_file] }
+                .mix(binqc_summary_ch.map { summary -> ['qc', summary] }, binqc_quast_summary_ch.map { summary -> ['quast', summary] })
+                .collect(flat: false)
+            BIN_MULTIQC_TABLES(
+                bin_mqc_inputs.map { rows -> rows.findAll { row -> row[0] == 'taxgenome' }.collect { row -> row[1] } },
+                bin_mqc_inputs.map { rows -> rows.findAll { row -> row[0] == 'qc' }.collect { row -> row[1] } },
+                bin_mqc_inputs.map { rows -> rows.findAll { row -> row[0] == 'quast' }.collect { row -> row[1] } },
+                file("${projectDir}/bin/py_scripts/assembly_based/bin_multiqc.py", checkIfExists: true)
+            )
             multiqc_files_ch = multiqc_files_ch.mix(
+                BIN_MULTIQC_TABLES.out.tables.flatten(),
+                BIN_MULTIQC_TABLES.out.quast_report,
                 MICROCOSM_MULTIQC_TABLES.out.tables,
                 BACTERIAL_MULTIQC_TABLE.out.table,
                 binqc_multiqc_ch.flatten(),

@@ -15,6 +15,7 @@ workflow ASSEMBLY_BASED {
     ch_megahit_outputs = channel.empty()
     ch_metaspades_outputs = channel.empty()
     ch_assemblies_for_quast = channel.empty()
+    def ch_multiqc_files = channel.empty()
 
     // MEGAHIT Assembly
     if (!params.skip_megahit) {
@@ -61,6 +62,7 @@ workflow ASSEMBLY_BASED {
     if (!params.skip_quast) {
         METAQUAST(ch_assemblies_for_quast)
         versions_ch = versions_ch.mix(METAQUAST.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(METAQUAST.out.report) // MultiQC "QUAST: assembly"
     }
 
     // CONTIG_ANALYSIS (runs in parallel with QUAST)
@@ -83,4 +85,5 @@ workflow ASSEMBLY_BASED {
     quast_qc = params.skip_quast ? null : METAQUAST.out.qc
     contig_qc_coverage = contig_analysis_coverage.ifEmpty(null)
     contig_qc_bundle = contig_analysis_bundle.ifEmpty(null)
+    multiqc_files = ch_multiqc_files
 }

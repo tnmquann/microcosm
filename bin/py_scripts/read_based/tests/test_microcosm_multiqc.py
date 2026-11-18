@@ -36,11 +36,14 @@ class MicrocosmMultiqcTest(unittest.TestCase):
         self.assertEqual(categories[0][tool.OTHER]["name"], "Other")
 
     def test_levels_and_json(self):
-        rows = [row("s1", ECOLI, 0.4, "GCF_1", "min_coverage0.05"), row("s1", ECOLI, 0.5, "GCF_1", "min_coverage0.01"),
-                row("s1", "unclassified", 0.5, "unclassified", "")]
+        # post_processing.py layout: a genome lists every level it passes; unclassified rows carry no level
+        rows = [row("s1", ECOLI, 0.4, "GCF_1", "min_coverage0.05 | min_coverage0.01"), row("s1", ECOLI, 0.1, "GCF_2", "min_coverage0.01"),
+                row("s1", "unclassified", 0.6, "unclassified", ""), row("s1", "unclassified", 0.5, "unclassified", "")]
         datasets, categories, labels = tool.build(rows, top=5)
-        self.assertEqual(sorted(datasets[1]), ["s1 (min_coverage0.01)", "s1 (min_coverage0.05)"])
-        self.assertAlmostEqual(datasets[1]["s1 (min_coverage0.05)"][tool.UNCLASSIFIED], 50.0)
+        self.assertEqual(sorted(datasets[0]), ["s1 (min_coverage0.01)", "s1 (min_coverage0.05)"])
+        self.assertEqual(datasets[0]["s1 (min_coverage0.05)"], {"GCF_1": 40.0, "GCF_2": 0.0, tool.OTHER: 0.0, tool.UNCLASSIFIED: 60.0})
+        self.assertAlmostEqual(datasets[1]["s1 (min_coverage0.01)"]["s__Escherichia coli"], 50.0)
+        self.assertAlmostEqual(datasets[1]["s1 (min_coverage0.01)"][tool.UNCLASSIFIED], 50.0)
         out = Path(tempfile.mkdtemp()) / "microcosm_mqc.json"
         tool.write_json(out, datasets, categories, labels, 5)
         content = json.loads(out.read_text())

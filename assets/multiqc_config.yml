@@ -3,8 +3,9 @@ title: "microcosm"
 subtitle: "Metagenomic profiling and bacterial genome analysis report"
 intro_text: >
   This report gathers the quality control and profiling results of one microcosm run:
-  read QC (FastQC, fastp), read-based taxonomic profiles (microcosm = sourmash + YACHT, and/or sylph),
-  bin quality (CheckM2, CheckM, BUSCO, QUAST), annotation (Prokka) and the bacterial genome overview.
+  read QC (FastQC, fastp, hostile), read-based taxonomic profiles (microcosm = sourmash + YACHT, and/or sylph),
+  assembly QC (QUAST, Bowtie2 read mapping), bins (sourmash taxonomy, CheckM2, CheckM, BUSCO, QUAST),
+  annotation (Prokka, Bakta) and the bacterial genome overview.
   Use the toolbox on the right to highlight, rename or hide samples and to export plots and data.
 report_comment: >
   Full result tables are in the pipeline output folders; this report shows summaries only.
@@ -24,6 +25,59 @@ data_format: "tsv"
 # Sample names: sylph-tax reports are named <sample>.sylphmpa
 extra_fn_clean_exts:
   - ".sylphmpa"
+  - ".bowtie2"
+  # Prokka: <bin>.fa.prokka.txt; BUSCO: short_summary.specific.<lineage>_odbNN.<bin>.txt
+  - ".fa.prokka"
+  - type: regex
+    pattern: '^short_summary\.(specific|generic)\.[^.]+\.'
+
+# Prokka names samples after the --organism line ("Genus species strain" for every bin) unless told otherwise
+use_filename_as_sample_name:
+  - prokka
+
+# QUAST reports: report_rawassemblies.tsv (assemblies) and report_bins.tsv (bins)
+sp:
+  quast:
+    fn: "report*.tsv"
+
+# Modules that run twice get their own section (same idea as nf-core/mag)
+module_order:
+  - fastqc:
+      name: "FastQC: raw reads"
+      anchor: "fastqc_raw"
+      path_filters_exclude:
+        - "*_cleaned_*fastqc.zip"
+  - fastp
+  - hostile
+  - fastqc:
+      name: "FastQC: after host removal"
+      anchor: "fastqc_cleaned"
+      info: "Reads after trimming (fastp) and host removal (hostile), as used by the analysis."
+      path_filters:
+        - "*_cleaned_*fastqc.zip"
+  - sylphtax
+  - quast:
+      name: "QUAST: assembly"
+      anchor: "quast_assembly"
+      info: "Assembly statistics of the metagenome assemblies."
+      path_filters:
+        - "*report_rawassemblies.tsv"
+  - bowtie2:
+      name: "Bowtie2: reads mapped to assemblies"
+      anchor: "bowtie2_assembly"
+      info: "Share of reads that map back to their assembly (input of the binning depth profiles)."
+  - quast:
+      name: "QUAST: bins"
+      anchor: "quast_bins"
+      info: "Assembly statistics of the bins."
+      path_filters:
+        - "*report_bins.tsv"
+  - checkm2
+  - checkm
+  - busco
+  - prokka
+  - bakta
+  - custom_content
 
 # Section order (higher first)
 report_section_order:
@@ -31,30 +85,60 @@ report_section_order:
     order: 1000
   sylphtax:
     order: 970
-  microcosm_bacterial_overview:
+  microcosm_bin_taxonomy:
     order: 960
-  fastp:
+  microcosm_bin_summary:
+    order: 955
+  microcosm_bacterial_overview:
+    order: 950
+  fastqc_raw:
     order: 900
-  fastqc:
+  fastp:
     order: 890
-  checkm2:
+  hostile:
+    order: 880
+  fastqc_cleaned:
+    order: 870
+  quast_assembly:
     order: 800
-  checkm:
+  bowtie2_assembly:
     order: 790
-  busco:
+  quast_bins:
     order: 780
-  quast:
+  checkm2:
     order: 770
-  prokka:
+  checkm:
     order: 760
+  busco:
+    order: 750
+  prokka:
+    order: 740
+  bakta:
+    order: 730
   microcosm-summary:
     order: -1000
   multiqc_software_versions:
     order: -1100
 
-# Keep the General Statistics table short
+# Keep the General Statistics table short: per-sample read / assembly metrics only. Per-bin tools are
+# hidden there (one row per bin would make the table and the report heavy for large batches); their
+# numbers are in the "Bin summary" table and the tools' own sections.
 table_columns_visible:
-  FastQC:
+  "QUAST: bins": false
+  "Bowtie2: reads mapped to assemblies": false
+  CheckM2: false
+  CheckM: false
+  BUSCO: false
+  Prokka: false
+  Bakta: false
+  "QUAST: assembly":
+    N50: true
+    "Total length": true
+    L50: false
+  "FastQC: raw reads":
+    percent_duplicates: false
+    percent_fails: false
+  "FastQC: after host removal":
     percent_duplicates: false
     percent_fails: false
   fastp:
