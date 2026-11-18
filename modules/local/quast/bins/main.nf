@@ -2,7 +2,7 @@ process QUAST_BINS {
     tag "${meta.assembler}-${meta.binner}-${meta.binrefine}-${meta.id}"
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/quast:5.3.0--py313pl5321h5ca1c30_2' :
         'biocontainers/quast:5.3.0--py313pl5321h5ca1c30_2' }"
 
