@@ -464,8 +464,12 @@
                 },
                 "skip_skani_search": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Skip SKANI ANI-based classification"
+                },
+                "skani_search_options": {
+                    "type": "string",
+                    "description": "Additional skani search arguments"
                 },
                 "skani_db": {
                     "type": "string",
@@ -754,6 +758,15 @@
                     "default": "prokka",
                     "description": "Tool for bin annotation",
                     "enum": ["prokka", "bakta"]
+                },
+                "prokka_bins_compliance_centre": {
+                    "type": "string",
+                    "description": "Sequencing centre ID for Prokka compliance mode"
+                },
+                "annotation_bakta_hmms": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Custom HMM models for Bakta"
                 },
                 "save_bin_annotations": {
                     "type": "boolean",
@@ -1065,13 +1078,21 @@
                 },
                 "rgi_include_other_models": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Include other model types in RGI"
                 },
                 "rgi_bwt_args": {
                     "type": "string",
-                    "default": "--clean",
+                    "default": "--local --clean",
                     "description": "Additional RGI BWT arguments"
+                },
+                "rgi_preparecarddb_args": {
+                    "type": "string",
+                    "description": "Additional RGI preparecarddb arguments"
+                },
+                "rgi_bwt_prefix": {
+                    "type": "string",
+                    "description": "Custom prefix for RGI bwt outputs"
                 },
                 "rgi_preparecarddb_dir": {
                     "type": "string",
