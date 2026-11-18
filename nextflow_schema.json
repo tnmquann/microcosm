@@ -367,7 +367,7 @@
                 "postprocess_options": {
                     "type": "string",
                     "description": "Additional supported command-line options passed safely to bin/py_scripts/read_based/post_processing.py.",
-                    "help_text": "Use only options supported by post_processing.py, such as --min_coverage 0.05 or --use_average. Module-managed input, input_format, output, and output_format arguments cannot be overridden. Options must be compatible with every selected output mode."
+                    "help_text": "Use only options supported by post_processing.py, such as --min_coverage 0.05 or --use_average. Module-managed input, input_format, output, and output_format arguments cannot be overridden. Options must be compatible with every selected output mode (--remove_unclassified is not passed to taxburst, which already leaves unclassified out). The microcosm MultiQC section follows the same --min_coverage (0.05 when not set) and --remove_unclassified (Unclassified left out, taxa rescaled to 100 %)."
                 },
                 "enable_rgi_bwt": {
                     "type": "boolean",

@@ -35,6 +35,9 @@ process POSTPROCESS_READBASED {
     import sys
 
     extra_args = shlex.split(os.environ.get("POSTPROCESS_OPTIONS", ""))
+    # taxburst already leaves synthetic unclassified rows out and post_processing.py rejects the flag there
+    if os.environ["POSTPROCESS_OUTPUT_FORMAT"] == "taxburst":
+        extra_args = [argument for argument in extra_args if argument != "--remove_unclassified"]
     reserved = ("--input", "--input_format", "--output", "--output_format")
     for argument in extra_args:
         if argument in reserved or any(argument.startswith(f"{flag}=") for flag in reserved):

@@ -30,6 +30,10 @@ extra_fn_clean_exts:
   - ".fa.prokka"
   - type: regex
     pattern: '^short_summary\.(specific|generic)\.[^.]+\.'
+  # hostile names a sample after its read 1 file (<sample>_R1.fastp.fastq.gz): keep the sample name, as fastp does
+  - type: regex
+    pattern: '_R?1([.].*)?$'
+    module: hostile
 
 # Prokka names samples after the --organism line ("Genus species strain" for every bin) unless told otherwise
 use_filename_as_sample_name:

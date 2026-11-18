@@ -7,10 +7,11 @@ graph that has a tab per rank (Strain = genome, Species ... Domain), laid out
 like MultiQC's sylph-tax module. Values are percent of weighted k-mers
 (f_weighted_at_rank); per rank the --top taxa by summed abundance are shown,
 the rest of the classified part is "Other", and "Unclassified" stays separate.
-When the table holds several YACHT min_coverage levels, each level is its own bar. A genome's
-min_coverage cell lists every level it passes ("min_coverage0.1 | min_coverage0.05 | ..."), so it
-joins each of those bars; Unclassified of a level bar is 100 - its classified share (the
-untagged unclassified rows of the table cannot be assigned to a level).
+One bar per sample at one YACHT min_coverage level (--min_coverage, the level post-processing
+was asked for; the pipeline passes the --min_coverage of --postprocess_options, default 0.05):
+a genome's min_coverage cell lists every level it passes ("min_coverage0.1 | min_coverage0.05"),
+so it is kept when that list holds the level. Unclassified = 100 - classified share; with
+--remove_unclassified it is left out and the classified taxa are rescaled to 100 %.
 """
 
 from __future__ import annotations
@@ -18,25 +19,30 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-VERSION = "2.1.0"
+VERSION = "3.0.0"
 # tab label -> lineage index (None = genome / match_name)
 RANKS = [("Strain", None), ("Species", 6), ("Genus", 5), ("Family", 4), ("Order", 3), ("Class", 2), ("Phylum", 1), ("Domain", 0)]
 OTHER, UNCLASSIFIED = "zzy_other", "zzz_unclassified"
 
 
-def row_levels(row: dict) -> list[str]:
-    return [level.strip() for level in (row.get("min_coverage") or "").split("|") if level.strip()]
+LEVEL = re.compile(r"min_coverage\s*([0-9eE.+-]+)")
 
 
-def expand_levels(rows: list[dict]) -> tuple[list[tuple[str, dict]], bool]:
-    """(bar label, row) pairs and whether bars are per level (then untagged unclassified rows are dropped)."""
-    if len({level for row in rows for level in row_levels(row)}) <= 1:
-        return [(row["sample_name"], row) for row in rows], False
-    return [(f"{row['sample_name']} ({level})", row) for row in rows for level in row_levels(row)], True
+def row_levels(row: dict) -> set[float]:
+    return {float(value) for value in LEVEL.findall(row.get("min_coverage") or "")}
+
+
+def select_rows(rows: list[dict], min_coverage: float | None) -> list[dict]:
+    """Classified rows at the chosen level (synthetic unclassified rows are recomputed in build)."""
+    classified = [row for row in rows if taxon(row, 0) or taxon(row, None)]
+    if min_coverage is None or not any(row_levels(row) for row in classified):
+        return classified
+    return [row for row in classified if any(abs(level - min_coverage) < 1e-9 for level in row_levels(row))]
 
 
 def taxon(row: dict, index: int | None) -> str | None:
@@ -53,20 +59,24 @@ def taxon(row: dict, index: int | None) -> str | None:
     return name if name and not name.endswith("__") else None
 
 
-def build(rows: list[dict], top: int) -> tuple[list[dict], list[dict], list[str]]:
-    pairs, per_level = expand_levels(rows)
-    remainder: dict[str, float] = defaultdict(lambda: 100.0)
-    if per_level:
-        for bar, row in pairs:
-            remainder[bar] -= float(row.get("f_weighted_at_rank") or 0) * 100
+def build(rows: list[dict], top: int, min_coverage: float | None = None, remove_unclassified: bool = False) -> tuple[list[dict], list[dict], list[str]]:
+    selected = select_rows(rows, min_coverage)
+    share: dict[str, float] = defaultdict(float)
+    for row in selected:
+        share[row["sample_name"]] += float(row.get("f_weighted_at_rank") or 0) * 100
+    samples = sorted({row["sample_name"] for row in rows})
     datasets, categories, labels = [], [], []
     for label, index in RANKS:
-        values: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
-        for bar, row in pairs:
-            name = taxon(row, index)
-            values[bar][name or UNCLASSIFIED] += float(row.get("f_weighted_at_rank") or 0) * 100
-        for bar in remainder:
-            values[bar][UNCLASSIFIED] += max(remainder[bar], 0.0)
+        values: dict[str, dict[str, float]] = {sample: defaultdict(float) for sample in samples}
+        for row in selected:
+            sample = row["sample_name"]
+            value = float(row.get("f_weighted_at_rank") or 0) * 100
+            if remove_unclassified and share[sample] > 0:
+                value *= 100 / share[sample]
+            values[sample][taxon(row, index) or UNCLASSIFIED] += value
+        if not remove_unclassified:
+            for sample in samples:
+                values[sample][UNCLASSIFIED] += max(100 - share[sample], 0.0)
         totals: dict[str, float] = defaultdict(float)
         for sample in values.values():
             for name, value in sample.items():
@@ -75,30 +85,37 @@ def build(rows: list[dict], top: int) -> tuple[list[dict], list[dict], list[str]
         if not totals:
             continue
         kept = [name for name, _ in sorted(totals.items(), key=lambda item: (-item[1], item[0]))[:top]]
+        show_unclassified = any(sample.get(UNCLASSIFIED, 0) > 0 for sample in values.values())
         data = {}
         for bar, sample in values.items():
             out = {name: round(sample.get(name, 0.0), 4) for name in kept}
             out[OTHER] = round(sum(v for n, v in sample.items() if n not in kept and n != UNCLASSIFIED), 4)
-            out[UNCLASSIFIED] = round(sample.get(UNCLASSIFIED, 0.0), 4)
+            if show_unclassified:
+                out[UNCLASSIFIED] = round(sample.get(UNCLASSIFIED, 0.0), 4)
             data[bar] = out
         cats = {name: {"name": name} for name in kept}
         cats[OTHER] = {"name": "Other", "color": "#cccccc"}
-        cats[UNCLASSIFIED] = {"name": "Unclassified", "color": "#8c8c8c"}
+        if show_unclassified:
+            cats[UNCLASSIFIED] = {"name": "Unclassified", "color": "#8c8c8c"}
         datasets.append(data)
         categories.append(cats)
         labels.append(label)
     return datasets, categories, labels
 
 
-def write_json(path: Path, datasets: list[dict], categories: list[dict], labels: list[str], top: int) -> None:
+def write_json(path: Path, datasets: list[dict], categories: list[dict], labels: list[str], top: int,
+               min_coverage: float | None = None, remove_unclassified: bool = False) -> None:
+    level = f"YACHT min_coverage {min_coverage:g}; " if min_coverage is not None else ""
+    scale = ("unclassified sequence removed and taxa rescaled to 100 % (--remove_unclassified). "
+             if remove_unclassified else "Unclassified = sequence not assigned at that rank. ")
     content = {
         "id": "microcosm",
         "section_name": "microcosm",
         "section_anchor": "microcosm",
         "description": (
             "Read-based taxonomic profile from microcosm (sourmash fastmultigather + YACHT, GTDB). "
-            f"Top {top} taxa per rank as percent of weighted k-mers; Other = remaining classified taxa, "
-            "Unclassified = sequence not assigned at that rank. Full table: "
+            f"{level}Top {top} taxa per rank as percent of weighted k-mers; Other = remaining classified taxa; "
+            f"{scale}Full table: "
             "Readbased_Analysis/Post_processing/&lt;prefix&gt;_default/&lt;prefix&gt;.processed_metaflow.csv."
         ),
         "plot_type": "bargraph",
@@ -120,6 +137,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--input", type=Path, required=True, help="<prefix>.processed_metaflow.csv")
     parser.add_argument("--outdir", type=Path, default=Path("."))
     parser.add_argument("--top", type=int, default=10)
+    parser.add_argument("--min_coverage", type=float, help="YACHT min_coverage level to plot (default: every row as one bar)")
+    parser.add_argument("--remove_unclassified", action="store_true", help="drop Unclassified and rescale taxa to 100 %%")
     parser.add_argument("--version", action="version", version=VERSION)
     args = parser.parse_args(argv)
     with args.input.open(newline="") as handle:
@@ -128,8 +147,10 @@ def main(argv: list[str] | None = None) -> int:
     if rows and missing:
         raise SystemExit(f"{args.input}: missing column(s) {sorted(missing)}")
     args.outdir.mkdir(parents=True, exist_ok=True)
-    datasets, categories, labels = build(rows, args.top)
-    write_json(args.outdir / "microcosm_mqc.json", datasets, categories, labels, args.top)
+    datasets, categories, labels = build(rows, args.top, args.min_coverage, args.remove_unclassified)
+    if args.min_coverage is not None and not datasets:
+        print(f"WARNING: no taxa at min_coverage {args.min_coverage:g} in {args.input}", file=sys.stderr)
+    write_json(args.outdir / "microcosm_mqc.json", datasets, categories, labels, args.top, args.min_coverage, args.remove_unclassified)
     print(f"{len(rows)} rows, ranks {labels} -> {args.outdir / 'microcosm_mqc.json'}", file=sys.stderr)
     return 0
 
