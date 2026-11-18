@@ -196,7 +196,7 @@ Every step can be customised with parameters (see `nextflow_schema.json`):
 |---|---|
 | Turn a tool off | `--skip_mlst`, `--skip_virulencefinder`, `--skip_plasmidfinder`, `--skip_kleborate`, `--skip_sistr`, `--skip_seqsero2`, `--skip_genotyphi`, `--skip_paratype`, `--skip_amrfinderplus`, `--skip_abricate`, `--skip_rgi`, `--skip_resfinder`, `--skip_deeparg`, `--skip_argnorm` |
 | Tool arguments | `--<tool>_args` (e.g. `--mlst_args`, `--kleborate_args`, `--sistr_args`). Defaults taken from the reference scripts are part of the value and are replaced when you set it: `amrfinderplus_args='--plus'`, `resfinder_args='--acquired --disinfectant'`, `rgi_main_args='--clean -g PYRODIGAL'`, `seqsero2_args='-m k -t 4'` |
-| Lineage rules | `--kleborate_preset_map` (default `assets/kleborate_presets.tsv`), `--amrfinderplus_organism_map` (default `assets/amrfinderplus_organisms.tsv`): TSV files; the first `lineage_pattern` found in the GTDB lineage wins |
+| Lineage rules | `--kleborate_preset_map` (default `assets/kleborate_presets.tsv`), `--amrfinderplus_organism_map` (default `assets/amrfinderplus_organisms.tsv`): TSV files; the first `lineage_pattern` found in the GTDB lineage wins. GTDB placeholder suffixes (`_A`, `_B`, ...) are ignored when matching, on both the lineage and the pattern (`s__Enterococcus_B faecium` matches `s__Enterococcus faecium`); published lineages keep the suffixes. |
 | Database versions downloaded | `--virulencefinder_db_revision`, `--resfinder_db_revision`, `--paratype_revision` |
 | Other | `--deeparg_model` (`SS` or `LS`), `--deeparg_db_version`, `--abricate_db_id`, `--virulencefinder_min_coverage`, `--virulencefinder_min_identity` |
 

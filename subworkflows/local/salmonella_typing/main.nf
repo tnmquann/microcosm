@@ -13,6 +13,7 @@ include { PARSE_SALMONELLA_TYPING } from '../../../modules/local/finalize/parse_
 include { PARATYPE_DOWNLOAD_LOCAL } from '../../../modules/local/paratype/download/main'
 include { VALIDATE_PARATYPE_BUNDLE } from '../../../modules/local/input/validate_paratype_bundle/main'
 include { PARATYPE_RUN } from '../../../modules/local/paratype/run/main'
+include { stripGtdbSuffixes } from '../utils_bacterial_lineage/main'
 
 def keyedSalmonellaOutput(output_channel) {
     return output_channel.map { meta, output ->
@@ -36,7 +37,7 @@ workflow SALMONELLA_TYPING {
     )
 
     ch_salmonella_genomes = bacterial_genomes_ch
-        .filter { meta, _genome -> (meta.lineage ?: '').contains('g__Salmonella') }
+        .filter { meta, _genome -> stripGtdbSuffixes(meta.lineage).contains('g__Salmonella') }
         .map { meta, genome ->
             def meta_new = meta.clone()
             meta_new.salmonella_typing_key = "${meta.sample_id}::${meta.genome_id}"

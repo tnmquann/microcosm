@@ -98,7 +98,7 @@
                     "format": "file-path",
                     "exists": true,
                     "description": "TSV mapping GTDB lineage to AMRFinderPlus --organism.",
-                    "help_text": "Columns lineage_pattern, organism. The first row whose lineage_pattern occurs in the genome lineage wins; no match = no --organism. Default: assets/amrfinderplus_organisms.tsv (the 5_amr.sh list)."
+                    "help_text": "Columns lineage_pattern, organism. The first row whose lineage_pattern occurs in the genome lineage wins; no match = no --organism. GTDB suffixes such as _B are ignored when matching (s__Enterococcus_B faecium matches s__Enterococcus faecium). Default: assets/amrfinderplus_organisms.tsv (the 5_amr.sh list)."
                 },
                 "abricate_db": {
                     "type": "string",
@@ -238,7 +238,7 @@
                     "format": "file-path",
                     "exists": true,
                     "description": "TSV mapping GTDB lineage to a Kleborate v3 preset and module list.",
-                    "help_text": "Columns lineage_pattern, preset (may be empty), modules. The first row whose lineage_pattern occurs in the genome lineage wins; genomes with no match skip Kleborate. Default: assets/kleborate_presets.tsv (the 3_kleb.sh rules)."
+                    "help_text": "Columns lineage_pattern, preset (may be empty), modules. The first row whose lineage_pattern occurs in the genome lineage wins; genomes with no match skip Kleborate. GTDB suffixes such as _B are ignored when matching (s__Enterococcus_B faecium matches s__Enterococcus faecium). Default: assets/kleborate_presets.tsv (the 3_kleb.sh rules)."
                 },
                 "seqsero2_args": {
                     "type": "string",
