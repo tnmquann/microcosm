@@ -10,7 +10,7 @@ workflow {
             checkIfExists: true
         ),
         file(
-            "${params.pipeline_root}/bin/py_scripts/assembly_based/validate_paratype_bundle.py",
+            "${params.pipeline_root}/bin/py_scripts/bacterial_analysis/validate_paratype_bundle.py",
             checkIfExists: true
         )
     )

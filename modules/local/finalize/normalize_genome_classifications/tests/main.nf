@@ -9,7 +9,7 @@ workflow {
     ])
     NORMALIZE_GENOME_CLASSIFICATIONS(
         classifications,
-        file("${params.pipeline_root}/bin/py_scripts/assembly_based/normalize_genome_classifications.py", checkIfExists: true)
+        file("${params.pipeline_root}/bin/py_scripts/bacterial_analysis/normalize_genome_classifications.py", checkIfExists: true)
     )
     NORMALIZE_GENOME_CLASSIFICATIONS.out.resolved_tsv.view { output ->
         "NORMALIZED_GENOME_CLASSIFICATIONS ${output.name}"

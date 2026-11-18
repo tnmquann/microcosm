@@ -26,8 +26,10 @@ process RESFINDER_RUN_LOCAL {
     prefix = task.ext.prefix ?: "${meta.id}.resfinder"
     // 5_amr.sh flags --acquired --disinfectant come from task.ext.args (--resfinder_args).
     // PointFinder species key as in 5_amr.sh: GTDB species, else genus, lower case with '_'.
-    def species_key = (meta.species ?: '').toString().replaceFirst('^s__', '').trim().toLowerCase().replaceAll('\\s+', '_')
-    def genus_key = (meta.genus ?: '').toString().replaceFirst('^g__', '').trim().toLowerCase().replaceAll('\\s+', '_')
+    // GTDB placeholder suffixes are dropped first (Escherichia coli_F -> escherichia_coli).
+    def gtdb_suffix = '(?<=[A-Za-z0-9])_[A-Z]+(?=\\s|$)'
+    def species_key = (meta.species ?: '').toString().replaceFirst('^s__', '').replaceAll(gtdb_suffix, '').trim().toLowerCase().replaceAll('\\s+', '_')
+    def genus_key = (meta.genus ?: '').toString().replaceFirst('^g__', '').replaceAll(gtdb_suffix, '').trim().toLowerCase().replaceAll('\\s+', '_')
     """
     point_args=""
     if [ -n "${species_key}" ] && [ -d "${db_point}/${species_key}" ]; then
@@ -46,6 +48,9 @@ process RESFINDER_RUN_LOCAL {
         --db_path_disinf ${db_disinf} \\
         --db_path_res ${db_res} \\
         ${args}
+
+    # BLAST scratch XML is not a result
+    rm -rf ${prefix}/*_blast
     """
 
     stub:

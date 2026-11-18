@@ -2,10 +2,6 @@ process CREATE_BINS_CSV {
     tag "Creating CSV for sourmash"
     label 'process_low'
 
-    publishDir "${params.bins_csv_dir}",
-        mode: params.publish_dir_mode,
-        saveAs: { filename -> filename.equals('versions.yml') ? null : filename }
-
     input:
     tuple val(meta), path(bins_dir)
 

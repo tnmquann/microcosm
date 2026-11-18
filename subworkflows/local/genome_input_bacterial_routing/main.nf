@@ -52,7 +52,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
 
     if (params.genome_input) {
         validator_script = file(
-            "${pipeline_root}/bin/py_scripts/assembly_based/validate_genome_input.py",
+            "${pipeline_root}/bin/py_scripts/bacterial_analysis/validate_genome_input.py",
             checkIfExists: true
         )
         classification_available = params.sourmash_database && params.sourmash_taxonomy_csv
@@ -137,7 +137,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
         checkIfExists: true
     )
     normalizer_script = file(
-        "${pipeline_root}/bin/py_scripts/assembly_based/normalize_genome_classifications.py",
+        "${pipeline_root}/bin/py_scripts/bacterial_analysis/normalize_genome_classifications.py",
         checkIfExists: true
     )
     ch_classification_files = ch_classification_csvs

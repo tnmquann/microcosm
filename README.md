@@ -102,10 +102,67 @@ nextflow run main.nf \
 
 Valid modes are `all`, `phyloseq`, `taxburst`, and `rgi_bwt`. The explicit `rgi_bwt` mode requires `--enable_rgi_bwt`. With `all`, the pipeline also writes the standard default processed CSV; RGI-BWT results are included only when RGI-BWT is enabled, otherwise the pipeline warns, skips that output group, and continues with default, phyloseq, and taxburst.
 
+### Read-based profilers: microcosm (sourmash + YACHT) and sylph
+
+`--readbased_taxotools` chooses the read-based profiler: `microcosm` (default,
+sourmash + YACHT), `sylph`, or `microcosm,sylph` to run both. sylph profiles
+the paired reads directly (no read merging), one task per sample, and writes to
+`Readbased_Analysis/sylph/`; the microcosm outputs stay in `Sourmash-YACHT/` and
+`Post_processing/`. `--enable_singlesketch` only changes the microcosm branch.
+
+```bash
+nextflow run main.nf --input samples.csv --outdir /path/to/project_A --enable_readbase \
+    --readbased_taxotools microcosm,sylph \
+    --sourmash_database /path/to/gtdb-rs226-reps.k31.rocksdb --yacht_database /path/to/yacht.json \
+    --sylph_database /path/to/gtdb-r226-c200-dbv2.syl2db \
+    --enable_sylphtax --sylph_taxonomy /path/to/gtdb_r226_metadata.tsv.gz \
+    --readbased_postprocess phyloseq
+```
+
+| Parameter | Meaning |
+|---|---|
+| `--sylph_database` | sylph database(s) (`*.syldb`/`*.syl2db`), comma-separated for several |
+| `--sylph_args` | extra `sylph profile` arguments |
+| `--enable_sylphtax` | run `sylph-tax taxprof`; needs `--sylph_taxonomy` (sylph-tax metadata file(s) matching the databases, comma-separated) |
+| `--sylph_datatype` | `taxonomic_abundance` (default, sylph-tax `relative_abundance`) or `sequence_abundance` (adds `--estimate-read-counts`, so values are estimated read counts) |
+
+With `--enable_sylphtax`, `Readbased_Analysis/sylph/` holds `profile/<sample>.tsv`,
+`sylphtax/<sample>.sylphmpa` and `<prefix>_sylphtax_<datatype>.tsv` (clade x
+sample). `--readbased_postprocess phyloseq` (or `all`) also writes
+`sylph/phyloseq/{tax_table,otu_table,sample_data}.csv` in the same layout as the
+microcosm phyloseq tables (taxa = genomes, values = `--sylph_datatype`); this
+needs `--enable_sylphtax`. `taxburst` and `rgi_bwt` post-processing use the
+microcosm result only. RGI-BWT (`--enable_rgi_bwt`) also runs with `sylph` alone.
+
+Several sourmash databases: `--sourmash_database "path/to/db1.zip,path/to/db2.zip"`
+(give one taxonomy per source with `--sourmash_taxonomy_csv "tax1.csv,tax2.csv"`).
+fastmultigather combines zip/sig databases; several RocksDB indexes cannot be
+combined. YACHT takes one database, so YACHT (and the post-processing that needs
+it) is skipped when several databases are given.
+
+`--enable_copymergedseqs`, `--enable_copysketch`, `--enable_copysketch_singles`
+and `--enable_copyintermediate` (YACHT tables, collected read CSV) turn the
+publishing of those intermediate files on or off.
+
 `--postprocess_options` accepts one shell-style option string and safely tokenizes it before invoking `post_processing.py`. For example, the general form `--postprocess_options "--params_1 abc def --params_2 sss ddd"` is passed as the corresponding argument sequence. Use only options supported by the current Python script; a current valid example is `--postprocess_options "--min_coverage 0.05 --use_average"`. If one individual value contains spaces, quote that value inside the outer option string.
+
+A MultiQC report is written to `${outdir}/MultiQC/<prefix>_multiqc_report.html`
+(turn off with `--skip_multiqc`). It gathers FastQC/fastp, bin QC (BUSCO,
+CheckM, CheckM2), Prokka, sylph-tax profiles (`--enable_sylphtax`) and, with
+`--readbased_postprocess all`, microcosm bar graphs of the top phyla, genera and
+species built from `<prefix>.processed_metaflow.csv`. `--multiqc_config`,
+`--multiqc_logo`, `--multiqc_replace_names` and `--multiqc_sample_names` are
+passed to MultiQC.
+
+Software versions of every tool used in a run are collected in one file,
+`${outdir}/pipeline_info/microcosm_software_versions.yml`, next to the
+execution report.
 
 ### Assembly-based analysis
 For assembly-based workflows, ensure your `sourmash` database is prepared.
+`--binqc_tool` accepts one or more of `busco`, `checkm`, `checkm2`
+(e.g. `--binqc_tool checkm2,checkm`); each tool writes its own
+`Binning/QC/<tool>_summary.tsv`.
 ```bash
 nextflow run main.nf \
     --input /path/to/your/samples.csv \
@@ -143,6 +200,9 @@ outdir/
 │   │       ├── phyloseq/
 │   │       ├── taxburst/
 │   │       └── rgi_bwt/
+│   ├── sylph/                  (--readbased_taxotools sylph)
+│   │   ├── profile/  sylphtax/  phyloseq/
+│   │   └── <batch-prefix>_sylphtax_<datatype>.tsv
 │   └── Sourmash-YACHT/
 │       ├── final_results/
 │       ├── fastmultigather/
@@ -204,11 +264,33 @@ SISTR alone routes Salmonella follow-up, so `--skip_sistr` also stops
 GenoTyphi and Paratype. CPUs/memory per tool are set with the usual
 `process.withName` selectors in a custom config.
 
-Results are published below
-`${outdir}/Assembly/Downstream_Bacterial_Analysis/`: routing reports,
-`amr/`, `general_typing/`, `klebsiella/` and `salmonella/`, separated by source
-route, sample and genome. The combined hAMRonization and ARGnorm tables are in
-`amr/hamronization_summary/`.
+Results are published below `${outdir}/Assembly/Bacterial_Analysis/`, one
+folder per tool and one file per genome (`<genome_id>.<tool>.*`). Folders of
+tools that did not run are absent. `<prefix>` is the last component of
+`--outdir`, as for the read-based post-processing tables.
+
+```text
+Bacterial_Analysis/
+├── routing/          bacterial_routing_manifest.tsv, excluded_genomes.tsv, unresolved_genomes.tsv
+├── amr/
+│   ├── amrfinderplus/ abricate/ rgi/ resfinder/ deeparg/
+│   ├── hamronization/          <genome_id>.<tool>_hamronized.tsv
+│   ├── argnorm/                <genome_id>.<tool>_hamronized_argnorm.tsv
+│   ├── hamronization_summary/  amr_summary.tsv, amr_summary_argnorm.tsv
+│   └── summary/                <prefix>_{amrfinderplus,abricate,rgi,resfinder,pointfinder,disinfinder,deeparg}.tsv
+├── general_typing/
+│   ├── mlst/ virulencefinder/ plasmidfinder/
+│   └── summary/                <prefix>_{mlst,virulencefinder,plasmidfinder}.tsv
+├── klebsiella/
+│   ├── kleborate/
+│   └── summary/                <prefix>_kleborate.tsv
+└── salmonella/
+    ├── sistr/ seqsero2/ genotyphi/ paratype/ routing/
+    └── summary/                <prefix>_{sistr,seqsero2,genotyphi,paratype,salmonella_typing}.tsv
+```
+
+Each summary table is the tool's per-genome tables stacked, with `genome_id` as
+the first column.
 
 The following tree illustrates the organization of output files generated by the assembly-based subworkflow:
 

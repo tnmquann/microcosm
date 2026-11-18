@@ -3,7 +3,7 @@ nextflow.enable.dsl = 2
 
 // Import subworkflows
 include { PREPROCESS } from '../subworkflows/local/preprocess/main'
-include { READ_BASED } from '../subworkflows/local/read_based/main'
+include { READ_BASED; deriveReadbasedBatchPrefix } from '../subworkflows/local/read_based/main'
 include { READ_BASED_SINGLERUN } from '../subworkflows/local/read_based_singlerun/main'
 include { ASSEMBLY_BASED } from '../subworkflows/local/assembly_based/main'
 include { BINNING_BAMABUND } from '../subworkflows/local/binning_bamabund/main'
@@ -23,6 +23,12 @@ include { BACTERIAL_AMR_ANALYSIS } from '../subworkflows/local/bacterial_amr_ana
 include { BACTERIAL_GENERAL_TYPING } from '../subworkflows/local/bacterial_general_typing/main'
 include { KLEBSIELLA_TYPING } from '../subworkflows/local/klebsiella_typing/main'
 include { SALMONELLA_TYPING } from '../subworkflows/local/salmonella_typing/main'
+include { BACTERIAL_TOOL_SUMMARY } from '../modules/local/bacterial/tool_summary/main'
+include { SOFTWARE_VERSIONS } from '../subworkflows/local/utils_software_versions/main'
+include { yachtSkipped; readbasedTaxotools; binqcTools } from '../subworkflows/local/utils_microcosm/main'
+include { READ_BASED_SYLPH } from '../subworkflows/local/read_based_sylph/main'
+include { MULTIQC } from '../modules/nf-core/multiqc/main'
+include { MICROCOSM_MULTIQC_TABLES } from '../modules/local/finalize/microcosm_multiqc_tables/main'
 include { GUNZIP as GUNZIP_ASSEMBLIES } from '../modules/nf-core/gunzip/main'
 
 // Import modules for database setup
@@ -151,6 +157,14 @@ workflow METAFLOW {
             }
         }
 
+        def readbased_tools = params.enable_readbase ? readbasedTaxotools() : []
+        def run_microcosm_readbased = 'microcosm' in readbased_tools
+        def run_sylph_readbased = 'sylph' in readbased_tools
+
+        if (run_microcosm_readbased && !params.skip_yacht && yachtSkipped()) {
+            log.warn 'Several --sourmash_database entries were given: YACHT takes one database, so YACHT is skipped (as with --skip_yacht).'
+        }
+
         // Preflight: validate optional read-based post-processing dependencies.
         if (params.readbased_postprocess) {
             def valid_postprocess_modes = ['all', 'phyloseq', 'taxburst', 'rgi_bwt']
@@ -160,11 +174,17 @@ workflow METAFLOW {
             if (!valid_postprocess_modes.contains(params.readbased_postprocess)) {
                 exit 1, "ERROR: Unsupported --readbased_postprocess value '${params.readbased_postprocess}'. Valid options: all, phyloseq, taxburst, rgi_bwt."
             }
-            if (params.skip_yacht) {
-                exit 1, 'ERROR: --readbased_postprocess requires the merged Sourmash-YACHT result; disable --skip_yacht.'
+            if (run_microcosm_readbased && yachtSkipped()) {
+                exit 1, 'ERROR: --readbased_postprocess requires the merged Sourmash-YACHT result; disable --skip_yacht and pass a single --sourmash_database (YACHT takes one database).'
             }
             if (params.readbased_postprocess == 'rgi_bwt' && !params.enable_rgi_bwt) {
                 exit 1, 'ERROR: --enable_rgi_bwt is required for --readbased_postprocess rgi_bwt.'
+            }
+            if (run_sylph_readbased && params.readbased_postprocess in ['all', 'phyloseq'] && !params.enable_sylphtax) {
+                exit 1, 'ERROR: sylph phyloseq tables (--readbased_postprocess phyloseq/all) need --enable_sylphtax and --sylph_taxonomy for the lineages.'
+            }
+            if (!run_microcosm_readbased && params.readbased_postprocess in ['taxburst', 'rgi_bwt']) {
+                exit 1, "ERROR: --readbased_postprocess ${params.readbased_postprocess} uses the microcosm (sourmash + YACHT) result; add microcosm to --readbased_taxotools."
             }
             if (params.readbased_postprocess == 'all' && !params.enable_rgi_bwt) {
                 log.warn 'readbased_postprocess=all was requested, but RGI-BWT is disabled; the RGI-BWT post-processing output will be skipped while phyloseq and taxburst continue.'
@@ -188,7 +208,7 @@ workflow METAFLOW {
         if (!checkm2_db) {
             params.checkm2_db = null
             // Only show warning if user is actually using CheckM2 or Binette
-            def needs_checkm2_db = (!params.genome_input && !params.enable_readbase && params.binqc_tool == 'checkm2' && !params.skip_binqc) ||
+            def needs_checkm2_db = (!params.genome_input && !params.enable_readbase && ('checkm2' in binqcTools()) && !params.skip_binqc) ||
                                    (!params.genome_input && !params.enable_readbase && params.refine_tool == 'binette' && !params.skip_binning_refinement)
             if (needs_checkm2_db && !params.skip_binning && !params.skip_binning_bamabund) {
                 log.warn "⚠️  Parameter --checkm2_db not provided; CheckM2 database will be downloaded automatically for CheckM2/Binette steps."
@@ -210,6 +230,8 @@ workflow METAFLOW {
 
         // Handle pre-computed assemblies or preprocessing
         def cleaned_reads_source
+        def preprocess_versions_ch = channel.empty()
+        def multiqc_files_ch = channel.empty() // files for the final MultiQC report
         def assembly_megahit_contigs_ch = channel.empty()
         def assembly_metaspades_contigs_ch = channel.empty()
         def assembly_versions_ch = channel.empty()
@@ -246,6 +268,13 @@ workflow METAFLOW {
             if (!params.skip_preprocess) {
                 PREPROCESS(input_ch)
                 cleaned_reads_source = PREPROCESS.out.cleaned_reads
+                preprocess_versions_ch = PREPROCESS.out.versions
+                multiqc_files_ch = multiqc_files_ch.mix(
+                    PREPROCESS.out.fastqc_raw_zip.map { _meta, zip -> zip },
+                    PREPROCESS.out.fastqc_trimmed_zip.map { _meta, zip -> zip },
+                    PREPROCESS.out.fastqc_rmhost_zip.map { _meta, zip -> zip },
+                    PREPROCESS.out.fastp_reports.map { report -> report[1] }
+                )
             } else {
                 // When skip_preprocess is true, use raw input reads directly
                 cleaned_reads_source = input_ch
@@ -295,18 +324,29 @@ workflow METAFLOW {
         def bacterial_salmonella_routing_ch = channel.empty()
         def bacterial_genotyphi_ch = channel.empty()
         def bacterial_paratype_ch = channel.empty()
+        def bacterial_summary_tables_ch = channel.empty() // [module, tool, genome_id, table]
 
         // Use cleaned_reads_source for downstream workflows
         if (params.genome_input) {
             log.info 'Standalone genome input supplied; read preprocessing, assembly, binning, and existing post-binning branches are skipped.'
         } else if (params.enable_readbase) {
+            if (run_sylph_readbased) {
+                // sylph profiles paired reads directly; RGI-BWT runs here when microcosm is not selected
+                READ_BASED_SYLPH(cleaned_reads_source, deriveReadbasedBatchPrefix(params.outdir), !run_microcosm_readbased)
+                read_based_versions_ch = read_based_versions_ch.mix(READ_BASED_SYLPH.out.versions)
+                read_based_rgi_ch = read_based_rgi_ch.mix(READ_BASED_SYLPH.out.rgi_results)
+                // MultiQC's sylphtax module reads the sylph-tax *.sylphmpa profiles (--enable_sylphtax)
+                multiqc_files_ch = multiqc_files_ch.mix(READ_BASED_SYLPH.out.sylphtax.map { _meta, sylphmpa -> sylphmpa })
+            }
             // Check if single-sample processing mode is enabled
-            if (params.enable_singlesketch) {
+            if (!run_microcosm_readbased) {
+                log.info 'Read-based profiling with sylph only (--readbased_taxotools sylph).'
+            } else if (params.enable_singlesketch) {
                 // Use READ_BASED_SINGLERUN for per-sample processing
                 READ_BASED_SINGLERUN(cleaned_reads_source)
-                read_based_versions_ch = READ_BASED_SINGLERUN.out.versions ?: channel.empty()
+                read_based_versions_ch = read_based_versions_ch.mix(READ_BASED_SINGLERUN.out.versions ?: channel.empty())
                 read_based_results_ch = READ_BASED_SINGLERUN.out.results ?: channel.empty()
-                read_based_rgi_ch = READ_BASED_SINGLERUN.out.rgi_results ?: channel.empty()
+                read_based_rgi_ch = read_based_rgi_ch.mix(READ_BASED_SINGLERUN.out.rgi_results ?: channel.empty())
                 read_based_postprocess_default_ch = READ_BASED_SINGLERUN.out.postprocess_default ?: channel.empty()
                 read_based_postprocess_phyloseq_ch = READ_BASED_SINGLERUN.out.postprocess_phyloseq ?: channel.empty()
                 read_based_postprocess_taxburst_ch = READ_BASED_SINGLERUN.out.postprocess_taxburst ?: channel.empty()
@@ -314,9 +354,9 @@ workflow METAFLOW {
             } else {
                 // Use READ_BASED for batch processing (default)
                 READ_BASED(cleaned_reads_source)
-                read_based_versions_ch = READ_BASED.out.versions ?: channel.empty()
+                read_based_versions_ch = read_based_versions_ch.mix(READ_BASED.out.versions ?: channel.empty())
                 read_based_results_ch = READ_BASED.out.results ?: channel.empty()
-                read_based_rgi_ch = READ_BASED.out.rgi_results ?: channel.empty()
+                read_based_rgi_ch = read_based_rgi_ch.mix(READ_BASED.out.rgi_results ?: channel.empty())
                 read_based_postprocess_default_ch = READ_BASED.out.postprocess_default ?: channel.empty()
                 read_based_postprocess_phyloseq_ch = READ_BASED.out.postprocess_phyloseq ?: channel.empty()
                 read_based_postprocess_taxburst_ch = READ_BASED.out.postprocess_taxburst ?: channel.empty()
@@ -401,12 +441,12 @@ workflow METAFLOW {
                     // (e.g., CheckM = legacy checkm v1, DAS_TOOL = only needs contig2bin tables)
                     //
                     def ch_checkm2_db = channel.empty()
-                    def needs_checkm2_db = (params.binqc_tool == 'checkm2' && !params.skip_binqc) || 
+                    def needs_checkm2_db = (('checkm2' in binqcTools()) && !params.skip_binqc) ||
                                            (params.refine_tool == 'binette' && !params.skip_binning_refinement)
                     
                     if (needs_checkm2_db && !params.checkm2_db) {
                         // Download CheckM2 database automatically if needed and not provided
-                        log.info "Downloading CheckM2 database for ${params.binqc_tool == 'checkm2' ? 'CheckM2 QC' : ''}${(params.binqc_tool == 'checkm2' && params.refine_tool == 'binette') ? ' and ' : ''}${params.refine_tool == 'binette' ? 'Binette refinement' : ''}"
+                        log.info "Downloading CheckM2 database for ${'checkm2' in binqcTools() ? 'CheckM2 QC' : ''}${('checkm2' in binqcTools() && params.refine_tool == 'binette') ? ' and ' : ''}${params.refine_tool == 'binette' ? 'Binette refinement' : ''}"
                         CHECKM2_DATABASEDOWNLOAD(params.checkm2_db_version)
                         // Extract just the database path from the tuple (meta, path) and
                         // convert it to a value channel (single shared DB for all downstream tasks)
@@ -562,6 +602,17 @@ workflow METAFLOW {
                 bacterial_amr_hamronization_summary_ch = BACTERIAL_AMR_ANALYSIS.out.hamronization_summary ?: channel.empty()
                 bacterial_amr_hamronized_ch = BACTERIAL_AMR_ANALYSIS.out.hamronized ?: channel.empty()
                 bacterial_amr_normalized_ch = BACTERIAL_AMR_ANALYSIS.out.normalized ?: channel.empty()
+                bacterial_summary_tables_ch = bacterial_summary_tables_ch.mix(
+                    BACTERIAL_AMR_ANALYSIS.out.amrfinder_report.map { meta, table -> tuple('amr', 'amrfinderplus', meta.genome_id, table) },
+                    BACTERIAL_AMR_ANALYSIS.out.abricate_report.map { meta, table -> tuple('amr', 'abricate', meta.genome_id, table) },
+                    BACTERIAL_AMR_ANALYSIS.out.rgi_tsv.map { meta, table -> tuple('amr', 'rgi', meta.genome_id, table) },
+                    BACTERIAL_AMR_ANALYSIS.out.deeparg_arg.map { meta, table -> tuple('amr', 'deeparg', meta.genome_id, table) },
+                    BACTERIAL_AMR_ANALYSIS.out.resfinder_results.flatMap { meta, dir ->
+                        [resfinder: 'ResFinder_results_tab.txt', pointfinder: 'PointFinder_results.txt', disinfinder: 'DisinFinder_results_tab.txt']
+                            .collect { tool, name -> tuple('amr', tool, meta.genome_id, file("${dir}/${name}")) }
+                            .findAll { record -> record[3].exists() }
+                    }
+                )
             }
 
             if (![params.skip_mlst, params.skip_virulencefinder, params.skip_plasmidfinder].every()) {
@@ -570,6 +621,11 @@ workflow METAFLOW {
                 bacterial_virulencefinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.virulencefinder_tsv ?: channel.empty()
                 bacterial_plasmidfinder_tsv_ch = BACTERIAL_GENERAL_TYPING.out.plasmidfinder_tsv ?: channel.empty()
                 bacterial_mlst_tsv_ch = BACTERIAL_GENERAL_TYPING.out.mlst_tsv ?: channel.empty()
+                bacterial_summary_tables_ch = bacterial_summary_tables_ch.mix(
+                    bacterial_mlst_tsv_ch.map { meta, table -> tuple('general_typing', 'mlst', meta.genome_id, table) },
+                    bacterial_virulencefinder_tsv_ch.map { meta, table -> tuple('general_typing', 'virulencefinder', meta.genome_id, table) },
+                    bacterial_plasmidfinder_tsv_ch.map { meta, table -> tuple('general_typing', 'plasmidfinder', meta.genome_id, table) }
+                )
             }
 
             if (!params.skip_kleborate) {
@@ -577,6 +633,7 @@ workflow METAFLOW {
                 bacterial_klebsiella_versions_ch = KLEBSIELLA_TYPING.out.versions ?: channel.empty()
                 bacterial_kleborate_report_ch = KLEBSIELLA_TYPING.out.report ?: channel.empty()
                 bacterial_klebsiella_summary_ch = KLEBSIELLA_TYPING.out.summary ?: channel.empty()
+                bacterial_summary_tables_ch = bacterial_summary_tables_ch.mix(bacterial_kleborate_report_ch.map { meta, table -> tuple('klebsiella', 'kleborate', meta.genome_id, table) })
             }
 
             if (!(params.skip_sistr && params.skip_seqsero2)) {
@@ -587,7 +644,24 @@ workflow METAFLOW {
                 bacterial_salmonella_routing_ch = SALMONELLA_TYPING.out.routing ?: channel.empty()
                 bacterial_genotyphi_ch = SALMONELLA_TYPING.out.genotyphi_tsv ?: channel.empty()
                 bacterial_paratype_ch = SALMONELLA_TYPING.out.paratype_report ?: channel.empty()
+                bacterial_summary_tables_ch = bacterial_summary_tables_ch.mix(
+                    SALMONELLA_TYPING.out.sistr_tsv.map { meta, table -> tuple('salmonella', 'sistr', meta.genome_id, table) },
+                    SALMONELLA_TYPING.out.seqsero2_tsv.map { meta, table -> tuple('salmonella', 'seqsero2', meta.genome_id, table) },
+                    bacterial_genotyphi_ch.map { meta, table -> tuple('salmonella', 'genotyphi', meta.genome_id, table) },
+                    bacterial_paratype_ch.map { meta, table -> tuple('salmonella', 'paratype', meta.genome_id, table) },
+                    bacterial_salmonella_evidence_ch.map { meta, table -> tuple('salmonella', 'salmonella_typing', meta.genome_id, table) }
+                )
             }
+
+            // One summary table per tool: Bacterial_Analysis/<module>/summary/<prefix>_<tool>.tsv
+            BACTERIAL_TOOL_SUMMARY(
+                bacterial_summary_tables_ch
+                    .map { module, tool, genome_id, table -> tuple([module, tool], genome_id, table) }
+                    .groupTuple()
+                    .map { key, genome_ids, tables -> tuple(key[0], key[1], genome_ids, tables) },
+                deriveReadbasedBatchPrefix(params.outdir),
+                file("${projectDir}/bin/py_scripts/bacterial_analysis/summarize_tool_tables.py", checkIfExists: true)
+            )
         }
 
         def combined_versions = channel.empty()
@@ -599,6 +673,43 @@ workflow METAFLOW {
         combined_versions = combined_versions.mix(bacterial_general_typing_versions_ch ?: channel.empty())
         combined_versions = combined_versions.mix(bacterial_klebsiella_versions_ch ?: channel.empty())
         combined_versions = combined_versions.mix(bacterial_salmonella_versions_ch ?: channel.empty())
+        combined_versions = combined_versions.mix(preprocess_versions_ch)
+
+        // Final MultiQC report (nf-core/mag style): read QC, bin QC/annotation, sylph,
+        // and microcosm custom-content tables from <prefix>.processed_metaflow.csv
+        if (!params.skip_multiqc) {
+            def processed_csv_name = "${deriveReadbasedBatchPrefix(params.outdir)}.processed_metaflow.csv"
+            MICROCOSM_MULTIQC_TABLES(
+                read_based_postprocess_default_ch
+                    .map { _meta, default_dir -> file("${default_dir}/${processed_csv_name}") }
+                    .filter { csv_file -> csv_file.exists() }
+                    .first(),
+                file("${projectDir}/bin/py_scripts/read_based/microcosm_multiqc.py", checkIfExists: true)
+            )
+            multiqc_files_ch = multiqc_files_ch.mix(
+                MICROCOSM_MULTIQC_TABLES.out.tables.flatten(),
+                binqc_multiqc_ch.flatten(),
+                binannotation_multiqc_ch.flatten()
+            )
+            MULTIQC(
+                multiqc_files_ch
+                    .filter { mqc_file -> mqc_file }
+                    .collect()
+                    .map { mqc_files ->
+                        [
+                            [id: 'microcosm'],
+                            mqc_files,
+                            [params.multiqc_config, params.multiqc_extra_config].findAll { config -> config }.collect { config -> file(config, checkIfExists: true) },
+                            params.multiqc_logo ? file(params.multiqc_logo, checkIfExists: true) : [],
+                            params.multiqc_replace_names ? file(params.multiqc_replace_names, checkIfExists: true) : [],
+                            params.multiqc_sample_names ? file(params.multiqc_sample_names, checkIfExists: true) : []
+                        ]
+                    }
+            )
+        }
+
+        // ${outdir}/pipeline_info/microcosm_software_versions.yml (legacy versions.yml + 'versions' topic)
+        SOFTWARE_VERSIONS(combined_versions)
 
         // Optional cleanup
         if (params.cleanup && !params.genome_input) {

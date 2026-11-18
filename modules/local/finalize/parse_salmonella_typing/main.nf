@@ -2,6 +2,7 @@ process PARSE_SALMONELLA_TYPING {
     tag "${meta.sample_id}:${meta.genome_id}"
     label 'process_low'
 
+    conda "conda-forge::python=3.11"
     // Standard-library Python helper.
     container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/python:3.11' :

@@ -32,7 +32,7 @@ workflow SALMONELLA_TYPING {
     ch_versions = channel.empty()
     pipeline_root = params.pipeline_root ?: projectDir
     parser_script = file(
-        "${pipeline_root}/bin/py_scripts/assembly_based/parse_salmonella_typing.py",
+        "${pipeline_root}/bin/py_scripts/bacterial_analysis/parse_salmonella_typing.py",
         checkIfExists: true
     )
 
@@ -125,7 +125,7 @@ workflow SALMONELLA_TYPING {
             }
             VALIDATE_PARATYPE_BUNDLE(
                 ch_paratype_bundle,
-                file("${pipeline_root}/bin/py_scripts/assembly_based/validate_paratype_bundle.py", checkIfExists: true)
+                file("${pipeline_root}/bin/py_scripts/bacterial_analysis/validate_paratype_bundle.py", checkIfExists: true)
             )
             PARATYPE_RUN(
                 ch_paratype_input

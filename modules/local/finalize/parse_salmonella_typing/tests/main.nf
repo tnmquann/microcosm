@@ -11,7 +11,7 @@ workflow {
             file("${projectDir}/data/sistr_typhi.tsv", checkIfExists: true)
         )),
         file(
-            "${projectDir}/../../../../../bin/py_scripts/assembly_based/parse_salmonella_typing.py",
+            "${projectDir}/../../../../../bin/py_scripts/bacterial_analysis/parse_salmonella_typing.py",
             checkIfExists: true
         )
     )

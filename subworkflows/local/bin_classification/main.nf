@@ -13,6 +13,7 @@ include { COMBINE_FASTMULTIGATHER_RESULTS } from '../../../modules/local/finaliz
 include { COMBINE_FASTMULTIGATHER_RESULTS as COMBINE_TAXANNOTATE_RESULTS} from '../../../modules/local/finalize/combine_fastmultigather_results/main'
 include { COMBINE_FASTMULTIGATHER_RESULTS as COMBINE_TAXGENOME_RESULTS} from '../../../modules/local/finalize/combine_fastmultigather_results/main'
 include { SOURMASH_TAXGENOME }              from '../../../modules/local/sourmash/taxgenome/main'
+include { pathList } from '../utils_microcosm/main'
 
 workflow BIN_CLASSIFICATION {
     take:
@@ -57,7 +58,7 @@ workflow BIN_CLASSIFICATION {
     // Step 3: Run fastmultigather
     SOURMASH_FASTMULTIGATHER_BINS(
         ch_sketch_split.for_fastmultigather,
-        file(params.sourmash_database, checkIfExists: true)
+        pathList(params.sourmash_database, 'sourmash_database')
     )
     ch_versions = ch_versions.mix(SOURMASH_FASTMULTIGATHER_BINS.out.versions)
 
@@ -80,7 +81,7 @@ workflow BIN_CLASSIFICATION {
     // Input: gather_csv from step 3
     SOURMASH_TAXANNOTATE(
         ch_gather_split.nonempty,
-        file(params.sourmash_taxonomy_csv, checkIfExists: true)
+        pathList(params.sourmash_taxonomy_csv, 'sourmash_taxonomy_csv')
     )
     ch_versions = ch_versions.mix(SOURMASH_TAXANNOTATE.out.versions_sourmash)
 
@@ -88,7 +89,7 @@ workflow BIN_CLASSIFICATION {
     // Input: TAXANNOTATE output (with-lineages.csv.gz)
     SOURMASH_TAXGENOME(
         SOURMASH_TAXANNOTATE.out.result,
-        file(params.sourmash_taxonomy_csv, checkIfExists: true)
+        pathList(params.sourmash_taxonomy_csv, 'sourmash_taxonomy_csv')
     )
     ch_versions = ch_versions.mix(SOURMASH_TAXGENOME.out.versions)
 

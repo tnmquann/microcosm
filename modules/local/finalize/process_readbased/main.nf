@@ -8,15 +8,6 @@ process PROCESS_READBASED_RESULTS {
         'oras://community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:f9da7bb46b36d191' :
         'community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:e8608291079924c4' }"
 
-    publishDir "${params.processed_results_dir}",
-        mode: params.publish_dir_mode,
-        pattern: "final_results"
-
-    publishDir "${params.yacht_results_dir}",
-        mode: params.publish_dir_mode,
-        pattern: "temp_yacht_results",
-        saveAs: { 'yacht_results' }
-
     input:
     tuple val(meta), path(gather_csv)
     tuple val(_meta_yacht), path(yacht_xlsx)

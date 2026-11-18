@@ -1516,7 +1516,14 @@ def build_tax_table(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     split_lineage = distinct["lineage"].astype(str).str.split(";", expand=True)
     if split_lineage.shape[1] > 7:
-        raise ProcessingError("Lineage values contain more than seven ranks and cannot be mapped to phyloseq columns.")
+        # GTDB lineages may include a terminal genome/strain identifier after
+        # species. Keep the seven-rank phyloseq schema and omit extra slots.
+        LOGGER.warning(
+            "Phyloseq tax_table received %s lineage value(s) with more than "
+            "seven ranks; truncating ranks after species.",
+            int((distinct["lineage"].astype(str).str.count(";") >= 7).sum()),
+        )
+        split_lineage = split_lineage.iloc[:, :7]
 
     split_lineage = split_lineage.reindex(columns=range(7), fill_value="")
     split_lineage.columns = ["domain", "phylum", "class", "order", "family", "genus", "species"]

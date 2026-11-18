@@ -64,16 +64,14 @@
                 "sourmash_database": {
                     "type": "string",
                     "pattern": "^.+$",
-                    "exists": true,
-                    "description": "Path to Sourmash database (.rocksdb, .zip, or directory)",
-                    "help_text": "Required for bin classification, read-based profiling, and --genome_input rows whose lineage field is blank"
+                    "description": "Sourmash database(s): one .rocksdb/.zip, or several zip/sig databases separated by commas",
+                    "help_text": "Required for bin classification, read-based profiling, and --genome_input rows whose lineage field is blank. Example: --sourmash_database \"path/to/db1.zip,path/to/db2.zip\". Several RocksDB indexes cannot be combined (fastmultigather skips them in a pathlist). With several databases YACHT is skipped, because YACHT takes one database."
                 },
                 "sourmash_taxonomy_csv": {
                     "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "description": "Path to taxonomy lineages CSV file for Sourmash",
-                    "help_text": "Required when running workflows that use SOURMASH_TAXANNOTATE (READ_BASED, READ_BASED_SINGLERUN, BIN_CLASSIFICATION), including --genome_input rows whose lineage field is blank."
+                    "pattern": "^.+$",
+                    "description": "Sourmash taxonomy lineages CSV/sqldb; several files separated by commas",
+                    "help_text": "Required when running workflows that use SOURMASH_TAXANNOTATE (READ_BASED, READ_BASED_SINGLERUN, BIN_CLASSIFICATION), including --genome_input rows whose lineage field is blank. Give one taxonomy file per database when the databases come from different sources."
                 },
                 "yacht_database": {
                     "type": "string",
@@ -344,6 +342,13 @@
                     "default": false,
                     "description": "Route assembly-produced bins with resolved d__Bacteria lineage into bacterial downstream analysis.",
                     "help_text": "This switch is for the ordinary assembly/binning route. Supplying --genome_input activates the same downstream routing contract automatically."
+                },
+                "readbased_taxotools": {
+                    "type": "string",
+                    "default": "microcosm",
+                    "pattern": "^(microcosm|sylph)(,(microcosm|sylph))?$",
+                    "description": "Read-based profiler(s): microcosm (sourmash + YACHT), sylph, or microcosm,sylph",
+                    "help_text": "sylph profiles the paired reads directly (no read merging) and writes to Readbased_Analysis/sylph/. With both, each tool keeps its own output folder. --enable_singlesketch only changes the microcosm branch."
                 },
                 "readbased_postprocess": {
                     "type": "string",
@@ -659,8 +664,8 @@
                 "binqc_tool": {
                     "type": "string",
                     "default": "checkm2",
-                    "description": "Tool for bin quality assessment",
-                    "enum": ["busco", "checkm", "checkm2"]
+                    "description": "Tool(s) for bin quality assessment: busco, checkm, checkm2, or several comma-separated (e.g. checkm2,checkm)",
+                    "pattern": "^(busco|checkm|checkm2)(,(busco|checkm|checkm2))*$"
                 },
                 "busco_db": {
                     "type": "string",
@@ -926,6 +931,35 @@
                     "description": "Skip YACHT-based filtering and read-based results processing",
                     "help_text": "When enabled, the pipeline will skip YACHT analysis"
                 },
+                "sylph_database": {
+                    "type": "string",
+                    "pattern": "^.+$",
+                    "description": "sylph database(s) (*.syldb/*.syl2db), comma-separated for several",
+                    "help_text": "Required when --readbased_taxotools includes sylph. Example: --sylph_database \"gtdb-r226-c200-dbv2.syl2db,fungi-refseq-2025-10-11-c200-dbv1.syldb\"."
+                },
+                "sylph_args": {
+                    "type": "string",
+                    "description": "Additional sylph profile arguments"
+                },
+                "sylph_datatype": {
+                    "type": "string",
+                    "default": "taxonomic_abundance",
+                    "enum": ["taxonomic_abundance", "sequence_abundance"],
+                    "description": "sylph value used for the merged sylph-tax table and the phyloseq otu_table",
+                    "help_text": "taxonomic_abundance uses sylph-tax relative_abundance; sequence_abundance runs sylph profile with --estimate-read-counts and uses the estimated read counts."
+                },
+                "enable_sylphtax": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run sylph-tax taxprof on the sylph profiles (needs --sylph_taxonomy)",
+                    "help_text": "Writes per-sample *.sylphmpa, a merged clade x sample table, and with --readbased_postprocess phyloseq/all the phyloseq tables (tax_table.csv, otu_table.csv, sample_data.csv)."
+                },
+                "sylph_taxonomy": {
+                    "type": "string",
+                    "pattern": "^.+$",
+                    "description": "sylph-tax metadata file(s) matching the sylph database(s), comma-separated",
+                    "help_text": "Example: gtdb_r226_metadata.tsv.gz for gtdb-r226 sylph databases."
+                },
                 "yacht_ksize": {
                     "type": "integer",
                     "default": 31,
@@ -1156,6 +1190,37 @@
             "type": "object",
             "description": "Other pipeline options",
             "properties": {
+                "skip_multiqc": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip the final MultiQC report (${outdir}/MultiQC)",
+                    "help_text": "The report gathers FastQC/fastp, bin QC (BUSCO, CheckM, CheckM2), Prokka, sylph-tax profiles (--enable_sylphtax) and, with --readbased_postprocess all, microcosm top-taxa bar graphs built from <prefix>.processed_metaflow.csv."
+                },
+                "multiqc_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Custom MultiQC config file"
+                },
+                "multiqc_extra_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Additional MultiQC config file"
+                },
+                "multiqc_logo": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Logo for the MultiQC report"
+                },
+                "multiqc_replace_names": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "TSV for MultiQC --replace-names"
+                },
+                "multiqc_sample_names": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "TSV for MultiQC --sample-names"
+                },
                 "cleanup": {
                     "type": "boolean",
                     "default": false,
@@ -1214,26 +1279,6 @@
                     "type": "string",
                     "fa_icon": "far calendar",
                     "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
-                    "hidden": true
-                },
-                "processed_results_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for processed read-based results.",
-                    "hidden": true
-                },
-                "yacht_results_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for YACHT read-based results.",
-                    "hidden": true
-                },
-                "bins_csv_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for Sourmash bin CSV files.",
-                    "hidden": true
-                },
-                "sketches_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for Sourmash sketch files.",
                     "hidden": true
                 }
             }

@@ -1,0 +1,84 @@
+#!/usr/bin/env nextflow
+nextflow.enable.dsl = 2
+
+// Authors: @tnmquann
+// Maintainers: @tnmquann
+
+/*
+ * Read-based profiling with sylph (--readbased_taxotools sylph).
+ * Paired reads go straight to sylph profile (no MERGE_PAIREDENDSEQS).
+ * --enable_sylphtax adds sylph-tax taxprof and a merged table in the
+ * --sylph_datatype column; --readbased_postprocess phyloseq|all adds phyloseq tables.
+ * run_rgi: RGI-BWT runs here when the microcosm (sourmash) branch is not selected.
+ */
+
+include { SYLPH_PROFILE } from '../../../modules/nf-core/sylph/profile/main'
+include { SYLPHTAX_TAXPROF } from '../../../modules/nf-core/sylphtax/taxprof/main'
+include { SYLPH_POSTPROCESS } from '../../../modules/local/sylph/postprocess/main'
+include { RGI_PREPARECARDDB } from '../../../modules/local/rgi/preparecarddb/main'
+include { RGI_BWT } from '../../../modules/local/rgi/bwt/main'
+include { pathList } from '../utils_microcosm/main'
+
+workflow READ_BASED_SYLPH {
+    take:
+    cleaned_reads_ch // channel: [ val(meta), [ reads ] ]
+    output_prefix    // val: run prefix (outdir basename)
+    run_rgi          // val: true when RGI-BWT is not run by the microcosm branch
+
+    main:
+    def versions_ch = channel.empty()
+    def ch_rgi_results = channel.empty()
+    def ch_sylphtax = channel.empty()
+    def ch_merged = channel.empty()
+    def ch_phyloseq = channel.empty()
+
+    if (!params.sylph_database) {
+        error "Missing required parameter for sylph profiling: --sylph_database"
+    }
+
+    SYLPH_PROFILE(cleaned_reads_ch, pathList(params.sylph_database, 'sylph_database'))
+
+    if (params.enable_sylphtax) {
+        if (!params.sylph_taxonomy) {
+            error "--enable_sylphtax needs --sylph_taxonomy (sylph-tax metadata file(s), e.g. gtdb_r226_metadata.tsv.gz)"
+        }
+        SYLPHTAX_TAXPROF(SYLPH_PROFILE.out.profile_out, pathList(params.sylph_taxonomy, 'sylph_taxonomy'))
+        ch_sylphtax = SYLPHTAX_TAXPROF.out.taxprof_output
+
+        def make_phyloseq = params.readbased_postprocess in ['all', 'phyloseq']
+        SYLPH_POSTPROCESS(
+            ch_sylphtax
+                .toSortedList { a, b -> a[0].id <=> b[0].id }
+                .filter { records -> records }
+                .map { records -> tuple(records.collect { record -> record[0].id }, records.collect { record -> record[1] }) },
+            output_prefix,
+            params.sylph_datatype,
+            make_phyloseq,
+            file("${projectDir}/bin/py_scripts/read_based/sylph_postprocess.py", checkIfExists: true)
+        )
+        ch_merged = SYLPH_POSTPROCESS.out.merged
+        ch_phyloseq = SYLPH_POSTPROCESS.out.phyloseq
+    }
+
+    if (run_rgi && params.enable_rgi_bwt) {
+        def ch_rgi_db
+        if (params.rgi_preparecarddb_dir) {
+            ch_rgi_db = channel.value(file(params.rgi_preparecarddb_dir))
+        } else {
+            RGI_PREPARECARDDB([])
+            ch_rgi_db = RGI_PREPARECARDDB.out.db
+            versions_ch = versions_ch.mix(RGI_PREPARECARDDB.out.versions)
+        }
+        RGI_BWT(cleaned_reads_ch.map { meta, reads -> [meta, reads[0], reads[1]] }, ch_rgi_db)
+        versions_ch = versions_ch.mix(RGI_BWT.out.versions)
+        ch_rgi_results = RGI_BWT.out.outdir
+    }
+
+    emit:
+    profile = SYLPH_PROFILE.out.profile_out
+    sylphtax = ch_sylphtax
+    merged = ch_merged
+    phyloseq = ch_phyloseq
+    rgi_results = ch_rgi_results
+    versions = versions_ch
+}

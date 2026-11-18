@@ -16,6 +16,7 @@ include { POSTPROCESS_READBASED } from '../../../modules/local/finalize/postproc
 include { MERGE_READBASED_POSTPROCESS_INPUTS } from '../../../modules/local/finalize/merge_readbased_postprocess_inputs/main'
 include { RGI_PREPARECARDDB } from '../../../modules/local/rgi/preparecarddb/main'
 include { RGI_BWT } from '../../../modules/local/rgi/bwt/main'
+include { pathList; yachtSkipped } from '../utils_microcosm/main'
 
 def deriveReadbasedBatchPrefix(outdir) {
     def normalized = outdir?.toString()?.trim()?.replaceAll('/+$', '')
@@ -128,7 +129,7 @@ workflow READ_BASED_SINGLERUN {
     // Input: signature from each sample + database
     SOURMASH_GATHER_META(
         SOURMASH_SKETCH_META.out.signatures,
-        file(params.sourmash_database, checkIfExists: true),
+        pathList(params.sourmash_database, 'sourmash_database'),
         false,  // save_unassigned
         false,  // save_matches_sig
         false,  // save_prefetch
@@ -139,20 +140,20 @@ workflow READ_BASED_SINGLERUN {
     // Step 4: Run sourmash tax annotate (per sample)
     SOURMASH_TAXANNOTATE_META(
         SOURMASH_GATHER_META.out.result,
-        file(params.sourmash_taxonomy_csv, checkIfExists: true)
+        pathList(params.sourmash_taxonomy_csv, 'sourmash_taxonomy_csv')
     )
     versions_ch = versions_ch.mix(SOURMASH_TAXANNOTATE_META.out.versions_sourmash.first())
 
     // Step 5: Run sourmash tax metagenome (per sample)
     SOURMASH_TAXMETAGENOME_SINGLESKETCH(
         SOURMASH_TAXANNOTATE_META.out.result,
-        file(params.sourmash_taxonomy_csv, checkIfExists: true)
+        pathList(params.sourmash_taxonomy_csv, 'sourmash_taxonomy_csv')
     )
     versions_ch = versions_ch.mix(SOURMASH_TAXMETAGENOME_SINGLESKETCH.out.versions.first())
 
     // Step 6: YACHT branch (parallel with step 4-5)
     // Only run YACHT + PROCESS_READBASED_RESULTS_SINGLESKETCH when not skipping
-    if (!params.skip_yacht) {
+    if (!yachtSkipped()) {
         // Use .sig.zip files for YACHT
         YACHT_RUN_SINGLESKETCH(
             SOURMASH_SIG_TO_ZIP.out.sig_zip,
@@ -256,7 +257,7 @@ workflow READ_BASED_SINGLERUN {
 
     emit:
     versions = versions_ch.ifEmpty(null)
-    results  = params.skip_yacht ? channel.empty() : PROCESS_READBASED_RESULTS_SINGLESKETCH.out.final_results
+    results  = yachtSkipped() ? channel.empty() : PROCESS_READBASED_RESULTS_SINGLESKETCH.out.final_results
 
     rgi_results = ch_rgi_results
     postprocess_default = ch_postprocess_default
@@ -269,5 +270,5 @@ workflow READ_BASED_SINGLERUN {
     single_sketches = SOURMASH_SKETCH_META.out.signatures
     single_sketches_zip = SOURMASH_SIG_TO_ZIP.out.sig_zip
 
-    yacht_results = params.skip_yacht ? channel.empty() : YACHT_RUN_SINGLESKETCH.out.yacht_xlsx
+    yacht_results = yachtSkipped() ? channel.empty() : YACHT_RUN_SINGLESKETCH.out.yacht_xlsx
 }
