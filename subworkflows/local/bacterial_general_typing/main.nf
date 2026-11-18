@@ -9,6 +9,7 @@ include { MLST as MLST_TYPING } from '../../../modules/nf-core/mlst/main'
 include { VIRULENCEFINDER_DOWNLOADDB_LOCAL } from '../../../modules/local/virulencefinder/downloaddb/main'
 include { VIRULENCEFINDER_RUN as VIRULENCEFINDER_TYPING } from '../../../modules/local/virulencefinder/main'
 include { PLASMIDFINDER as PLASMIDFINDER_TYPING } from '../../../modules/nf-core/plasmidfinder/main'
+include { stepWanted } from '../utils_bacterial_lineage/main'
 
 // Steps of playground/modular/2_general_bac.sh for every d__Bacteria genome:
 // MLST, VirulenceFinder and PlasmidFinder (container-bundled database).
@@ -20,10 +21,13 @@ workflow BACTERIAL_GENERAL_TYPING {
     main:
     ch_versions = channel.empty()
 
-    ch_genome_splits = bacterial_genomes_ch.branch { _meta, genome ->
-        compressed: genome.getName().endsWith('.gz')
-        uncompressed: true
-    }
+    // --bacterial_decision_table: only genomes with at least one of these steps
+    ch_genome_splits = bacterial_genomes_ch
+        .filter { meta, _genome -> ['mlst', 'virulencefinder', 'plasmidfinder'].any { step -> stepWanted(meta, step) } }
+        .branch { _meta, genome ->
+            compressed: genome.getName().endsWith('.gz')
+            uncompressed: true
+        }
     GUNZIP_GENERAL_TYPING(ch_genome_splits.compressed)
     ch_typing_genomes = GUNZIP_GENERAL_TYPING.out.gunzip
         .mix(ch_genome_splits.uncompressed)
@@ -39,22 +43,24 @@ workflow BACTERIAL_GENERAL_TYPING {
     ch_pf_tsv = channel.empty()
 
     if (!params.skip_mlst) {
-        MLST_TYPING(ch_typing_genomes)
+        ch_mlst_genomes = ch_typing_genomes.filter { meta, _genome -> stepWanted(meta, 'mlst') }
+        MLST_TYPING(ch_mlst_genomes)
         ch_mlst_tsv = MLST_TYPING.out.tsv
         ch_versions = ch_versions.mix(MLST_TYPING.out.versions_mlst)
     }
 
     if (!params.skip_virulencefinder) {
+        ch_virulencefinder_genomes = ch_typing_genomes.filter { meta, _genome -> stepWanted(meta, 'virulencefinder') }
         if (params.virulencefinder_db) {
             ch_virulencefinder_db = channel.value(file(params.virulencefinder_db, checkIfExists: true))
         } else {
             VIRULENCEFINDER_DOWNLOADDB_LOCAL(
-                ch_typing_genomes.first().map { _genome -> params.virulencefinder_db_revision }
+                ch_virulencefinder_genomes.first().map { _genome -> params.virulencefinder_db_revision }
             )
             ch_virulencefinder_db = VIRULENCEFINDER_DOWNLOADDB_LOCAL.out.db
             ch_versions = ch_versions.mix(VIRULENCEFINDER_DOWNLOADDB_LOCAL.out.versions)
         }
-        VIRULENCEFINDER_TYPING(ch_typing_genomes, ch_virulencefinder_db)
+        VIRULENCEFINDER_TYPING(ch_virulencefinder_genomes, ch_virulencefinder_db)
         ch_vf_json = VIRULENCEFINDER_TYPING.out.json
         ch_vf_legacy_json = VIRULENCEFINDER_TYPING.out.legacy_json
         ch_vf_tsv = VIRULENCEFINDER_TYPING.out.tsv
@@ -63,7 +69,8 @@ workflow BACTERIAL_GENERAL_TYPING {
     }
 
     if (!params.skip_plasmidfinder) {
-        PLASMIDFINDER_TYPING(ch_typing_genomes)
+        ch_plasmidfinder_genomes = ch_typing_genomes.filter { meta, _genome -> stepWanted(meta, 'plasmidfinder') }
+        PLASMIDFINDER_TYPING(ch_plasmidfinder_genomes)
         ch_pf_json = PLASMIDFINDER_TYPING.out.json
         ch_pf_txt = PLASMIDFINDER_TYPING.out.txt
         ch_pf_tsv = PLASMIDFINDER_TYPING.out.tsv

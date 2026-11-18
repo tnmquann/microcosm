@@ -13,7 +13,7 @@ include { PARSE_SALMONELLA_TYPING } from '../../../modules/local/finalize/parse_
 include { PARATYPE_DOWNLOAD_LOCAL } from '../../../modules/local/paratype/download/main'
 include { VALIDATE_PARATYPE_BUNDLE } from '../../../modules/local/input/validate_paratype_bundle/main'
 include { PARATYPE_RUN } from '../../../modules/local/paratype/run/main'
-include { stripGtdbSuffixes } from '../utils_bacterial_lineage/main'
+include { stripGtdbSuffixes; stepWanted } from '../utils_bacterial_lineage/main'
 
 def keyedSalmonellaOutput(output_channel) {
     return output_channel.map { meta, output ->
@@ -37,7 +37,8 @@ workflow SALMONELLA_TYPING {
     )
 
     ch_salmonella_genomes = bacterial_genomes_ch
-        .filter { meta, _genome -> stripGtdbSuffixes(meta.lineage).contains('g__Salmonella') }
+        // default route: g__Salmonella; --bacterial_decision_table sistr/seqsero2 = y/n overrides it per lineage
+        .filter { meta, _genome -> ['sistr', 'seqsero2'].any { step -> stepWanted(meta, step, stripGtdbSuffixes(meta.lineage).contains('g__Salmonella')) } }
         .map { meta, genome ->
             def meta_new = meta.clone()
             meta_new.salmonella_typing_key = "${meta.sample_id}::${meta.genome_id}"
@@ -62,26 +63,25 @@ workflow SALMONELLA_TYPING {
     ch_paratype_report = channel.empty()
 
     if (!params.skip_sistr) {
-        SISTR_SALMONELLA(ch_typing_genomes)
+        SISTR_SALMONELLA(ch_typing_genomes.filter { meta, _genome -> stepWanted(meta, 'sistr', stripGtdbSuffixes(meta.lineage).contains('g__Salmonella')) })
         ch_sistr_tsv = SISTR_SALMONELLA.out.tsv
         ch_versions = ch_versions.mix(SISTR_SALMONELLA.out.versions_sistr)
     }
     if (!params.skip_seqsero2) {
-        SEQSERO2_SALMONELLA(ch_typing_genomes)
+        SEQSERO2_SALMONELLA(ch_typing_genomes.filter { meta, _genome -> stepWanted(meta, 'seqsero2', stripGtdbSuffixes(meta.lineage).contains('g__Salmonella')) })
         ch_seqsero2_tsv = SEQSERO2_SALMONELLA.out.tsv
         ch_versions = ch_versions.mix(SEQSERO2_SALMONELLA.out.versions_seqsero2)
     }
 
     // The SISTR serovar is the only routing input; without SISTR there is no follow-up.
     if (!params.skip_sistr) {
-        // Route only after both tools finished for the same genome.
-        ch_parser_input = params.skip_seqsero2
-            ? ch_sistr_tsv.map { meta, sistr_tsv -> tuple(meta, [], sistr_tsv) }
-            : keyedSalmonellaOutput(ch_seqsero2_tsv)
-                .join(keyedSalmonellaOutput(ch_sistr_tsv), by: 0)
-                .map { _key, meta, seqsero2_tsv, _sistr_meta, sistr_tsv ->
-                    tuple(meta, seqsero2_tsv, sistr_tsv)
-                }
+        // Route only after both tools finished for the same genome. SeqSero2 may not run for a genome
+        // (--skip_seqsero2 or seqsero2=n in --bacterial_decision_table): remainder join, [] instead.
+        // Joined records: [key, meta, sistr, meta, seqsero2], or [key, meta, sistr, null] without SeqSero2.
+        ch_parser_input = keyedSalmonellaOutput(ch_sistr_tsv)
+            .join(keyedSalmonellaOutput(ch_seqsero2_tsv), by: 0, remainder: true)
+            .filter { record -> record[1] != null }
+            .map { record -> tuple(record[1], record.size() == 5 ? record[4] : [], record[2]) }
         PARSE_SALMONELLA_TYPING(ch_parser_input, parser_script)
         ch_evidence = PARSE_SALMONELLA_TYPING.out.evidence
         ch_routing = PARSE_SALMONELLA_TYPING.out.routing
@@ -101,7 +101,9 @@ workflow SALMONELLA_TYPING {
         // Typhi: Mykrobe (typhi panel) then the GenoTyphi parser.
         if (!params.skip_genotyphi) {
             MYKROBE_SALMONELLA(
-                ch_routed_genomes.typhi.map { _key, meta, genome, _row -> tuple(meta, genome) },
+                ch_routed_genomes.typhi
+                    .filter { _key, meta, _genome, _row -> stepWanted(meta, 'genotyphi') }
+                    .map { _key, meta, genome, _row -> tuple(meta, genome) },
                 'typhi'
             )
             GENOTYPHI_SALMONELLA(MYKROBE_SALMONELLA.out.json)
@@ -115,6 +117,7 @@ workflow SALMONELLA_TYPING {
         // Paratyphi A: Paratype; fetch it only when a genome needs it.
         if (!params.skip_paratype) {
             ch_paratype_input = ch_routed_genomes.paratyphi_a
+                .filter { _key, meta, _genome, _row -> stepWanted(meta, 'paratype') }
                 .map { _key, meta, genome, _row -> tuple(meta, genome) }
             if (params.paratype_bundle) {
                 ch_paratype_bundle = channel.value(file(params.paratype_bundle, checkIfExists: true))

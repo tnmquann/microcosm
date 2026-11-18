@@ -10,6 +10,7 @@ include { PUBLISH_GENOME_ROUTING } from '../../../modules/local/finalize/publish
 // Intentional nested use: standalone --genome_input rows with blank lineage
 // are classified here; assembly-produced bins are classified by workflow/metaflow.nf.
 include { BIN_CLASSIFICATION } from '../bin_classification/main'
+include { readDecisionTable; decisionFor } from '../utils_bacterial_lineage/main'
 
 def routingTsvValue(value) {
     return value == null ? '' : value.toString().replaceAll(/[\t\r\n]/, ' ')
@@ -34,7 +35,9 @@ def routingTsvLine(meta, genome, status, reason) {
         meta.lineage_source,
         meta.source_route,
         status,
-        reason
+        reason,
+        meta.decision_pattern,
+        meta.decision_steps?.collect { step, run -> "${step}=${run ? 'y' : 'n'}" }?.join(';')
     ].collect { value -> routingTsvValue(value) }.join('\t') + '\n'
 }
 
@@ -196,6 +199,17 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
         excluded: true
     }
 
+    // --bacterial_decision_table: per-lineage y/n steps (meta keys only added when a table is given,
+    // so runs without one keep their -resume cache)
+    decision_rows = params.bacterial_decision_table ? readDecisionTable(params.bacterial_decision_table) : null
+    ch_bacterial_genomes = decision_rows == null ? ch_routed_genomes.bacterial : ch_routed_genomes.bacterial.map { meta, genome ->
+        def decision = decisionFor(decision_rows, meta.lineage)
+        def meta_new = meta.clone()
+        meta_new.decision_pattern = decision.pattern
+        meta_new.decision_steps = decision.steps
+        tuple(meta_new, genome)
+    }
+
     routing_header = [
         'sample_id',
         'genome_id',
@@ -214,10 +228,12 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
         'lineage_source',
         'source_route',
         'status',
-        'reason'
+        'reason',
+        'decision_pattern',
+        'decision_steps'
     ].join('\t') + '\n'
 
-    ch_bacterial_report = ch_routed_genomes.bacterial
+    ch_bacterial_report = ch_bacterial_genomes
         .map { meta, genome ->
             routingTsvLine(
                 meta,
@@ -273,7 +289,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
     ch_versions = ch_versions.mix(PUBLISH_GENOME_ROUTING.out.versions)
 
     emit:
-    bacterial_genomes = ch_routed_genomes.bacterial
+    bacterial_genomes = ch_bacterial_genomes
     excluded_genomes = ch_routed_genomes.excluded
     unresolved_genomes = ch_unresolved_genomes
     bacterial_report = PUBLISH_GENOME_ROUTING.out.bacterial

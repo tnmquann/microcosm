@@ -22,7 +22,7 @@ include { HAMRONIZATION_REPORT_LOCAL as HAMRONIZATION_RGI_AMR } from '../../../m
 include { HAMRONIZATION_SUMMARIZE_LOCAL as HAMRONIZATION_SUMMARIZE_AMR } from '../../../modules/local/hamronization/summarize/main'
 include { ARGNORM_LOCAL as ARGNORM_SUMMARY_AMR } from '../../../modules/local/argnorm/main'
 include { ARGNORM_LOCAL as ARGNORM_TOOL_AMR } from '../../../modules/local/argnorm/main'
-include { readLineageMap; lookupLineage } from '../utils_bacterial_lineage/main'
+include { readLineageMap; lookupLineage; stepWanted } from '../utils_bacterial_lineage/main'
 
 // Steps of playground/modular/5_amr.sh (AMRFinderPlus, ABRicate, RGI, ResFinder,
 // DeepARG) and 6_hamr.sh (hAMRonization per tool + summary, ARGnorm) for every
@@ -56,7 +56,9 @@ workflow BACTERIAL_AMR_ANALYSIS {
         ['organism']
     )
 
+    // --bacterial_decision_table: only genomes with at least one AMR step
     ch_genome_splits = bacterial_genomes_ch
+        .filter { meta, _genome -> ['amrfinderplus', 'abricate', 'rgi', 'resfinder', 'deeparg'].any { step -> stepWanted(meta, step) } }
         .map { meta, genome ->
             def meta_new = meta.clone()
             meta_new.amrfinder_organism = lookupLineage(organism_rows, meta.lineage)?.organism?.trim() ?: ''
@@ -73,14 +75,15 @@ workflow BACTERIAL_AMR_ANALYSIS {
     // ---- 5_amr.sh: one task per genome and tool; 6_hamr.sh: hAMRonization per tool ----
     // Database downloads take the first genome as trigger: nothing is downloaded without one.
     if (!params.skip_amrfinderplus) {
+        ch_amrfinderplus_genomes = ch_amr_genomes.filter { meta, _genome -> stepWanted(meta, 'amrfinderplus') }
         if (params.amrfinderplus_db) {
             ch_amrfinder_db = channel.value(file(params.amrfinderplus_db, checkIfExists: true))
         } else {
-            AMRFINDERPLUS_UPDATE(ch_amr_genomes.first().map { _genome -> true })
+            AMRFINDERPLUS_UPDATE(ch_amrfinderplus_genomes.first().map { _genome -> true })
             ch_amrfinder_db = AMRFINDERPLUS_UPDATE.out.db
             ch_versions = ch_versions.mix(AMRFINDERPLUS_UPDATE.out.versions_amrfinder)
         }
-        AMRFINDERPLUS_AMR(ch_amr_genomes, ch_amrfinder_db)
+        AMRFINDERPLUS_AMR(ch_amrfinderplus_genomes, ch_amrfinder_db)
         ch_amrfinder_report = AMRFINDERPLUS_AMR.out.report
         HAMRONIZATION_AMRFINDERPLUS_AMR(
             AMRFINDERPLUS_AMR.out.report, 'amrfinderplus', 'tsv',
@@ -96,7 +99,8 @@ workflow BACTERIAL_AMR_ANALYSIS {
     }
 
     if (!params.skip_abricate) {
-        ABRICATE_AMR(ch_amr_genomes, [])
+        ch_abricate_genomes = ch_amr_genomes.filter { meta, _genome -> stepWanted(meta, 'abricate') }
+        ABRICATE_AMR(ch_abricate_genomes, [])
         ch_abricate_report = ABRICATE_AMR.out.report
         HAMRONIZATION_ABRICATE_AMR(
             ABRICATE_AMR.out.report, 'abricate', 'tsv',
@@ -112,14 +116,15 @@ workflow BACTERIAL_AMR_ANALYSIS {
     }
 
     if (!params.skip_rgi) {
+        ch_rgi_genomes = ch_amr_genomes.filter { meta, _genome -> stepWanted(meta, 'rgi') }
         if (params.rgi_preparecarddb_dir) {
             ch_card_db = channel.value(file(params.rgi_preparecarddb_dir, checkIfExists: true))
         } else {
-            RGI_PREPARECARDDB_AMR(ch_amr_genomes.first().map { _genome -> [] })
+            RGI_PREPARECARDDB_AMR(ch_rgi_genomes.first().map { _genome -> [] })
             ch_card_db = RGI_PREPARECARDDB_AMR.out.db
             ch_versions = ch_versions.mix(RGI_PREPARECARDDB_AMR.out.versions)
         }
-        RGI_AMR(ch_amr_genomes, ch_card_db, [])
+        RGI_AMR(ch_rgi_genomes, ch_card_db, [])
         ch_rgi_tsv = RGI_AMR.out.tsv
         ch_rgi_json = RGI_AMR.out.json
         HAMRONIZATION_RGI_AMR(
@@ -135,13 +140,14 @@ workflow BACTERIAL_AMR_ANALYSIS {
     }
 
     if (!params.skip_resfinder) {
+        ch_resfinder_genomes = ch_amr_genomes.filter { meta, _genome -> stepWanted(meta, 'resfinder') }
         if (params.resfinder_db && params.pointfinder_db && params.disinfinder_db) {
             ch_resfinder_db = channel.value(file(params.resfinder_db, checkIfExists: true))
             ch_pointfinder_db = channel.value(file(params.pointfinder_db, checkIfExists: true))
             ch_disinfinder_db = channel.value(file(params.disinfinder_db, checkIfExists: true))
         } else {
             RESFINDER_DOWNLOADDB_LOCAL(
-                ch_amr_genomes.first().map { _genome -> params.resfinder_db_revision }
+                ch_resfinder_genomes.first().map { _genome -> params.resfinder_db_revision }
             )
             ch_versions = ch_versions.mix(RESFINDER_DOWNLOADDB_LOCAL.out.versions)
             ch_resfinder_db = params.resfinder_db
@@ -154,7 +160,7 @@ workflow BACTERIAL_AMR_ANALYSIS {
                 ? channel.value(file(params.disinfinder_db, checkIfExists: true))
                 : RESFINDER_DOWNLOADDB_LOCAL.out.disinfinder_db
         }
-        RESFINDER_AMR(ch_amr_genomes, ch_resfinder_db, ch_pointfinder_db, ch_disinfinder_db)
+        RESFINDER_AMR(ch_resfinder_genomes, ch_resfinder_db, ch_pointfinder_db, ch_disinfinder_db)
         ch_resfinder_json = RESFINDER_AMR.out.json
         ch_resfinder_results = RESFINDER_AMR.out.results
         // ResFinder JSON carries its own software/database versions.
@@ -168,15 +174,16 @@ workflow BACTERIAL_AMR_ANALYSIS {
     }
 
     if (!params.skip_deeparg) {
+        ch_deeparg_genomes = ch_amr_genomes.filter { meta, _genome -> stepWanted(meta, 'deeparg') }
         if (params.deeparg_db) {
             ch_deeparg_db = channel.value(file(params.deeparg_db, checkIfExists: true))
         } else {
-            DEEPARG_DOWNLOADDATA_AMR(ch_amr_genomes.first().map { _genome -> true })
+            DEEPARG_DOWNLOADDATA_AMR(ch_deeparg_genomes.first().map { _genome -> true })
             ch_deeparg_db = DEEPARG_DOWNLOADDATA_AMR.out.db
             ch_versions = ch_versions.mix(DEEPARG_DOWNLOADDATA_AMR.out.versions_deeparg)
         }
         DEEPARG_AMR(
-            ch_amr_genomes.map { meta, genome -> tuple(meta, genome, params.deeparg_model) },
+            ch_deeparg_genomes.map { meta, genome -> tuple(meta, genome, params.deeparg_model) },
             ch_deeparg_db
         )
         ch_deeparg_arg = DEEPARG_AMR.out.arg

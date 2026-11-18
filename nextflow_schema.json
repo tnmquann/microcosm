@@ -238,6 +238,14 @@
                     "description": "TSV mapping GTDB lineage to a Kleborate v3 preset and module list.",
                     "help_text": "Columns lineage_pattern, preset (may be empty), modules. The first row whose lineage_pattern occurs in the genome lineage wins; genomes with no match skip Kleborate. GTDB suffixes such as _B are ignored when matching (s__Enterococcus_B faecium matches s__Enterococcus faecium). Default: assets/kleborate_presets.tsv (the 3_kleb.sh rules)."
                 },
+                "bacterial_decision_table": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.tsv$",
+                    "description": "TSV of per-lineage y/n decisions for the bacterial downstream steps.",
+                    "help_text": "Optional: without it every d__Bacteria genome follows the default route. Columns: lineage_pattern, optional label, then any of amrfinderplus, abricate, rgi, resfinder, deeparg, mlst, virulencefinder, plasmidfinder, kleborate, sistr, seqsero2, genotyphi, paratype with y or n. lineage_pattern is one or more whole GTDB taxa at any rank (p__Bacillota, g__Salmonella, s__Escherichia coli; GTDB suffixes such as _B are ignored). The most specific matching row decides its y/n steps (species over genus over phylum, whatever the row order); blank cells, missing columns and lineages with no row follow the default route. --skip_<tool> still turns a tool off for every genome. kleborate=y also needs a --kleborate_preset_map row; genotyphi/paratype=y still need the SISTR serovar route. Example: assets/bacterial_decision_table_example.tsv."
+                },
                 "seqsero2_args": {
                     "type": "string",
                     "default": "-m k -t 4",

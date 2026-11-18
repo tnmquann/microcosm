@@ -1,0 +1,5 @@
+lineage_pattern	label	amrfinderplus	abricate	rgi	resfinder	deeparg	mlst	virulencefinder	plasmidfinder	kleborate	sistr	seqsero2	genotyphi	paratype
+p__Pseudomonadota	Pseudomonadota: AMR + MLST only	y	n	n	y	n	y	n	n					
+g__Escherichia	Escherichia	y	n	n	y	n	y	y	y	n	n	n	n	n
+s__Klebsiella pneumoniae	Klebsiella pneumoniae	y	n	n	y	n	y	n	n	y	n	n	n	n
+g__Listeria	Listeria	n	n	n	n	n	y	y	n	n	n	n	n	n
