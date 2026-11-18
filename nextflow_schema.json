@@ -979,7 +979,7 @@
                     "type": "string",
                     "pattern": "^.+$",
                     "description": "sylph-tax metadata file(s) matching the sylph database(s), comma-separated",
-                    "help_text": "Example: gtdb_r226_metadata.tsv.gz for gtdb-r226 sylph databases."
+                    "help_text": "One metadata file per sylph database, all passed to one sylph-tax taxprof call (-t). Example for --sylph_database gtdb-r226-c200-dbv2.syl2db,fungi-refseq-2025-10-11-c200-dbv1.syldb: --sylph_taxonomy gtdb_r226_metadata.tsv.gz,fungi_refseq_2025-10-11_metadata.tsv.gz."
                 },
                 "yacht_ksize": {
                     "type": "integer",
