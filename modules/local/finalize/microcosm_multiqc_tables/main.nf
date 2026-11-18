@@ -13,7 +13,7 @@ process MICROCOSM_MULTIQC_TABLES {
     path multiqc_script
 
     output:
-    path "microcosm_*_mqc.tsv", emit: tables
+    path "microcosm_mqc.json", emit: tables
     tuple val("${task.process}"), val('python'), eval("python --version 2>&1 | sed 's/Python //'"), emit: versions_python, topic: versions
 
     script:
@@ -24,6 +24,6 @@ process MICROCOSM_MULTIQC_TABLES {
 
     stub:
     """
-    touch microcosm_species_mqc.tsv
+    touch microcosm_mqc.json
     """
 }

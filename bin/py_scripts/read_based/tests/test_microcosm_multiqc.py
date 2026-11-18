@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import csv
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,33 +16,37 @@ KPN = "d__Bacteria;p__Pseudomonadota;c__G;o__E;f__E;g__Klebsiella;s__Klebsiella 
 SAUR = "d__Bacteria;p__Bacillota;c__B;o__S;f__S;g__Staphylococcus;s__Staphylococcus aureus"
 
 
-def row(sample, lineage, value, level="min_coverage0.05"):
-    return {"sample_name": sample, "lineage": lineage, "f_weighted_at_rank": str(value), "min_coverage": level}
+def row(sample, lineage, value, match="", level="min_coverage0.05"):
+    return {"sample_name": sample, "lineage": lineage, "f_weighted_at_rank": str(value),
+            "match_name": match, "min_coverage": level}
 
 
 class MicrocosmMultiqcTest(unittest.TestCase):
-    def test_top_other_unclassified(self):
-        rows = [row("s1", ECOLI, 0.5), row("s1", KPN, 0.1), row("s1", SAUR, 0.05), row("s1", "unclassified", 0.35),
-                row("s2", ECOLI, 0.2), row("s2", "unclassified", 0.8)]
-        tables = tool.build_tables(rows, top=1)
-        species = tables["species"]
-        self.assertEqual(list(species["s1"]), ["s__Escherichia coli", "Other", "unclassified"])
-        self.assertAlmostEqual(species["s1"]["Other"], 15.0)
-        self.assertAlmostEqual(species["s2"]["unclassified"], 80.0)
-        self.assertAlmostEqual(tables["phylum"]["s1"]["p__Pseudomonadota"], 60.0)
+    def test_rank_tabs_top_other_unclassified(self):
+        rows = [row("s1", ECOLI, 0.5, "GCF_1"), row("s1", KPN, 0.1, "GCF_2"), row("s1", SAUR, 0.05, "GCF_3"),
+                row("s1", "unclassified", 0.35, "unclassified", ""), row("s2", ECOLI, 0.2, "GCF_1"),
+                row("s2", "unclassified", 0.8, "unclassified", "")]
+        datasets, categories, labels = tool.build(rows, top=1)
+        self.assertEqual(labels, ["Strain", "Species", "Genus", "Family", "Order", "Class", "Phylum", "Domain"])
+        species = datasets[labels.index("Species")]
+        self.assertEqual(list(species["s1"]), ["s__Escherichia coli", tool.OTHER, tool.UNCLASSIFIED])
+        self.assertAlmostEqual(species["s1"][tool.OTHER], 15.0)
+        self.assertAlmostEqual(species["s2"][tool.UNCLASSIFIED], 80.0)
+        self.assertEqual(list(datasets[0]["s1"])[0], "GCF_1")
+        self.assertEqual(categories[0][tool.OTHER]["name"], "Other")
 
-    def test_levels_become_samples_and_file_written(self):
-        rows = [row("s1", ECOLI, 0.4, "min_coverage0.05"), row("s1", ECOLI, 0.5, "min_coverage0.01"),
-                row("s1", "unclassified", 0.5, "")]
-        tables = tool.build_tables(rows, top=5)
-        self.assertEqual(sorted(tables["genus"]), ["s1 (min_coverage0.01)", "s1 (min_coverage0.05)"])
-        self.assertAlmostEqual(tables["genus"]["s1 (min_coverage0.05)"]["unclassified"], 50.0)
-        out = Path(tempfile.mkdtemp()) / "x_mqc.tsv"
-        tool.write_table(out, "genus", tables["genus"])
-        lines = out.read_text().splitlines()
-        self.assertTrue(lines[0].startswith("# id: 'microcosm_genus'"))
-        data = list(csv.reader([l for l in lines if not l.startswith("#")], delimiter="\t"))
-        self.assertEqual(data[0], ["Sample", "g__Escherichia", "Other", "unclassified"])
+    def test_levels_and_json(self):
+        rows = [row("s1", ECOLI, 0.4, "GCF_1", "min_coverage0.05"), row("s1", ECOLI, 0.5, "GCF_1", "min_coverage0.01"),
+                row("s1", "unclassified", 0.5, "unclassified", "")]
+        datasets, categories, labels = tool.build(rows, top=5)
+        self.assertEqual(sorted(datasets[1]), ["s1 (min_coverage0.01)", "s1 (min_coverage0.05)"])
+        self.assertAlmostEqual(datasets[1]["s1 (min_coverage0.05)"][tool.UNCLASSIFIED], 50.0)
+        out = Path(tempfile.mkdtemp()) / "microcosm_mqc.json"
+        tool.write_json(out, datasets, categories, labels, 5)
+        content = json.loads(out.read_text())
+        self.assertEqual(content["plot_type"], "bargraph")
+        self.assertEqual(content["pconfig"]["data_labels"], labels)
+        self.assertEqual(len(content["data"]), len(content["categories"]))
 
 
 if __name__ == "__main__":

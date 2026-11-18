@@ -1194,7 +1194,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Skip the final MultiQC report (${outdir}/MultiQC)",
-                    "help_text": "The report gathers FastQC/fastp, bin QC (BUSCO, CheckM, CheckM2), Prokka, sylph-tax profiles (--enable_sylphtax) and, with --readbased_postprocess all, microcosm top-taxa bar graphs built from <prefix>.processed_metaflow.csv."
+                    "help_text": "Sections: microcosm top taxa (tab per rank; needs --readbased_postprocess all), sylph-tax (--enable_sylphtax), bacterial genome overview, FastQC/fastp, bin QC (CheckM2, CheckM, BUSCO, QUAST), Prokka, run summary and software versions. Styled by assets/multiqc_config.yml and assets/microcosm_logo.png."
                 },
                 "multiqc_config": {
                     "type": "string",

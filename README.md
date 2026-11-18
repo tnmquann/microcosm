@@ -147,12 +147,15 @@ publishing of those intermediate files on or off.
 `--postprocess_options` accepts one shell-style option string and safely tokenizes it before invoking `post_processing.py`. For example, the general form `--postprocess_options "--params_1 abc def --params_2 sss ddd"` is passed as the corresponding argument sequence. Use only options supported by the current Python script; a current valid example is `--postprocess_options "--min_coverage 0.05 --use_average"`. If one individual value contains spaces, quote that value inside the outer option string.
 
 A MultiQC report is written to `${outdir}/MultiQC/<prefix>_multiqc_report.html`
-(turn off with `--skip_multiqc`). It gathers FastQC/fastp, bin QC (BUSCO,
-CheckM, CheckM2), Prokka, sylph-tax profiles (`--enable_sylphtax`) and, with
-`--readbased_postprocess all`, microcosm bar graphs of the top phyla, genera and
-species built from `<prefix>.processed_metaflow.csv`. `--multiqc_config`,
-`--multiqc_logo`, `--multiqc_replace_names` and `--multiqc_sample_names` are
-passed to MultiQC.
+(turn off with `--skip_multiqc`), styled by `assets/multiqc_config.yml` with the
+microcosm logo. Sections: microcosm top taxa (one bar graph with a tab per rank,
+Strain to Domain, from `<prefix>.processed_metaflow.csv`, so it needs
+`--readbased_postprocess all`), sylph-tax (`--enable_sylphtax`), a bacterial
+genome overview (species, MLST, SISTR serovar, AMR genes per tool), FastQC/fastp,
+bin QC (CheckM2, CheckM, BUSCO, QUAST), Prokka, the run summary (parameters that
+differ from the defaults) and the software versions. `--multiqc_config` and
+`--multiqc_extra_config` are applied after the default config; `--multiqc_logo`,
+`--multiqc_replace_names` and `--multiqc_sample_names` are passed to MultiQC.
 
 Software versions of every tool used in a run are collected in one file,
 `${outdir}/pipeline_info/microcosm_software_versions.yml`, next to the

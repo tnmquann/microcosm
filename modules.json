@@ -213,7 +213,8 @@
           "multiqc": {
             "branch": "master",
             "git_sha": "cd0ad387832473916b1f1c80c2ca673a7883bf94",
-            "installed_by": ["modules"]
+            "installed_by": ["modules"],
+            "patch": "modules/nf-core/multiqc/multiqc.diff"
           },
           "mykrobe/predict": {
             "branch": "master",

@@ -62,8 +62,9 @@ process PROCESS_READBASED_RESULTS {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
-        conda-forge: pandas=2.2.3 openpyxl=3.1.5
-        gunzip: \$(gunzip --version 2>&1 | head -n 1 | cut -d ' ' -f 2)
+        pandas: \$(python -c 'import pandas; print(pandas.__version__)')
+        openpyxl: \$(python -c 'import openpyxl; print(openpyxl.__version__)')
+        gzip: \$(gzip --version 2>&1 | head -n 1 | awk '{print \$NF}')
     END_VERSIONS
     """
 

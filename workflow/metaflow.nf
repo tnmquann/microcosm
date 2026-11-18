@@ -24,10 +24,11 @@ include { BACTERIAL_GENERAL_TYPING } from '../subworkflows/local/bacterial_gener
 include { KLEBSIELLA_TYPING } from '../subworkflows/local/klebsiella_typing/main'
 include { SALMONELLA_TYPING } from '../subworkflows/local/salmonella_typing/main'
 include { BACTERIAL_TOOL_SUMMARY } from '../modules/local/bacterial/tool_summary/main'
-include { SOFTWARE_VERSIONS } from '../subworkflows/local/utils_software_versions/main'
+include { REPORTING } from '../subworkflows/local/reporting/main'
+include { BACTERIAL_MULTIQC_TABLE } from '../modules/local/bacterial/multiqc_table/main'
+include { paramsSummaryMap } from 'plugin/nf-schema'
 include { yachtSkipped; readbasedTaxotools; binqcTools } from '../subworkflows/local/utils_microcosm/main'
 include { READ_BASED_SYLPH } from '../subworkflows/local/read_based_sylph/main'
-include { MULTIQC } from '../modules/nf-core/multiqc/main'
 include { MICROCOSM_MULTIQC_TABLES } from '../modules/local/finalize/microcosm_multiqc_tables/main'
 include { GUNZIP as GUNZIP_ASSEMBLIES } from '../modules/nf-core/gunzip/main'
 
@@ -103,6 +104,42 @@ def createAssemblyInputChannel(input_path) {
         }
 }
 
+
+// MultiQC custom-content section with the run information and the parameters that differ from the defaults.
+def htmlEscape(value) {
+    return value.toString().replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+}
+
+def workflowSummaryMultiqc(summary_params) {
+    def run_info = [
+        'Run name': workflow.runName,
+        'Started': workflow.start,
+        'Profile': workflow.profile,
+        'Container engine': workflow.containerEngine ?: 'none',
+        'Nextflow': workflow.nextflow.version,
+        'Launch dir': workflow.launchDir,
+        'Work dir': workflow.workDir
+    ]
+    def html = new StringBuilder()
+    html << '<dl class="dl-horizontal">\n'
+    run_info.each { key, value -> html << "    <dt>${htmlEscape(key)}</dt><dd><samp>${htmlEscape(value)}</samp></dd>\n" }
+    html << '</dl>\n'
+    summary_params.each { group, group_params ->
+        if (group_params) {
+            html << "<h4>${htmlEscape(group)}</h4>\n<dl class=\"dl-horizontal\">\n"
+            group_params.each { key, value -> html << "    <dt>${htmlEscape(key)}</dt><dd><samp>${value ? htmlEscape(value) : '<span style=\"color:#999999;\">N/A</span>'}</samp></dd>\n" }
+            html << '</dl>\n'
+        }
+    }
+    def indented = html.toString().readLines().collect { line -> "    ${line}" }.join('\n')
+    return """id: 'microcosm-summary'
+description: ' - parameters that differ from the defaults, recorded when the run started.'
+section_name: 'microcosm workflow summary'
+plot_type: 'html'
+data: |
+${indented}
+"""
+}
 
 workflow METAFLOW {
     main:
@@ -325,6 +362,7 @@ workflow METAFLOW {
         def bacterial_genotyphi_ch = channel.empty()
         def bacterial_paratype_ch = channel.empty()
         def bacterial_summary_tables_ch = channel.empty() // [module, tool, genome_id, table]
+        def bacterial_tool_summaries_ch = channel.empty() // [module, tool, summary.tsv]
 
         // Use cleaned_reads_source for downstream workflows
         if (params.genome_input) {
@@ -662,6 +700,7 @@ workflow METAFLOW {
                 deriveReadbasedBatchPrefix(params.outdir),
                 file("${projectDir}/bin/py_scripts/bacterial_analysis/summarize_tool_tables.py", checkIfExists: true)
             )
+            bacterial_tool_summaries_ch = BACTERIAL_TOOL_SUMMARY.out.summary
         }
 
         def combined_versions = channel.empty()
@@ -675,8 +714,8 @@ workflow METAFLOW {
         combined_versions = combined_versions.mix(bacterial_salmonella_versions_ch ?: channel.empty())
         combined_versions = combined_versions.mix(preprocess_versions_ch)
 
-        // Final MultiQC report (nf-core/mag style): read QC, bin QC/annotation, sylph,
-        // and microcosm custom-content tables from <prefix>.processed_metaflow.csv
+        // Final MultiQC report (nf-core/mag style) and the run-wide software versions:
+        // read QC, bin QC/annotation, sylph-tax, microcosm top taxa, bacterial genome overview.
         if (!params.skip_multiqc) {
             def processed_csv_name = "${deriveReadbasedBatchPrefix(params.outdir)}.processed_metaflow.csv"
             MICROCOSM_MULTIQC_TABLES(
@@ -686,30 +725,23 @@ workflow METAFLOW {
                     .first(),
                 file("${projectDir}/bin/py_scripts/read_based/microcosm_multiqc.py", checkIfExists: true)
             )
-            multiqc_files_ch = multiqc_files_ch.mix(
-                MICROCOSM_MULTIQC_TABLES.out.tables.flatten(),
-                binqc_multiqc_ch.flatten(),
-                binannotation_multiqc_ch.flatten()
+            BACTERIAL_MULTIQC_TABLE(
+                bacterial_routing_report_ch.first(),
+                bacterial_tool_summaries_ch.filter { _module, tool, _table -> tool == 'mlst' }.map { _module, _tool, table -> table }.ifEmpty([]),
+                bacterial_tool_summaries_ch.filter { _module, tool, _table -> tool == 'salmonella_typing' }.map { _module, _tool, table -> table }.ifEmpty([]),
+                bacterial_amr_hamronization_summary_ch.ifEmpty([]),
+                file("${projectDir}/bin/py_scripts/bacterial_analysis/bacterial_multiqc.py", checkIfExists: true)
             )
-            MULTIQC(
-                multiqc_files_ch
-                    .filter { mqc_file -> mqc_file }
-                    .collect()
-                    .map { mqc_files ->
-                        [
-                            [id: 'microcosm'],
-                            mqc_files,
-                            [params.multiqc_config, params.multiqc_extra_config].findAll { config -> config }.collect { config -> file(config, checkIfExists: true) },
-                            params.multiqc_logo ? file(params.multiqc_logo, checkIfExists: true) : [],
-                            params.multiqc_replace_names ? file(params.multiqc_replace_names, checkIfExists: true) : [],
-                            params.multiqc_sample_names ? file(params.multiqc_sample_names, checkIfExists: true) : []
-                        ]
-                    }
+            multiqc_files_ch = multiqc_files_ch.mix(
+                MICROCOSM_MULTIQC_TABLES.out.tables,
+                BACTERIAL_MULTIQC_TABLE.out.table,
+                binqc_multiqc_ch.flatten(),
+                binannotation_multiqc_ch.flatten(),
+                channel.value(workflowSummaryMultiqc(paramsSummaryMap(workflow, parameters_schema: "${projectDir}/nextflow_schema.json")))
+                    .collectFile(name: 'microcosm_workflow_summary_mqc.yaml')
             )
         }
-
-        // ${outdir}/pipeline_info/microcosm_software_versions.yml (legacy versions.yml + 'versions' topic)
-        SOFTWARE_VERSIONS(combined_versions)
+        REPORTING(combined_versions, multiqc_files_ch)
 
         // Optional cleanup
         if (params.cleanup && !params.genome_input) {

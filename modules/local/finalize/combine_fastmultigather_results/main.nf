@@ -63,7 +63,7 @@ process COMBINE_FASTMULTIGATHER_RESULTS {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         bash: \$(bash --version 2>&1 | head -n 1 | cut -d ' ' -f 4)
-        gunzip: \$(gunzip --version 2>&1 | head -n 1 | cut -d ' ' -f 2)
+        gzip: \$(gzip --version 2>&1 | head -n 1 | awk '{print \$NF}')
     END_VERSIONS
     """
 
