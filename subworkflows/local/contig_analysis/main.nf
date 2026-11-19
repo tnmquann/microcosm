@@ -13,6 +13,12 @@ include { SAMTOOLS_COVERAGE } from '../../../modules/local/samtools/coverage/mai
 
 // Annotation modules
 include { PROKKA } from '../../../modules/nf-core/prokka/main'
+include { CONTIG_MULTIQC_TABLES } from '../../../modules/local/finalize/contig_multiqc_tables/main'
+
+// [meta, file] channel -> one list of files ([] when the tool did not run)
+def multiqcFiles(ch) {
+    return ch.map { _meta, output -> output }.collect().ifEmpty([])
+}
 include { PYRODIGAL } from '../../../modules/nf-core/pyrodigal/main'
 include { GUNZIP as GUNZIP_PYRODIGAL_FNA } from '../../../modules/nf-core/gunzip/main'
 include { GUNZIP as GUNZIP_PYRODIGAL_FAA } from '../../../modules/nf-core/gunzip/main'
@@ -170,7 +176,24 @@ workflow CONTIG_ANALYSIS {
             .join(ch_tiara_results, by: 0, remainder: true)
     }
 
+    // MultiQC: one contig summary table + Tiara and skani bar graphs for all assemblies (only for the tools that ran)
+    ch_multiqc_files = channel.empty()
+    if (!params.skip_multiqc) {
+        CONTIG_MULTIQC_TABLES(
+            multiqcFiles(SEQKIT_FX2TAB.out.text),
+            multiqcFiles(SAMTOOLS_COVERAGE.out.coverage),
+            multiqcFiles(ch_annotation_faa),
+            multiqcFiles(ch_genomad_plasmid_summary),
+            multiqcFiles(ch_genomad_virus_summary),
+            multiqcFiles(ch_tiara_results),
+            multiqcFiles(ch_skani_results),
+            file("${projectDir}/bin/py_scripts/assembly_based/contig_multiqc.py", checkIfExists: true)
+        )
+        ch_multiqc_files = CONTIG_MULTIQC_TABLES.out.tables.flatten()
+    }
+
     emit:
+    multiqc_files      = ch_multiqc_files
     bam                = BWAMEM2_MEM_CONTIGS.out.bam
     coverage           = SAMTOOLS_COVERAGE.out.coverage
     seqkit_stats       = SEQKIT_FX2TAB.out.text

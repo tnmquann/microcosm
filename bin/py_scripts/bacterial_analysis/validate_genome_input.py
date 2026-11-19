@@ -247,8 +247,8 @@ def validate_rows(
         )
         raise ValidationError(
             "lineage classification is required for "
-            f"{details}, but --sourmash_database and --sourmash_taxonomy_csv "
-            "were not both supplied"
+            f"{details}, but the bin classifier inputs are missing (--sourmash_database and "
+            "--sourmash_taxonomy_csv, or --bin_classifier gtdbtk with --gtdbtk_db)"
         )
     return output_rows
 

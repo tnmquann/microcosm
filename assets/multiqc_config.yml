@@ -105,6 +105,12 @@ report_section_order:
     order: 870
   quast_assembly:
     order: 800
+  microcosm_contig_summary:
+    order: 797
+  microcosm_contig_tiara:
+    order: 795
+  microcosm_contig_skani:
+    order: 794
   bowtie2_assembly:
     order: 790
   quast_bins:

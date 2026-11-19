@@ -49,6 +49,7 @@ params {
     exclude_unbins_from_postbinning: Boolean = false
     fastp_save_merged: Boolean = false
     fastp_save_trimmed_fail: Boolean = false
+    gtdbtk_pplacer_scratch: Boolean = true
     gunc_save_db: Boolean = false
     help: Boolean = false
     help_full: Boolean = false
@@ -117,6 +118,7 @@ params {
     annotation_pyrodigal_transtable: Integer = 11
     checkm2_db_version: Integer = 14897628
     genomad_splits: Integer = 1
+    gtdbtk_pplacer_cpus: Integer = 1
     max_cpus: Integer = 25
     max_unbinned_contigs: Integer = 100
     metabat_rng_seed: Integer = 1

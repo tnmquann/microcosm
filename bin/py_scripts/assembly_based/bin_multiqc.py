@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""MultiQC files for the assembly-based bins (MultiQC has no module for sourmash bin taxonomy).
+"""MultiQC files for the assembly-based bins (MultiQC has no module for sourmash / GTDB-Tk bin taxonomy).
 
 Writes, from whatever inputs are given:
-  bin_taxonomy_mqc.json  sourmash tax genome classification of the bins: one bar graph with a tab per rank
+  bin_taxonomy_mqc.json  bin classification (sourmash tax genome or GTDB-Tk, --classifier): one bar graph with a tab per rank
                          (Species ... Domain), one bar per bin set (<assembler>-<binner>-<sample>), value =
                          number of bins; top --top taxa per rank, rest "Other", unclassified separate
                          (same layout as the read-based microcosm section).
   bin_summary_mqc.json   one table row per bin: CheckM2 / CheckM / BUSCO completeness and contamination,
-                         QUAST size, contigs, N50, GC and the sourmash taxon (like nf-core/mag's bin summary).
+                         QUAST size, contigs, N50, GC and the GTDB taxon (like nf-core/mag's bin summary).
   report_bins.tsv        QUAST bin summary transposed back to QUAST's report.tsv layout for MultiQC's quast module.
 """
 
@@ -21,10 +21,17 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 RANKS = [("Species", 6), ("Genus", 5), ("Family", 4), ("Order", 3), ("Class", 2), ("Phylum", 1), ("Domain", 0)]
 OTHER, UNCLASSIFIED = "zzy_other", "zzz_unclassified"
 EXT = re.compile(r"(\.(fa|fasta|fna|fas))?(\.gz)?$", re.IGNORECASE)
+
+
+# --classifier: section label, method, results folder
+CLASSIFIERS = {
+    "sourmash": ("sourmash", "sourmash tax genome", "sourmash"),
+    "gtdbtk": ("GTDB-Tk", "GTDB-Tk classify_wf", "GTDB-Tk"),
+}
 
 
 def bin_name(name: str) -> str:
@@ -55,7 +62,7 @@ def lineage_taxa(row: dict) -> list[str]:
     return [part.strip() for part in (row.get("lineage") or "").split(";") if part.strip() and not part.strip().endswith("__")]
 
 
-def taxonomy_plot(rows: list[dict], top: int) -> dict | None:
+def taxonomy_plot(rows: list[dict], top: int, classifier: str = "sourmash") -> dict | None:
     datasets, categories, labels = [], [], []
     for label, index in RANKS:
         counts: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
@@ -84,17 +91,17 @@ def taxonomy_plot(rows: list[dict], top: int) -> dict | None:
         return None
     return {
         "id": "microcosm_bin_taxonomy",
-        "section_name": "Bin taxonomy (sourmash)",
+        "section_name": f"Bin taxonomy ({CLASSIFIERS[classifier][0]})",
         "section_anchor": "microcosm_bin_taxonomy",
         "description": (
-            "sourmash tax genome classification of the bins against GTDB, counted per bin set "
+            f"{CLASSIFIERS[classifier][1]} classification of the bins against GTDB, counted per bin set "
             f"(&lt;assembler&gt;-&lt;binner&gt;-&lt;sample&gt;). Top {top} taxa per rank; Other = remaining classified bins, "
-            "Unclassified = bins without a match at that rank. Full tables: Taxonomy/sourmash/."
+            f"Unclassified = bins without a match at that rank. Full tables: Taxonomy/{CLASSIFIERS[classifier][2]}/."
         ),
         "plot_type": "bargraph",
         "pconfig": {
             "id": "microcosm-bin-taxonomy-plot",
-            "title": "Bins: sourmash taxonomy",
+            "title": f"Bins: {CLASSIFIERS[classifier][0]} taxonomy",
             "ylab": "Number of bins",
             "data_labels": labels,
             "cpswitch_c_active": True,
@@ -115,7 +122,9 @@ HEADERS = {
     "contigs": {"title": "Contigs", "description": "Number of contigs (QUAST)", "format": "{:,.0f}", "scale": "Oranges"},
     "n50": {"title": "N50", "description": "N50 (QUAST)", "suffix": " bp", "format": "{:,.0f}", "scale": "Greens"},
     "gc": {"title": "GC", "description": "GC content (QUAST)", "suffix": "%", "format": "{:,.1f}"},
-    "taxon": {"title": "sourmash taxon", "description": "Lowest GTDB rank assigned by sourmash tax genome"},
+    "gtdb_ani": {"title": "GTDB-Tk ANI", "description": "ANI to the closest GTDB reference genome (GTDB-Tk)", "suffix": "%", "max": 100, "min": 75, "scale": "RdYlGn"},
+    "gtdb_method": {"title": "GTDB-Tk method", "description": "GTDB-Tk classification method (ANI screen, topology + ANI, RED ...)"},
+    "taxon": {"title": "GTDB taxon", "description": "Lowest GTDB rank assigned by the bin classifier (sourmash tax genome or GTDB-Tk)"},
 }
 
 
@@ -141,6 +150,9 @@ def summary_rows(taxonomy: list[dict], qc: list[Path], quast: list[dict]) -> dic
     for row in taxonomy:
         taxa = lineage_taxa(row)
         rows[bin_name(row["query_name"])]["taxon"] = taxa[-1] if taxa else "unclassified"
+        # GTDB-Tk (gtdbtk_to_taxgenome.py columns): ANI to the closest GTDB genome and how the taxon was assigned
+        if row.get("classification_method"):
+            rows[bin_name(row["query_name"])].update(gtdb_ani=number(row.get("closest_genome_ani")), gtdb_method=row["classification_method"])
     return {name: {k: v for k, v in values.items() if v is not None} for name, values in sorted(rows.items())}
 
 
@@ -152,7 +164,7 @@ def summary_table(rows: dict[str, dict]) -> dict | None:
         "id": "microcosm_bin_summary",
         "section_name": "Bin summary",
         "section_anchor": "microcosm_bin_summary",
-        "description": "One row per bin: quality (CheckM2 / CheckM / BUSCO), assembly statistics (QUAST) and the sourmash GTDB taxon.",
+        "description": "One row per bin: quality (CheckM2 / CheckM / BUSCO), assembly statistics (QUAST) and the GTDB taxon of the bin classifier.",
         "plot_type": "table",
         "pconfig": {"id": "microcosm-bin-summary-table", "title": "Bins: summary", "namespace": "Bins", "col1_header": "Bin"},
         "headers": {key: HEADERS[key] for key in used},
@@ -172,11 +184,12 @@ def write_quast_report(quast: list[dict], path: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--taxgenome", type=Path, nargs="*", default=[], help="sourmash tax genome CSVs (combined_genome_classification)")
+    parser.add_argument("--taxgenome", type=Path, nargs="*", default=[], help="combined_genome_classification CSVs (sourmash tax genome layout; GTDB-Tk converted to it)")
     parser.add_argument("--qc", type=Path, nargs="*", default=[], help="<tool>_summary.tsv from bin QC (checkm2, checkm, busco)")
     parser.add_argument("--quast", type=Path, nargs="*", default=[], help="QUAST bin summary (quast_summary.tsv)")
     parser.add_argument("--outdir", type=Path, default=Path("."))
     parser.add_argument("--top", type=int, default=10)
+    parser.add_argument("--classifier", choices=sorted(CLASSIFIERS), default="sourmash", help="bin classifier that wrote --taxgenome")
     parser.add_argument("--version", action="version", version=VERSION)
     args = parser.parse_args(argv)
 
@@ -184,7 +197,7 @@ def main(argv: list[str] | None = None) -> int:
     quast = [row for path in args.quast for row in read_table(path, "\t")]
     args.outdir.mkdir(parents=True, exist_ok=True)
     written = []
-    for name, content in [("bin_taxonomy_mqc.json", taxonomy_plot(taxonomy, args.top)), ("bin_summary_mqc.json", summary_table(summary_rows(taxonomy, args.qc, quast)))]:
+    for name, content in [("bin_taxonomy_mqc.json", taxonomy_plot(taxonomy, args.top, args.classifier)), ("bin_summary_mqc.json", summary_table(summary_rows(taxonomy, args.qc, quast)))]:
         if content:
             (args.outdir / name).write_text(json.dumps(content, indent=1) + "\n")
             written.append(name)

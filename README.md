@@ -152,7 +152,12 @@ microcosm logo. Sections: microcosm top taxa (one bar graph with a tab per rank,
 Strain to Domain, from `<prefix>.processed_metaflow.csv`, so it needs
 `--readbased_postprocess all`), sylph-tax (`--enable_sylphtax`), a bacterial
 genome overview (species, MLST, SISTR serovar, AMR genes per tool), FastQC/fastp,
-bin QC (CheckM2, CheckM, BUSCO, QUAST), Prokka, the run summary (parameters that
+hostile, QUAST and Bowtie2 for the assemblies, contig analysis (one row per
+assembly: contigs, mapped reads, depth, predicted genes, geNomad plasmids and
+viruses, skani hits; Tiara domains and skani best references as bar graphs;
+only the tools that ran), bin taxonomy
+(sourmash or GTDB-Tk) and bin summary, bin QC (CheckM2, CheckM, BUSCO, QUAST),
+Prokka/Bakta, the run summary (parameters that
 differ from the defaults) and the software versions. `--multiqc_config` and
 `--multiqc_extra_config` are applied after the default config; `--multiqc_logo`,
 `--multiqc_replace_names` and `--multiqc_sample_names` are passed to MultiQC.
@@ -233,6 +238,17 @@ classified through the existing bin-classification route. Only records resolved
 as `d__Bacteria` enter the downstream tools. The ordinary assembly/bin route
 uses the same layer when `--enable_bacterial_downstream` is set.
 
+Bins and blank-lineage genomes are classified with sourmash by default
+(`--sourmash_database`, `--sourmash_taxonomy_csv`). `--bin_classifier gtdbtk
+--gtdbtk_db /path/to/gtdb/release226` uses GTDB-Tk `classify_wf` (2.5.2, GTDB
+R226) instead: one call per sample, results in `Taxonomy/GTDB-Tk/`. Its
+summaries are converted to the same table as sourmash, so the routing, lineage
+rules, `--bacterial_decision_table` and MultiQC work unchanged. GTDB-Tk
+"Unclassified Bacteria" (too few marker genes) is routed as `d__Bacteria`;
+"Unclassified" and genomes GTDB-Tk could not process are listed as unresolved.
+GTDB-Tk needs about 64-128 GB of memory (`--gtdbtk_pplacer_cpus`,
+`--gtdbtk_pplacer_scratch`, `--gtdbtk_args`).
+
 Each `d__Bacteria` genome then goes through:
 
 - General typing: MLST, VirulenceFinder and PlasmidFinder.
@@ -260,7 +276,7 @@ Every step can be customised with parameters (see `nextflow_schema.json`):
 | Turn a tool off | `--skip_mlst`, `--skip_virulencefinder`, `--skip_plasmidfinder`, `--skip_kleborate`, `--skip_sistr`, `--skip_seqsero2`, `--skip_genotyphi`, `--skip_paratype`, `--skip_amrfinderplus`, `--skip_abricate`, `--skip_rgi`, `--skip_resfinder`, `--skip_deeparg`, `--skip_argnorm` |
 | Tool arguments | `--<tool>_args` (e.g. `--mlst_args`, `--kleborate_args`, `--sistr_args`). Defaults taken from the reference scripts are part of the value and are replaced when you set it: `amrfinderplus_args='--plus'`, `resfinder_args='--acquired --disinfectant'`, `rgi_main_args='--clean -g PYRODIGAL'`, `seqsero2_args='-m k -t 4'` |
 | Lineage rules | `--kleborate_preset_map` (default `assets/kleborate_presets.tsv`), `--amrfinderplus_organism_map` (default `assets/amrfinderplus_organisms.tsv`): TSV files; the first `lineage_pattern` found in the GTDB lineage wins. GTDB placeholder suffixes (`_A`, `_B`, ...) are ignored when matching, on both the lineage and the pattern (`s__Enterococcus_B faecium` matches `s__Enterococcus faecium`); published lineages keep the suffixes. |
-| Per-lineage steps (optional) | `--bacterial_decision_table`: TSV with `lineage_pattern`, optional `label`, and a `y`/`n` column per step (`amrfinderplus`, `abricate`, `rgi`, `resfinder`, `deeparg`, `mlst`, `virulencefinder`, `plasmidfinder`, `kleborate`, `sistr`, `seqsero2`, `genotyphi`, `paratype`). `lineage_pattern` is a whole GTDB taxon at any rank (`p__Bacillota`, `g__Salmonella`, `s__Escherichia coli`); the most specific matching row decides its `y`/`n` steps for a genome, whatever the row order; blank cells, missing columns and lineages without a row follow the default route above. `--skip_<tool>` still wins. `kleborate=y` also needs a `--kleborate_preset_map` row, and `genotyphi`/`paratype=y` still need the SISTR serovar route. The matched row and steps are listed in `bacterial_genomes.routing.tsv`. Example: `assets/bacterial_decision_table_example.tsv`. |
+| Per-lineage steps (optional) | `--bacterial_decision_table`: TSV with `lineage_pattern`, optional `label`, and a `y`/`n` column per step (`amrfinderplus`, `abricate`, `rgi`, `resfinder`, `deeparg`, `mlst`, `virulencefinder`, `plasmidfinder`, `kleborate`, `sistr`, `seqsero2`, `genotyphi`, `paratype`). `lineage_pattern` is a whole GTDB taxon at any rank (`p__Bacillota`, `g__Salmonella`, `s__Escherichia coli`); the most specific matching row decides its `y`/`n` steps for a genome, whatever the row order; blank cells, missing columns and lineages without a row follow the default route above. `--skip_<tool>` still wins. `kleborate=y` also needs a `--kleborate_preset_map` row, and `genotyphi`/`paratype=y` still need the SISTR serovar route. Optional parameter columns set tool options per lineage: `<tool>_args` columns named like the parameters (`mlst_args`, `amrfinderplus_args`, `resfinder_args`, `rgi_main_args`, `mykrobe_args`, ...) replace that parameter for the genomes of the row (e.g. `mlst_args` = `--scheme ecoli_achtman_4`); `amrfinderplus_organism` replaces the `--amrfinderplus_organism_map` value and `resfinder_species` the PointFinder species (folder name, e.g. `escherichia_coli`). The matched row, steps and parameters are listed in `bacterial_genomes.routing.tsv`. Example: `assets/bacterial_decision_table_example.tsv`. |
 | Database versions downloaded | `--virulencefinder_db_revision`, `--resfinder_db_revision`, `--paratype_revision` |
 | Other | `--deeparg_model` (`SS` or `LS`), `--deeparg_db_version`, `--abricate_db_id`, `--virulencefinder_min_coverage`, `--virulencefinder_min_identity` |
 

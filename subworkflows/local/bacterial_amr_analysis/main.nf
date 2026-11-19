@@ -61,7 +61,9 @@ workflow BACTERIAL_AMR_ANALYSIS {
         .filter { meta, _genome -> ['amrfinderplus', 'abricate', 'rgi', 'resfinder', 'deeparg'].any { step -> stepWanted(meta, step) } }
         .map { meta, genome ->
             def meta_new = meta.clone()
-            meta_new.amrfinder_organism = lookupLineage(organism_rows, meta.lineage)?.organism?.trim() ?: ''
+            // --bacterial_decision_table amrfinderplus_organism wins over --amrfinderplus_organism_map
+            meta_new.amrfinder_organism = meta.decision_params?.amrfinderplus_organism
+                ?: lookupLineage(organism_rows, meta.lineage)?.organism?.trim() ?: ''
             tuple(meta_new, genome)
         }
         .branch { _meta, genome ->

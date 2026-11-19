@@ -52,6 +52,20 @@ class BinMultiqcTest(unittest.TestCase):
             self.assertEqual(report[0], ["Assembly", "MEGAHIT-COMEBin-s1.1.fa.gz", "MEGAHIT-COMEBin-s1.2.fa.gz"])
             self.assertIn(["N50", "90000", "50000"], report)
 
+    def test_gtdbtk_label(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "tax.csv").write_text(TAX)
+            bin_multiqc.main(["--taxgenome", str(Path(tmp) / "tax.csv"), "--classifier", "gtdbtk", "--outdir", tmp])
+            plot = json.loads((Path(tmp) / "bin_taxonomy_mqc.json").read_text())
+            self.assertEqual(plot["section_name"], "Bin taxonomy (GTDB-Tk)")
+            gtdb = Path(tmp) / "gtdb.csv"
+            gtdb.write_text("query_name,status,rank,lineage,classification_method,closest_genome_reference,closest_genome_ani,note,warnings\n"
+                            "MEGAHIT-COMEBin-s1.1,match,species,d__Bacteria;g__Salmonella;s__Salmonella enterica,ani_screen,GCF_1,99.1,,\n")
+            bin_multiqc.main(["--taxgenome", str(gtdb), "--classifier", "gtdbtk", "--outdir", tmp])
+            row = json.loads((Path(tmp) / "bin_summary_mqc.json").read_text())["data"]["MEGAHIT-COMEBin-s1.1"]
+            self.assertEqual((row["gtdb_ani"], row["gtdb_method"]), (99.1, "ani_screen"))
+            self.assertIn("Taxonomy/GTDB-Tk/", plot["description"])
+
     def test_no_inputs_writes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(bin_multiqc.main(["--outdir", tmp]), 0)

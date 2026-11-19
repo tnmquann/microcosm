@@ -738,8 +738,8 @@ workflow METAFLOW {
                 bacterial_amr_hamronization_summary_ch.ifEmpty([]),
                 file("${projectDir}/bin/py_scripts/bacterial_analysis/bacterial_multiqc.py", checkIfExists: true)
             )
-            // Bins: sourmash taxonomy plot, per-bin summary table and the QUAST bin report (no MultiQC module
-            // reads sourmash tax genome or the transposed QUAST summary); runs only when bin results exist
+            // Bins: classifier (sourmash or GTDB-Tk) taxonomy plot, per-bin summary table and the QUAST bin report (no MultiQC module
+            // reads these classification tables or the transposed QUAST summary); runs only when bin results exist
             def bin_mqc_inputs = binclassification_taxgenome_ch.map { csv_file -> ['taxgenome', csv_file] }
                 .mix(binqc_summary_ch.map { summary -> ['qc', summary] }, binqc_quast_summary_ch.map { summary -> ['quast', summary] })
                 .collect(flat: false)

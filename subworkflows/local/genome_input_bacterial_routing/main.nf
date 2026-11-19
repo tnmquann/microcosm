@@ -11,6 +11,7 @@ include { PUBLISH_GENOME_ROUTING } from '../../../modules/local/finalize/publish
 // are classified here; assembly-produced bins are classified by workflow/metaflow.nf.
 include { BIN_CLASSIFICATION } from '../bin_classification/main'
 include { readDecisionTable; decisionFor } from '../utils_bacterial_lineage/main'
+include { binClassificationAvailable } from '../utils_microcosm/main'
 
 def routingTsvValue(value) {
     return value == null ? '' : value.toString().replaceAll(/[\t\r\n]/, ' ')
@@ -37,7 +38,8 @@ def routingTsvLine(meta, genome, status, reason) {
         status,
         reason,
         meta.decision_pattern,
-        meta.decision_steps?.collect { step, run -> "${step}=${run ? 'y' : 'n'}" }?.join(';')
+        meta.decision_steps?.collect { step, run -> "${step}=${run ? 'y' : 'n'}" }?.join(';'),
+        meta.decision_params?.collect { column, value -> "${column}=${value}" }?.join('; ')
     ].collect { value -> routingTsvValue(value) }.join('\t') + '\n'
 }
 
@@ -58,7 +60,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
             "${pipeline_root}/bin/py_scripts/bacterial_analysis/validate_genome_input.py",
             checkIfExists: true
         )
-        classification_available = params.sourmash_database && params.sourmash_taxonomy_csv
+        classification_available = binClassificationAvailable()
 
         VALIDATE_GENOME_INPUT(
             file(params.genome_input, checkIfExists: true),
@@ -207,6 +209,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
         def meta_new = meta.clone()
         meta_new.decision_pattern = decision.pattern
         meta_new.decision_steps = decision.steps
+        meta_new.decision_params = decision.params
         tuple(meta_new, genome)
     }
 
@@ -230,7 +233,8 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
         'status',
         'reason',
         'decision_pattern',
-        'decision_steps'
+        'decision_steps',
+        'decision_params'
     ].join('\t') + '\n'
 
     ch_bacterial_report = ch_bacterial_genomes

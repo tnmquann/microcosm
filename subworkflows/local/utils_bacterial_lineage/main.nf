@@ -40,9 +40,9 @@ def lookupLineage(rows, lineage) {
 
 /*
  * --bacterial_decision_table (optional): lineage_pattern at any rank (p__, g__, s__ ...), optional
- * label, then one y/n column per step. The most specific matching row decides its y/n steps for
- * that genome; a blank cell, an absent
- * column or a lineage with no matching row follows the default microcosm route.
+ * label, then one y/n column per step and optional parameter columns. The most specific matching row
+ * decides its y/n steps and parameters for that genome; a blank cell, an absent column or a lineage
+ * with no matching row follows the default microcosm route and the pipeline parameters.
  * --skip_<tool> still turns a tool off everywhere.
  */
 def bacterialDecisionSteps() {
@@ -50,12 +50,21 @@ def bacterialDecisionSteps() {
             'kleborate', 'sistr', 'seqsero2', 'genotyphi', 'paratype']
 }
 
+// Parameter columns: a non-blank cell replaces the pipeline parameter of the same name for the genomes of
+// that row (*_args), or the lineage-map value (amrfinderplus_organism: --organism; resfinder_species:
+// PointFinder --species key, e.g. escherichia_coli).
+def bacterialDecisionParams() {
+    return ['amrfinderplus_args', 'abricate_args', 'rgi_main_args', 'resfinder_args', 'deeparg_args', 'mlst_args',
+            'virulencefinder_args', 'plasmidfinder_args', 'kleborate_args', 'sistr_args', 'seqsero2_args',
+            'mykrobe_args', 'paratype_args', 'amrfinderplus_organism', 'resfinder_species']
+}
+
 def readDecisionTable(path) {
     def steps = bacterialDecisionSteps()
     def rows = readLineageMap(path, [], [])
-    def unknown = rows ? rows[0].keySet() - (['lineage_pattern', 'label'] + steps) : []
+    def unknown = rows ? rows[0].keySet() - (['lineage_pattern', 'label'] + steps + bacterialDecisionParams()) : []
     if (unknown) {
-        error("${path}: unknown column(s) ${unknown.join(', ')}; step columns are ${steps.join(', ')}")
+        error("${path}: unknown column(s) ${unknown.join(', ')}; step columns are ${steps.join(', ')}; parameter columns are ${bacterialDecisionParams().join(', ')}")
     }
     rows.eachWithIndex { row, index ->
         if (patternRankDepth(row.lineage_pattern.trim()) < 0) {
@@ -88,13 +97,17 @@ def lookupDecisionRow(rows, lineage) {
     return matches ? matches.max { row -> patternRankDepth(row.lineage_pattern.trim()) } : null
 }
 
-// [pattern: matched lineage_pattern or '', steps: [step: true|false] for the y/n cells of that row]
+// [pattern: matched lineage_pattern or '', steps: [step: true|false] for the y/n cells of that row,
+//  params: [column: value] for the non-blank parameter cells of that row]
 def decisionFor(rows, lineage) {
     def row = lookupDecisionRow(rows, lineage)
     def steps = row ? bacterialDecisionSteps()
         .findAll { step -> row[step]?.trim() }
         .collectEntries { step -> [(step): row[step].trim().toLowerCase().startsWith('y')] } : [:]
-    return [pattern: row ? row.lineage_pattern.trim() : '', steps: steps]
+    def values = row ? bacterialDecisionParams()
+        .findAll { column -> row[column]?.trim() }
+        .collectEntries { column -> [(column): row[column].trim()] } : [:]
+    return [pattern: row ? row.lineage_pattern.trim() : '', steps: steps, params: values]
 }
 
 // Decision for one genome and step; defaultRoute is what microcosm does without a table.

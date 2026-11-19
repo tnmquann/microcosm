@@ -18,6 +18,22 @@ def pathList(value, param_name) {
     return paths.collect { path_text -> file(path_text, checkIfExists: true) }
 }
 
+// --bin_classifier: sourmash (default) or gtdbtk; both give GTDB lineages to the bacterial routing.
+def binClassifier() {
+    def classifier = (params.bin_classifier ?: 'sourmash').toString().trim().toLowerCase()
+    if (!(classifier in ['sourmash', 'gtdbtk'])) {
+        error("Unsupported --bin_classifier '${params.bin_classifier}'. Use sourmash or gtdbtk.")
+    }
+    return classifier
+}
+
+// Database inputs of the chosen bin classifier are set (--genome_input rows without lineage need them).
+def binClassificationAvailable() {
+    return binClassifier() == 'gtdbtk'
+        ? params.gtdbtk_db as boolean
+        : (params.sourmash_database && params.sourmash_taxonomy_csv) as boolean
+}
+
 // YACHT takes one database, so several --sourmash_database entries imply --skip_yacht.
 def yachtSkipped() {
     def database_count = (params.sourmash_database ?: '').toString().tokenize(',').findAll { path_text -> path_text.trim() }.size()

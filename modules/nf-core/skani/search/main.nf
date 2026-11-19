@@ -13,7 +13,7 @@ process SKANI_SEARCH {
 
     output:
     tuple val(meta), path("${prefix}.tsv") , emit: search
-    tuple val("${task.process}"), val('skani'), eval("skani --version 2>&1 | sed 's/^.*skani //; s/ .*\\$//'"), emit: versions_skani, topic: versions
+    tuple val("${task.process}"), val('skani'), eval("skani --version 2>&1 | sed 's/^.*skani //'"), emit: versions_skani, topic: versions
 
     when:
     task.ext.when == null || task.ext.when

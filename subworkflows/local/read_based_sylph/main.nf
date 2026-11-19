@@ -42,7 +42,14 @@ workflow READ_BASED_SYLPH {
         if (!params.sylph_taxonomy) {
             error "--enable_sylphtax needs --sylph_taxonomy (sylph-tax metadata file(s), e.g. gtdb_r226_metadata.tsv.gz)"
         }
-        SYLPHTAX_TAXPROF(SYLPH_PROFILE.out.profile_out, pathList(params.sylph_taxonomy, 'sylph_taxonomy'))
+        def sylph_databases = pathList(params.sylph_database, 'sylph_database')
+        def sylph_taxonomies = pathList(params.sylph_taxonomy, 'sylph_taxonomy')
+        // sylph-tax labels a genome only from the metadata of its database; a missing file leaves that
+        // database's genomes without lineage and sylph-tax does not fail, so check the pairing up front.
+        if (sylph_taxonomies.size() != sylph_databases.size()) {
+            error("--sylph_taxonomy has ${sylph_taxonomies.size()} file(s) but --sylph_database has ${sylph_databases.size()}: give one sylph-tax metadata file per database, in the same order (e.g. --sylph_database gtdb-r226-c200-dbv2.syl2db,fungi-refseq-2025-10-11-c200-dbv1.syldb --sylph_taxonomy gtdb_r226_metadata.tsv.gz,fungi_refseq_2025-10-11_metadata.tsv.gz)")
+        }
+        SYLPHTAX_TAXPROF(SYLPH_PROFILE.out.profile_out, sylph_taxonomies)
         ch_sylphtax = SYLPHTAX_TAXPROF.out.taxprof_output
 
         def make_phyloseq = params.readbased_postprocess in ['all', 'phyloseq']

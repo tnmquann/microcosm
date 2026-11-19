@@ -28,7 +28,8 @@ process RESFINDER_RUN_LOCAL {
     // PointFinder species key as in 5_amr.sh: GTDB species, else genus, lower case with '_'.
     // GTDB placeholder suffixes are dropped first (Escherichia coli_F -> escherichia_coli).
     def gtdb_suffix = '(?<=[A-Za-z0-9])_[A-Z]+(?=\\s|$)'
-    def species_key = (meta.species ?: '').toString().replaceFirst('^s__', '').replaceAll(gtdb_suffix, '').trim().toLowerCase().replaceAll('\\s+', '_')
+    // --bacterial_decision_table resfinder_species (a PointFinder folder name) replaces the GTDB species key.
+    def species_key = meta.decision_params?.resfinder_species ?: (meta.species ?: '').toString().replaceFirst('^s__', '').replaceAll(gtdb_suffix, '').trim().toLowerCase().replaceAll('\\s+', '_')
     def genus_key = (meta.genus ?: '').toString().replaceFirst('^g__', '').replaceAll(gtdb_suffix, '').trim().toLowerCase().replaceAll('\\s+', '_')
     """
     point_args=""

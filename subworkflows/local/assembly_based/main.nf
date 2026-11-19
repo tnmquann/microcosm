@@ -75,6 +75,7 @@ workflow ASSEMBLY_BASED {
         contig_analysis_coverage = CONTIG_ANALYSIS.out.coverage
         contig_analysis_versions = CONTIG_ANALYSIS.out.versions
         contig_analysis_bundle = CONTIG_ANALYSIS.out.contig_qc_bundle
+        ch_multiqc_files = ch_multiqc_files.mix(CONTIG_ANALYSIS.out.multiqc_files) // MultiQC "Contig analysis", "Contig domains (Tiara)", "Contig ANI search (skani)"
         versions_ch = versions_ch.mix(contig_analysis_versions)
     }
 
