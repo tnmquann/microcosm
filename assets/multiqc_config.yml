@@ -3,9 +3,10 @@ title: "microcosm"
 subtitle: "Metagenomic profiling and bacterial genome analysis report"
 intro_text: >
   This report gathers the quality control and profiling results of one microcosm run:
-  read QC (FastQC, fastp, hostile), read-based taxonomic profiles (microcosm = sourmash + YACHT, and/or sylph),
-  assembly QC (QUAST, Bowtie2 read mapping), bins (sourmash taxonomy, CheckM2, CheckM, BUSCO, QUAST),
-  annotation (Prokka, Bakta) and the bacterial genome overview.
+  read QC (FastQC, fastp, hostile), read-based taxonomic profiles (microcosm = sourmash + YACHT, and/or sylph) and
+  AMR genes (RGI bwt), assembly and contig QC (QUAST, Bowtie2, SeqKit, samtools coverage, Pyrodigal / Prokka, geNomad,
+  Tiara, skani), bins (Tiara domains, QUAST, assembly_stats.py, CheckM2, CheckM, BUSCO, GUNC, Prokka / Bakta,
+  sourmash / GTDB-Tk taxonomy) and the bacterial genomes (overview, RGI).
   Use the toolbox on the right to highlight, rename or hide samples and to export plots and data.
 report_comment: >
   Full result tables are in the pipeline output folders; this report shows summaries only.
@@ -26,8 +27,9 @@ data_format: "tsv"
 extra_fn_clean_exts:
   - ".sylphmpa"
   - ".bowtie2"
-  # Prokka: <bin>.fa.prokka.txt; BUSCO: short_summary.specific.<lineage>_odbNN.<bin>.txt
+  # Prokka: <bin>.fa.prokka.txt (bins), <assembler>-<sample>.prokka.txt (contigs); BUSCO: short_summary.specific.<lineage>_odbNN.<bin>.txt
   - ".fa.prokka"
+  - ".prokka"
   - type: regex
     pattern: '^short_summary\.(specific|generic)\.[^.]+\.'
   # hostile names a sample after its read 1 file (<sample>_R1.fastp.fastq.gz): keep the sample name, as fastp does
@@ -79,8 +81,25 @@ module_order:
   - checkm2
   - checkm
   - busco
-  - prokka
+  - prokka:
+      name: "Prokka: contigs"
+      anchor: "prokka_contigs"
+      info: "Prokka annotation of the assembly contigs (--annotation_tool prokka)."
+      path_filters_exclude:
+        - "*.fa.prokka.txt"
+        - "*.fasta.prokka.txt"
+        - "*.fna.prokka.txt"
+  - prokka:
+      name: "Prokka: bins"
+      anchor: "prokka_bins"
+      info: "Prokka annotation of the bins (--bin_annotation_tool prokka)."
+      path_filters:
+        - "*.fa.prokka.txt"
+        - "*.fasta.prokka.txt"
+        - "*.fna.prokka.txt"
   - bakta
+  - gtdbtk
+  - sourmash
   - custom_content
 
 # Section order (higher first)
@@ -93,8 +112,16 @@ report_section_order:
     order: 960
   microcosm_bin_summary:
     order: 955
+  microcosm_rgi_bwt:
+    order: 965
+  microcosm_rgi_bwt_families:
+    order: 964
   microcosm_bacterial_overview:
     order: 950
+  microcosm_rgi_amr:
+    order: 945
+  microcosm_rgi_amr_families:
+    order: 944
   fastqc_raw:
     order: 900
   fastp:
@@ -106,25 +133,41 @@ report_section_order:
   quast_assembly:
     order: 800
   microcosm_contig_summary:
+    order: 798
+  microcosm_pyrodigal:
     order: 797
-  microcosm_contig_tiara:
+  prokka_contigs:
+    order: 796
+  microcosm_genomad:
     order: 795
-  microcosm_contig_skani:
+  microcosm_contig_tiara:
     order: 794
+  microcosm_contig_skani:
+    order: 793
   bowtie2_assembly:
     order: 790
+  microcosm_bin_tiara:
+    order: 785
   quast_bins:
     order: 780
+  microcosm_assembly_stats:
+    order: 778
   checkm2:
     order: 770
   checkm:
     order: 760
   busco:
     order: 750
-  prokka:
+  microcosm_gunc:
+    order: 745
+  prokka_bins:
     order: 740
   bakta:
     order: 730
+  gtdbtk:
+    order: 725
+  sourmash:
+    order: 720
   microcosm-summary:
     order: -1000
   multiqc_software_versions:
@@ -139,7 +182,8 @@ table_columns_visible:
   CheckM2: false
   CheckM: false
   BUSCO: false
-  Prokka: false
+  "Prokka: contigs": false
+  "Prokka: bins": false
   Bakta: false
   "QUAST: assembly":
     N50: true

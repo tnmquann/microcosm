@@ -35,6 +35,7 @@ workflow BIN_QC {
     ch_versions = channel.empty()
     ch_multiqc_files = channel.empty()
     ch_qc_summaries = channel.empty()
+    ch_gunc = channel.empty()
 
     /*
     ================================
@@ -245,6 +246,7 @@ workflow BIN_QC {
 
         GUNC_RUN(ch_input_bins_for_gunc, ch_gunc_db)
         ch_versions = ch_versions.mix(GUNC_RUN.out.versions_gunc)
+        ch_gunc = GUNC_RUN.out.maxcss_level_tsv
 
         // Make sure to keep directory in sync with modules.conf
         GUNC_RUN.out.maxcss_level_tsv
@@ -287,5 +289,7 @@ workflow BIN_QC {
     qc_summary    = ch_qc_summary
     quast_summary = QUAST_BINS_SUMMARY.out.summary
     multiqc_files = ch_multiqc_files
+    gunc          = ch_gunc                    // [meta, *maxCSS_level.tsv] (MultiQC)
+    assembly_stats = ASSEMBLY_STATS.out.asm_stats // [meta, *.assembly_stats.csv] (MultiQC)
     versions      = ch_versions
 }

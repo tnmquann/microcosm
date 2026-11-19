@@ -13,11 +13,11 @@ include { SAMTOOLS_COVERAGE } from '../../../modules/local/samtools/coverage/mai
 
 // Annotation modules
 include { PROKKA } from '../../../modules/nf-core/prokka/main'
-include { CONTIG_MULTIQC_TABLES } from '../../../modules/local/finalize/contig_multiqc_tables/main'
+include { TOOL_MULTIQC } from '../../../modules/local/finalize/tool_multiqc/main'
 
-// [meta, file] channel -> one list of files ([] when the tool did not run)
-def multiqcFiles(ch) {
-    return ch.map { _meta, output -> output }.collect().ifEmpty([])
+// [meta, file(s)] channel -> [tool, file] pairs for TOOL_MULTIQC (a single Path is not split into its name parts)
+def toolFiles(tool, ch) {
+    return ch.flatMap { _meta, output -> (output instanceof List ? output : [output]).collect { item -> [tool, item] } }
 }
 include { PYRODIGAL } from '../../../modules/nf-core/pyrodigal/main'
 include { GUNZIP as GUNZIP_PYRODIGAL_FNA } from '../../../modules/nf-core/gunzip/main'
@@ -176,20 +176,28 @@ workflow CONTIG_ANALYSIS {
             .join(ch_tiara_results, by: 0, remainder: true)
     }
 
-    // MultiQC: one contig summary table + Tiara and skani bar graphs for all assemblies (only for the tools that ran)
+    // MultiQC: one TOOL_MULTIQC task per tool that ran (custom sections); Prokka through the MultiQC prokka module
     ch_multiqc_files = channel.empty()
     if (!params.skip_multiqc) {
-        CONTIG_MULTIQC_TABLES(
-            multiqcFiles(SEQKIT_FX2TAB.out.text),
-            multiqcFiles(SAMTOOLS_COVERAGE.out.coverage),
-            multiqcFiles(ch_annotation_faa),
-            multiqcFiles(ch_genomad_plasmid_summary),
-            multiqcFiles(ch_genomad_virus_summary),
-            multiqcFiles(ch_tiara_results),
-            multiqcFiles(ch_skani_results),
-            file("${projectDir}/bin/py_scripts/assembly_based/contig_multiqc.py", checkIfExists: true)
-        )
-        ch_multiqc_files = CONTIG_MULTIQC_TABLES.out.tables.flatten()
+        def ch_tool_files = toolFiles('contig_summary', SEQKIT_FX2TAB.out.text.mix(SAMTOOLS_COVERAGE.out.coverage))
+        if (!params.skip_contig_annotation && params.annotation_tool == 'pyrodigal') {
+            ch_tool_files = ch_tool_files.mix(toolFiles('pyrodigal', ch_annotation_faa))
+        }
+        if (!params.skip_contig_annotation && params.annotation_tool == 'prokka') {
+            ch_multiqc_files = ch_multiqc_files.mix(PROKKA.out.txt.map { _meta, txt -> txt })
+        }
+        if (!params.skip_genomad_e2e) {
+            ch_tool_files = ch_tool_files.mix(toolFiles('genomad', ch_genomad_plasmid_summary.mix(ch_genomad_virus_summary)))
+        }
+        // Tiara and skani plots also weigh contigs by length (SeqKit)
+        if (!params.skip_tiara_contigqc) {
+            ch_tool_files = ch_tool_files.mix(toolFiles('tiara_contigs', ch_tiara_results.mix(SEQKIT_FX2TAB.out.text)))
+        }
+        if (!params.skip_skani_search && params.skani_db) {
+            ch_tool_files = ch_tool_files.mix(toolFiles('skani', ch_skani_results.mix(SEQKIT_FX2TAB.out.text)))
+        }
+        TOOL_MULTIQC(ch_tool_files.groupTuple(), file("${projectDir}/bin/py_scripts/multiqc/tool_multiqc.py", checkIfExists: true))
+        ch_multiqc_files = ch_multiqc_files.mix(TOOL_MULTIQC.out.tables.flatten())
     }
 
     emit:

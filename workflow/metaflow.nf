@@ -31,6 +31,7 @@ include { yachtSkipped; readbasedTaxotools; binqcTools } from '../subworkflows/l
 include { READ_BASED_SYLPH } from '../subworkflows/local/read_based_sylph/main'
 include { MICROCOSM_MULTIQC_TABLES } from '../modules/local/finalize/microcosm_multiqc_tables/main'
 include { BIN_MULTIQC_TABLES } from '../modules/local/finalize/bin_multiqc_tables/main'
+include { TOOL_MULTIQC } from '../modules/local/finalize/tool_multiqc/main'
 include { GUNZIP as GUNZIP_ASSEMBLIES } from '../modules/nf-core/gunzip/main'
 
 // Import modules for database setup
@@ -270,6 +271,7 @@ workflow METAFLOW {
         def cleaned_reads_source
         def preprocess_versions_ch = channel.empty()
         def multiqc_files_ch = channel.empty() // files for the final MultiQC report
+        def tool_mqc_ch = channel.empty() // [tool, file] for TOOL_MULTIQC: one custom MultiQC section set per tool
         def assembly_megahit_contigs_ch = channel.empty()
         def assembly_metaspades_contigs_ch = channel.empty()
         def assembly_versions_ch = channel.empty()
@@ -452,6 +454,7 @@ workflow METAFLOW {
 
                         DOMAIN_CLASSIFICATION_RAW(all_assemblies, ch_bins_for_classification)
                         binning_versions_ch = binning_versions_ch.mix(DOMAIN_CLASSIFICATION_RAW.out.versions)
+                        tool_mqc_ch = tool_mqc_ch.mix(DOMAIN_CLASSIFICATION_RAW.out.bin_classifications.map { _meta, tsv -> ['tiara_bins', tsv] })
 
                         // Add domain metadata to raw bins
                         ch_domain_map = DOMAIN_CLASSIFICATION_RAW.out.classified_bins
@@ -554,6 +557,7 @@ workflow METAFLOW {
                             DOMAIN_CLASSIFICATION_REFINED(all_assemblies, ch_refined_bins_for_classification)
                             ch_refined_bins = DOMAIN_CLASSIFICATION_REFINED.out.classified_bins
                             binning_versions_ch = binning_versions_ch.mix(DOMAIN_CLASSIFICATION_REFINED.out.versions)
+                            tool_mqc_ch = tool_mqc_ch.mix(DOMAIN_CLASSIFICATION_REFINED.out.bin_classifications.map { _meta, tsv -> ['tiara_bins', tsv] })
                         }
                         
                         binning_versions_ch = binning_versions_ch.mix(BINNING_REFINEMENT.out.versions)
@@ -598,6 +602,10 @@ workflow METAFLOW {
                         binqc_summary_ch = BIN_QC.out.qc_summary ?: channel.empty()
                         binqc_quast_summary_ch = BIN_QC.out.quast_summary ?: channel.empty()
                         binqc_multiqc_ch = BIN_QC.out.multiqc_files ?: channel.empty()
+                        tool_mqc_ch = tool_mqc_ch.mix(
+                            BIN_QC.out.gunc.map { _meta, tsv -> ['gunc', tsv] },
+                            BIN_QC.out.assembly_stats.map { _meta, csv_file -> ['assembly_stats', csv_file] }
+                        )
                         binning_versions_ch = binning_versions_ch.mix(binqc_versions_ch)
                     }
 
@@ -619,6 +627,11 @@ workflow METAFLOW {
                         binclassification_versions_ch = BIN_CLASSIFICATION.out.versions ?: channel.empty()
                         binclassification_summary_ch = BIN_CLASSIFICATION.out.genome_classification ?: channel.empty()
                         binclassification_taxgenome_ch = BIN_CLASSIFICATION.out.combined_taxgenome.map { _meta, csv_file -> csv_file }
+                        // MultiQC modules: gtdbtk (GTDB-Tk summary) or sourmash gather (combined bin gather CSV)
+                        multiqc_files_ch = multiqc_files_ch.mix(
+                            BIN_CLASSIFICATION.out.gtdbtk_summary.map { _meta, tsv -> tsv },
+                            BIN_CLASSIFICATION.out.combined_gather.map { _meta, csv_file -> csv_file }
+                        )
                         binning_versions_ch = binning_versions_ch.mix(binclassification_versions_ch)
                     }
                 }
@@ -642,6 +655,7 @@ workflow METAFLOW {
 
             if (![params.skip_amrfinderplus, params.skip_abricate, params.skip_rgi, params.skip_resfinder, params.skip_deeparg].every()) {
                 BACTERIAL_AMR_ANALYSIS(bacterial_genomes_ch)
+                tool_mqc_ch = tool_mqc_ch.mix(BACTERIAL_AMR_ANALYSIS.out.rgi_tsv.map { _meta, txt -> ['rgi_amr', txt] })
                 bacterial_amr_versions_ch = BACTERIAL_AMR_ANALYSIS.out.versions ?: channel.empty()
                 bacterial_amr_hamronization_summary_ch = BACTERIAL_AMR_ANALYSIS.out.hamronization_summary ?: channel.empty()
                 bacterial_amr_hamronized_ch = BACTERIAL_AMR_ANALYSIS.out.hamronized ?: channel.empty()
@@ -749,7 +763,13 @@ workflow METAFLOW {
                 bin_mqc_inputs.map { rows -> rows.findAll { row -> row[0] == 'quast' }.collect { row -> row[1] } },
                 file("${projectDir}/bin/py_scripts/assembly_based/bin_multiqc.py", checkIfExists: true)
             )
+            // RGI bwt (reads) and the bin/genome tools without a MultiQC module: one task per tool
+            TOOL_MULTIQC(
+                tool_mqc_ch.mix(read_based_rgi_ch.map { _meta, rgi_dir -> ['rgi_bwt', rgi_dir] }).groupTuple(),
+                file("${projectDir}/bin/py_scripts/multiqc/tool_multiqc.py", checkIfExists: true)
+            )
             multiqc_files_ch = multiqc_files_ch.mix(
+                TOOL_MULTIQC.out.tables.flatten(),
                 BIN_MULTIQC_TABLES.out.tables.flatten(),
                 BIN_MULTIQC_TABLES.out.quast_report,
                 MICROCOSM_MULTIQC_TABLES.out.tables,

@@ -1,0 +1,4 @@
+lineage_pattern	mlst	amrfinderplus	mlst_args	amrfinderplus_args	amrfinderplus_organism	sistr_args	label
+s__Klebsiella pneumoniae	y	y	--scheme klebsiella	--plus --ident_min 0.95			Kpn: own MLST scheme and AMRFinderPlus identity
+g__Salmonella					Escherichia	--qc	Salmonella: organism and SISTR options (test values)
+g__Proteus	n	n					Proteus: no MLST, no AMRFinderPlus

@@ -11,7 +11,7 @@ include { PUBLISH_GENOME_ROUTING } from '../../../modules/local/finalize/publish
 // are classified here; assembly-produced bins are classified by workflow/metaflow.nf.
 include { BIN_CLASSIFICATION } from '../bin_classification/main'
 include { readDecisionTable; decisionFor } from '../utils_bacterial_lineage/main'
-include { binClassificationAvailable } from '../utils_microcosm/main'
+include { binClassificationAvailable; binClassifier } from '../utils_microcosm/main'
 
 def routingTsvValue(value) {
     return value == null ? '' : value.toString().replaceAll(/[\t\r\n]/, ' ')
@@ -153,7 +153,9 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
     NORMALIZE_GENOME_CLASSIFICATIONS(ch_classification_files, normalizer_script)
     ch_versions = ch_versions.mix(NORMALIZE_GENOME_CLASSIFICATIONS.out.versions)
 
+    // Unresolved rows are joined too, so their classifier detail reaches the routing report.
     ch_resolved_classification_rows = NORMALIZE_GENOME_CLASSIFICATIONS.out.resolved_tsv
+        .mix(NORMALIZE_GENOME_CLASSIFICATIONS.out.unresolved_tsv)
         .splitCsv(header: true, sep: '\t', strip: false)
         .map { row -> tuple(row.query_name, row) }
 
@@ -190,6 +192,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
         def genome = record[2]
         def meta_new = meta.clone()
         meta_new.classification_status = 'unresolved'
+        meta_new.unresolved_detail = record[3] == null ? 'no classification row' : (record[3].detail ?: record[3].status)
         tuple(meta_new, genome)
     }
 
@@ -275,7 +278,7 @@ workflow GENOME_INPUT_AND_BACTERIAL_ROUTING {
                 meta,
                 genome,
                 meta.classification_status,
-                'no_resolved_lineage_from_BIN_CLASSIFICATION'
+                "no_resolved_lineage_from_BIN_CLASSIFICATION (${binClassifier()}: ${meta.unresolved_detail ?: 'no detail'})"
             )
         }
         .ifEmpty('')

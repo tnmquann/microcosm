@@ -85,6 +85,12 @@
                     "description": "AMRFinderPlus 4.x database directory (a dated version folder or its latest link).",
                     "help_text": "Optional. When unset, amrfinder_update downloads the current database into the run work directory. A database made for AMRFinderPlus 3.x is not compatible."
                 },
+                "save_amrfinderplus_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded AMRFinderPlus database to <outdir>/Databases/AMRFinderPlus.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
                 "amrfinderplus_args": {
                     "type": "string",
                     "default": "--plus",
@@ -138,6 +144,12 @@
                     "description": "resfinder_db directory for ResFinder 4.7.2.",
                     "help_text": "Optional. When resfinder_db, pointfinder_db or disinfinder_db is unset, the missing ones are downloaded at tag resfinder-4.7.2 into the run work directory."
                 },
+                "save_resfinder_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded ResFinder, PointFinder and DisinFinder databases to <outdir>/Databases/ResFinder.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
                 "resfinder_args": {
                     "type": "string",
                     "default": "--acquired --disinfectant",
@@ -170,6 +182,12 @@
                     "description": "DeepARG data folder (contains database/ and model/).",
                     "help_text": "Optional. When unset, deeparg download_data fetches it into the run work directory (about 1 GB, slow)."
                 },
+                "save_deeparg_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded DeepARG data folder to <outdir>/Databases/DeepARG.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
                 "deeparg_db_version": {
                     "type": "string",
                     "default": "2",
@@ -195,6 +213,12 @@
                     "exists": true,
                     "description": "VirulenceFinder database directory (must contain config and notes.txt).",
                     "help_text": "Optional. When unset, virulencefinder_db is downloaded at a fixed revision into the run work directory."
+                },
+                "save_virulencefinder_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded VirulenceFinder database to <outdir>/Databases/VirulenceFinder.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
                 },
                 "virulencefinder_db_revision": {
                     "type": "string",
@@ -270,6 +294,12 @@
                     "exists": true,
                     "description": "Optional local Paratype checkout (github.com/CHRF-Genomics/Paratype).",
                     "help_text": "Used only for genomes whose SISTR serovar is Paratyphi A. If not set, Paratype is cloned at a fixed commit when such a genome is found. The directory must contain paratype.py, SParatyphiAKU12601.fasta, SParatyphiA_genotype_specific_alleles.txt and SParatyphiA_gene_mutation_codons.txt; it is copied into each task and never modified."
+                },
+                "save_paratype_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded Paratype checkout to <outdir>/Databases/ParaType.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
                 },
                 "paratype_revision": {
                     "type": "string",
@@ -1136,7 +1166,13 @@
                     "type": "string",
                     "format": "directory-path",
                     "description": "Read-only processed CARD database directory.",
-                    "help_text": "Optional for bacterial-genome AMR. When unset, RGI is skipped because this workflow does not automatically prepare CARD. When supplied, validation requires card.json and processed card_database files; WildCARD files are also required when --rgi_include_wildcard is enabled."
+                    "help_text": "Optional. When unset, CARD (and WildCARD) is downloaded and prepared once per run (see --save_rgi_db). When supplied, validation requires card.json and processed card_database files; WildCARD files are also required when --rgi_include_wildcard is enabled."
+                },
+                "save_rgi_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded CARD database prepared by RGI to <outdir>/Databases/RGI.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
                 }
             }
         },

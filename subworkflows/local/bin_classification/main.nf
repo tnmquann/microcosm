@@ -42,6 +42,7 @@ workflow BIN_CLASSIFICATION {
     ch_combined_taxannotate = channel.empty()
     ch_genome_classification = channel.empty()
     ch_combined_taxgenome = channel.empty()
+    ch_gtdbtk_summary = channel.empty()
 
     if (binClassifier() == 'gtdbtk') {
         // --bin_classifier gtdbtk (idea from nf-core/mag): GTDB-Tk classify_wf instead of sourmash.
@@ -72,6 +73,7 @@ workflow BIN_CLASSIFICATION {
         )
         ch_versions = ch_versions.mix(GTDBTK_TAXGENOME.out.versions)
         ch_genome_classification = GTDBTK_TAXGENOME.out.genome_classification
+        ch_gtdbtk_summary = GTDBTK_CLASSIFYWF.out.summary
 
         COMBINE_GTDBTK_RESULTS(
             ch_genome_classification
@@ -223,5 +225,6 @@ workflow BIN_CLASSIFICATION {
     combined_gather      = ch_combined_gather
     combined_taxannotate = ch_combined_taxannotate
     combined_taxgenome   = ch_combined_taxgenome
+    gtdbtk_summary       = ch_gtdbtk_summary   // [meta, GTDB-Tk *.summary.tsv] (MultiQC gtdbtk module)
     versions             = ch_versions
 }

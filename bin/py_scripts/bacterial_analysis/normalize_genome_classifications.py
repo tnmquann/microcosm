@@ -9,7 +9,7 @@ import re
 import sys
 from pathlib import Path
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 RANK_ORDER = ("d", "p", "c", "o", "f", "g", "s")
 OUTPUT_HEADERS = (
     "query_name",
@@ -22,7 +22,17 @@ OUTPUT_HEADERS = (
     "family",
     "genus",
     "species",
+    "detail",
 )
+
+
+def row_detail(row: dict[str, str]) -> str:
+    """Why a row has no lineage: GTDB-Tk warnings/note, else the classifier status."""
+    for field in ("warnings", "note", "status"):
+        value = " ".join((row.get(field) or "").split())
+        if value and value.upper() != "N/A":
+            return value
+    return ""
 
 
 class ClassificationError(ValueError):
@@ -125,6 +135,7 @@ def normalize(
                             "family": "",
                             "genus": "",
                             "species": "",
+                            "detail": row_detail(row),
                         }
                     )
                     continue
@@ -144,6 +155,7 @@ def normalize(
                         "family": family,
                         "genus": genus,
                         "species": species,
+                        "detail": "",
                     }
                 )
     return resolved, unresolved

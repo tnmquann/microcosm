@@ -1,0 +1,3 @@
+lineage_pattern	label	amrfinderplus	abricate	rgi	resfinder	deeparg	mlst	virulencefinder	plasmidfinder	kleborate	sistr	seqsero2	genotyphi	paratype
+s__Escherichia coli	E. coli: AMRFinderPlus only	y	n	n	n	n	n	n	n	n	n	n	n	n
+g__Salmonella	Salmonella: MLST + SISTR, no SeqSero2/Paratype	n	n	n	n	n	y	n	n	n		n		n

@@ -59,6 +59,7 @@ params {
     rgi_include_other_models: Boolean = false
     rgi_include_wildcard: Boolean = true
     run_gunc: Boolean = false
+    save_amrfinderplus_db: Boolean = true
     save_assembly_mapped_reads: Boolean = true
     save_bakta_db: Boolean = true
     save_bin_annotations: Boolean = true
@@ -66,7 +67,12 @@ params {
     save_checkm2_data: Boolean = false
     save_checkm_data: Boolean = false
     save_contig_annotations: Boolean = true
+    save_deeparg_db: Boolean = true
     save_genomad_db: Boolean = true
+    save_paratype_db: Boolean = true
+    save_resfinder_db: Boolean = true
+    save_rgi_db: Boolean = true
+    save_virulencefinder_db: Boolean = true
     show_hidden: Boolean = false
     skip_abricate: Boolean = false
     skip_amrfinderplus: Boolean = false

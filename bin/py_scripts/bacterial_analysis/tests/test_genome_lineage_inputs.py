@@ -187,6 +187,18 @@ class ClassificationNormalizationTests(unittest.TestCase):
         self.assertEqual(resolved[0]["genus"], "g__Escherichia")
         self.assertEqual(resolved[0]["species"], "s__Escherichia coli")
         self.assertEqual(unresolved[0]["query_name"], "genome-b")
+        self.assertEqual(unresolved[0]["detail"], "no_match")
+
+    def test_unresolved_detail_prefers_gtdbtk_warnings(self) -> None:
+        path = Path(self.temp_dir.name) / "gtdbtk.csv"
+        path.write_text(
+            "query_name,status,lineage,note,warnings\n"
+            "rand_a,nomatch,,N/A,No bacterial or archaeal marker\n"
+            "rand_b,nomatch,,  ,N/A\n",
+            encoding="utf-8",
+        )
+        _, unresolved = normalizer.normalize([path])
+        self.assertEqual([row["detail"] for row in unresolved], ["No bacterial or archaeal marker", "nomatch"])
 
     def test_malformed_and_duplicate_classifications_fail(self) -> None:
         path = self.write_classification(
