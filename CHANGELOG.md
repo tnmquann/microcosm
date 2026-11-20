@@ -24,6 +24,7 @@ First release under the name **microcosm** (formerly **metaflow**; the GitHub re
   published below `Readbased_Analysis/Post_processing/` (`<batch-prefix>_<mode>/` in batch mode, `<sample_id>/<mode>/`
   plus all-sample aggregates in single-sketch mode). `all` also writes the standard processed CSV; RGI-BWT results are
   included when `--enable_rgi_bwt` is set (otherwise a warning, and the other modes continue).
+  `rgi_bwt` (and the RGI part of `all`) also runs with sylph alone; `taxburst` needs the sourmash + YACHT result.
 - `--readbased_postprocess_options`: extra `post_processing.py` options, tokenized safely (module-managed arguments
   cannot be overridden); directory input accepts both `_1/_2` and `_R1/_R2` read pairs.
 - **sylph profiler:** `--readbased_taxotools microcosm|sylph|microcosm,sylph` chooses sourmash + YACHT (default), sylph,

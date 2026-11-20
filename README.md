@@ -274,9 +274,11 @@ With `--enable_sylphtax`, `Readbased_Analysis/sylph/` holds `profile/`, `sylphta
 | `all` | everything below + `<prefix>_default/<prefix>.processed_microcosm.csv` |
 | `phyloseq` | `<prefix>_phyloseq/{otu_table,tax_table,sample_data}.csv` |
 | `taxburst` | `<prefix>_taxburst/*.taxburst.csv` |
-| `rgi_bwt` | `<prefix>_rgi_bwt/` (needs `--enable_rgi_bwt`) |
+| `rgi_bwt` | `<prefix>_rgi_bwt/`: the RGI bwt folders of all samples (needs `--enable_rgi_bwt`; also with sylph alone) |
 
 - `<prefix>` is the last folder name of `--outdir`; with `--enable_singlesketch` outputs are per sample plus all-sample aggregates.
+- With `--readbased_taxotools sylph` alone, `phyloseq` comes from sylph-tax (`Readbased_Analysis/sylph/phyloseq/`), `rgi_bwt` still
+  collects the RGI bwt folders, and `taxburst` is not available (it draws the sourmash + YACHT result).
 - Filters: `--readbased_postprocess_options` (default `--min_coverage 0.05`), e.g. `"--min_coverage 0.1 --use_average"`.
 
 ## Assembly-based analysis
