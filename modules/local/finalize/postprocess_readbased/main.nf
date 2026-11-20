@@ -6,7 +6,7 @@ process POSTPROCESS_READBASED {
     container "community.wave.seqera.io/library/sourmash_pandas_sourmash_plugin_branchwater:477d25f3865da957"
 
     input:
-    tuple val(meta), val(output_prefix), val(mode), val(single_sample_layout), val(rgi_gene_mapping_only), env('POSTPROCESS_OPTIONS'), path(merged_sourmash_yacht, stageAs: 'merged_sourmash_yacht.csv'), path(rgi_results, stageAs: 'rgi_inputs/*', arity: '0..*')
+    tuple val(meta), val(output_prefix), val(mode), val(single_sample_layout), val(rgi_gene_mapping_only), env('POSTPROCESS_OPTIONS'), path(merged_sourmash_yacht, stageAs: 'merged_sourmash_yacht.csv', arity: '0..*'), path(rgi_results, stageAs: 'rgi_inputs/*', arity: '0..*')
     path postprocess_script, stageAs: 'post_processing.py'
 
     output:
@@ -17,6 +17,10 @@ process POSTPROCESS_READBASED {
     path "versions.yml", emit: versions
 
     script:
+    // Without the merged Sourmash-YACHT table (sylph-only runs) only the RGI-BWT results can be collected.
+    if (!merged_sourmash_yacht && mode != 'rgi_bwt') {
+        error("POSTPROCESS_READBASED mode '${mode}' needs merged_sourmash_yacht.csv")
+    }
     def run_default = mode == 'all'
     def run_phyloseq = mode == 'phyloseq' || mode == 'all'
     def run_taxburst = mode == 'taxburst' || mode == 'all'
@@ -168,6 +172,10 @@ process POSTPROCESS_READBASED {
     """
 
     stub:
+    // Without the merged Sourmash-YACHT table (sylph-only runs) only the RGI-BWT results can be collected.
+    if (!merged_sourmash_yacht && mode != 'rgi_bwt') {
+        error("POSTPROCESS_READBASED mode '${mode}' needs merged_sourmash_yacht.csv")
+    }
     def run_default = mode == 'all'
     def run_phyloseq = mode == 'phyloseq' || mode == 'all'
     def run_taxburst = mode == 'taxburst' || mode == 'all'

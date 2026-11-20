@@ -222,8 +222,8 @@ workflow MICROCOSM {
             if (run_sylph_readbased && params.readbased_postprocess in ['all', 'phyloseq'] && !params.enable_sylphtax) {
                 exit 1, 'ERROR: sylph phyloseq tables (--readbased_postprocess phyloseq/all) need --enable_sylphtax and --sylph_taxonomy for the lineages.'
             }
-            if (!run_microcosm_readbased && params.readbased_postprocess in ['taxburst', 'rgi_bwt']) {
-                exit 1, "ERROR: --readbased_postprocess ${params.readbased_postprocess} uses the microcosm (sourmash + YACHT) result; add microcosm to --readbased_taxotools."
+            if (!run_microcosm_readbased && params.readbased_postprocess == 'taxburst') {
+                exit 1, "ERROR: --readbased_postprocess taxburst draws the microcosm (sourmash + YACHT) result; add microcosm to --readbased_taxotools."
             }
             if (params.readbased_postprocess == 'all' && !params.enable_rgi_bwt) {
                 log.warn 'readbased_postprocess=all was requested, but RGI-BWT is disabled; the RGI-BWT post-processing output will be skipped while phyloseq and taxburst continue.'
