@@ -73,8 +73,9 @@ First release under the name **microcosm** (formerly **metaflow**; the GitHub re
   `--readbased_postprocess_options`); sylph profile and sylph-tax; RGI bwt (table + AMR gene families); QUAST and Bowtie2
   for assemblies; contigs (SeqKit + samtools coverage, Pyrodigal or Prokka, geNomad, Tiara, skani); bins (Tiara domains,
   QUAST, assembly_stats, CheckM2, CheckM, BUSCO, GUNC, Prokka / Bakta, GTDB-Tk or sourmash gather, bin taxonomy and
-  summary); bacterial genomes (overview: species, MLST, SISTR serovar, AMR genes per tool; RGI main table + gene
-  families); run summary (parameters that differ from the defaults) and software versions.
+  summary); bacterial genomes (overview: species, MLST, SISTR serovar, AMR genes per tool; Kleborate: ST, scores, K/O
+  locus, virulence loci; Salmonella: SISTR/SeqSero2 serovars, cgMLST, follow-up route, GenoTyphi/Paratype genotype; RGI
+  main table + gene families); run summary (parameters that differ from the defaults) and software versions.
 - Tools without a MultiQC module are summarised by `bin/py_scripts/multiqc/tool_multiqc.py`, one task per tool, so a
   skipped or failing tool never affects the other sections.
 - All software versions of a run are collected in `${outdir}/pipeline_info/microcosm_software_versions.yml`.

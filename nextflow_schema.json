@@ -1290,7 +1290,7 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Skip the final MultiQC report (${outdir}/MultiQC)",
-                    "help_text": "Sections: microcosm top taxa (tab per rank; needs --readbased_postprocess all), sylph-tax (--enable_sylphtax), bacterial genome overview, FastQC/fastp, bin QC (CheckM2, CheckM, BUSCO, QUAST), Prokka, run summary and software versions. Styled by assets/multiqc_config.yml and assets/microcosm_logo.png."
+                    "help_text": "Sections: microcosm top taxa (tab per rank; needs --readbased_postprocess all), sylph profile, sylph-tax (--enable_sylphtax), bacterial genome overview, Kleborate, Salmonella typing, FastQC/fastp, bin QC (CheckM2, CheckM, BUSCO, QUAST), Prokka, run summary and software versions. Styled by assets/multiqc_config.yml and assets/microcosm_logo.png."
                 },
                 "multiqc_config": {
                     "type": "string",

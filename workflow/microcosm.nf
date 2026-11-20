@@ -694,6 +694,7 @@ workflow MICROCOSM {
                 bacterial_kleborate_report_ch = KLEBSIELLA_TYPING.out.report ?: channel.empty()
                 bacterial_klebsiella_summary_ch = KLEBSIELLA_TYPING.out.summary ?: channel.empty()
                 bacterial_summary_tables_ch = bacterial_summary_tables_ch.mix(bacterial_kleborate_report_ch.map { meta, table -> tuple('klebsiella', 'kleborate', meta.genome_id, table) })
+                tool_mqc_ch = tool_mqc_ch.mix(bacterial_kleborate_report_ch.map { _meta, txt -> ['kleborate', txt] })
             }
 
             if (!(params.skip_sistr && params.skip_seqsero2)) {
@@ -704,6 +705,10 @@ workflow MICROCOSM {
                 bacterial_salmonella_routing_ch = SALMONELLA_TYPING.out.routing ?: channel.empty()
                 bacterial_genotyphi_ch = SALMONELLA_TYPING.out.genotyphi_tsv ?: channel.empty()
                 bacterial_paratype_ch = SALMONELLA_TYPING.out.paratype_report ?: channel.empty()
+                tool_mqc_ch = tool_mqc_ch.mix(
+                    SALMONELLA_TYPING.out.sistr_tsv.mix(SALMONELLA_TYPING.out.seqsero2_tsv, bacterial_salmonella_routing_ch, bacterial_genotyphi_ch, bacterial_paratype_ch)
+                        .map { _meta, table -> ['salmonella', table] }
+                )
                 bacterial_summary_tables_ch = bacterial_summary_tables_ch.mix(
                     SALMONELLA_TYPING.out.sistr_tsv.map { meta, table -> tuple('salmonella', 'sistr', meta.genome_id, table) },
                     SALMONELLA_TYPING.out.seqsero2_tsv.map { meta, table -> tuple('salmonella', 'seqsero2', meta.genome_id, table) },

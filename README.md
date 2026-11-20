@@ -157,7 +157,7 @@ assemblies, contigs (SeqKit + samtools coverage table, Pyrodigal genes or Prokka
 geNomad plasmids and viruses, Tiara domains, skani best references), bins (Tiara
 domains, QUAST, assembly_stats.py, CheckM2, CheckM, BUSCO, GUNC, Prokka/Bakta,
 the MultiQC GTDB-Tk or sourmash gather module, and the microcosm bin taxonomy and
-bin summary), bacterial genomes (overview and RGI main), the run summary (parameters that
+bin summary), bacterial genomes (overview, Kleborate, Salmonella typing and RGI main), the run summary (parameters that
 differ from the defaults) and the software versions. Only the tools that ran get a
 section; tools without a MultiQC module are summarised by
 `bin/py_scripts/multiqc/tool_multiqc.py`, one task per tool. `--multiqc_config` and

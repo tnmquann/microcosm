@@ -28,10 +28,10 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 # file name -> assembly name: MEGAHIT-s1.tiara.txt, MEGAHIT-s1.contigs_plasmid_summary.tsv, MEGAHIT-s1.pyrodigal.faa ...
 SUFFIX = re.compile(r"(_plasmid_summary|_virus_summary)?\.(txt|tsv|faa|csv)(\.gz)?$")
-TOOL = re.compile(r"\.(tiara|seqkit|skani|coverage|pyrodigal|prokka|geNomad|contigs|gene_mapping_data|overall_mapping_stats|rgi|binclassification|assembly_stats)$")
+TOOL = re.compile(r"\.(tiara|seqkit|skani|coverage|pyrodigal|prokka|geNomad|contigs|gene_mapping_data|overall_mapping_stats|rgi|binclassification|assembly_stats|kleborate|seqsero2_result|genotype_predictResults|salmonella_routing)$")
 TIARA_CLASSES = ["bacteria", "archaea", "prokarya", "eukarya", "organelle", "unknown"]
 OTHER, SKANI_NONE = "Other", "No skani hit"
 csv.field_size_limit(sys.maxsize)  # RGI rows carry whole sequences
@@ -421,7 +421,121 @@ def rgi_amr(paths: list[Path], top: int) -> list:
     ]
 
 
-TOOLS = {f.__name__: f for f in (contig_summary, pyrodigal, genomad, tiara_contigs, skani, tiara_bins, gunc, assembly_stats, rgi_bwt, rgi_amr, sylph)}
+# Kleborate v3 column names depend on the preset (klebsiella_pneumo_complex__, klebsiella_oxytoca_complex__,
+# escherichia__): each report column takes the first non-empty value among the matching Kleborate columns.
+KLEBORATE_COLUMNS = {
+    "species": (r"^enterobacterales__species__species$",),
+    "species_match": (r"^enterobacterales__species__species_match$",),
+    "st": (r"_complex__mlst__ST$", r"^escherichia__mlst_achtman__ST$"),
+    "virulence_score": (r"__virulence_score__virulence_score$",),
+    "resistance_score": (r"__resistance_score__resistance_score$",),
+    "resistance_classes": (r"__num_resistance_classes$",),
+    "resistance_genes": (r"__num_resistance_genes$",),
+    "k_locus": (r"__kaptive__K_locus$",),
+    "k_confidence": (r"__kaptive__K_locus_confidence$",),
+    "o_type": (r"__kaptive__O_type$", r"^escherichia__ectyper__Serotype$"),
+    "clermont": (r"^escherichia__ezclermont__Clermont_type$",),
+    "pathotype": (r"^escherichia__pathovar__Pathotype$",),
+    "yersiniabactin": (r"__ybst__Yersiniabactin$",),
+    "colibactin": (r"__cbst__Colibactin$",),
+    "aerobactin": (r"__abst__Aerobactin$",),
+    "salmochelin": (r"__smst__Salmochelin$",),
+    "rmpadc": (r"__rmst__RmpADC$",),
+    "rmpa2": (r"__rmpa2__rmpA2$",),
+}
+KLEBORATE_NUMERIC = {"virulence_score", "resistance_score", "resistance_classes", "resistance_genes"}
+
+
+def kleborate_value(row: dict, patterns: tuple) -> str:
+    for pattern in patterns:
+        for column, value in row.items():
+            value = (value or "").strip()
+            if re.search(pattern, column or "") and value not in ("", "-", "NA", "Not Tested"):
+                return value
+    return ""
+
+
+def kleborate(paths: list[Path], _top: int) -> list:
+    rows = {}
+    for path in pick(paths, r"\.kleborate\.txt$"):
+        for row in read_table(path):
+            values = {key: kleborate_value(row, patterns) for key, patterns in KLEBORATE_COLUMNS.items()}
+            # Scores are 0 for species whose modules were "Not Tested": keep them only when a typing module ran.
+            tested = bool(values["st"] or values["k_locus"] or values["o_type"])
+            values = {key: number(v) if key in KLEBORATE_NUMERIC else v for key, v in values.items()
+                      if v and (tested or key not in KLEBORATE_NUMERIC)}
+            if values:
+                rows[(row.get("strain") or "").strip() or sample_name(path)] = values
+    text = lambda title, description: {"title": title, "description": description, "scale": False}
+    headers = {
+        "species": text("Species", "Kleborate species"),
+        "species_match": text("Match", "Species match strength"),
+        "st": text("ST", "Kleborate MLST (KpSC / KoSC scheme, or Achtman for Escherichia)"),
+        "virulence_score": fmt("Virulence", "Virulence score (0-5, KpSC)", "Reds", max=5, min=0),
+        "resistance_score": fmt("Resistance", "Resistance score (0-3, KpSC)", "Reds", max=3, min=0),
+        "resistance_classes": fmt("AMR classes", "Drug classes with acquired resistance", "Oranges"),
+        "resistance_genes": fmt("AMR genes", "Acquired resistance genes", "Oranges"),
+        "k_locus": text("K locus", "Capsule (K) locus from Kaptive"),
+        "k_confidence": text("K confidence", "Kaptive K locus confidence"),
+        "o_type": text("O type", "O antigen type (Kaptive) or serotype (ECTyper for Escherichia)"),
+        "clermont": text("Clermont", "EzClermont phylogroup (Escherichia)"),
+        "pathotype": text("Pathotype", "Escherichia pathotype"),
+        "yersiniabactin": text("Yersiniabactin", "ybt lineage / ICEKp"),
+        "colibactin": text("Colibactin", "clb lineage"),
+        "aerobactin": text("Aerobactin", "iuc lineage"),
+        "salmochelin": text("Salmochelin", "iro lineage"),
+        "rmpadc": text("RmpADC", "Hypermucoidy locus rmpADC"),
+        "rmpa2": text("rmpA2", "Hypermucoidy gene rmpA2"),
+    }
+    return [table("microcosm_kleborate", "Bacterial genomes: Kleborate", "Kleborate v3 on Klebsiella, Raoultella and "
+                  "Escherichia genomes (preset from the lineage). Files: Bacterial_Analysis/klebsiella/kleborate/.",
+                  headers, rows, "Genome")]
+
+
+def salmonella(paths: list[Path], _top: int) -> list:
+    """SISTR, SeqSero2, routing, GenoTyphi and Paratype tables, recognised by their headers."""
+    rows: dict[str, dict] = defaultdict(dict)
+    clean = lambda value: "" if (value or "").strip() in ("", "-", "NA", "missing") else value.strip()
+    for path in pick(paths, r"\.(tab|tsv)$"):
+        for row in read_table(path):
+            if "serovar" in row and "cgmlst_ST" in row:  # SISTR
+                antigens = ":".join(clean(row.get(k)) or "-" for k in ("o_antigen", "h1", "h2"))
+                rows[clean(row.get("genome")) or sample_name(path)].update(
+                    sistr_serovar=clean(row["serovar"]), serogroup=clean(row.get("serogroup")), antigens=antigens,
+                    cgmlst_st=clean(row["cgmlst_ST"]), sistr_qc=clean(row.get("qc_status")))
+            elif "Predicted serotype" in row:  # SeqSero2
+                rows[clean(row.get("Sample name")) or sample_name(path)].update(
+                    seqsero2_serotype=clean(row["Predicted serotype"]), seqsero2_profile=clean(row.get("Predicted antigenic profile")))
+            elif "routing_reason" in row:  # microcosm Salmonella routing
+                route = "GenoTyphi" if row.get("route_genotyphi") == "true" else "Paratype" if row.get("route_paratype") == "true" else "none"
+                rows[clean(row.get("genome_id"))].update(route=route, conflict="yes" if row.get("tool_conflict") == "true" else "no")
+            elif "final genotype" in row:  # GenoTyphi (Mykrobe)
+                rows[clean(row.get("genome")).removesuffix(".mykrobe") or sample_name(path)].update(
+                    genotype=clean(row["final genotype"]), genotype_confidence=clean(row.get("confidence")))
+            elif "Genotype" in row and "Primary_clade" in row:  # Paratype
+                rows[clean(row.get("Strain")) or sample_name(path)].update(
+                    genotype=clean(row["Genotype"]), genotype_confidence=f"support {clean(row.get('Support'))}" if clean(row.get("Support")) else "")
+    rows = {genome: {k: v for k, v in row.items() if v} for genome, row in rows.items() if genome}
+    text = lambda title, description: {"title": title, "description": description, "scale": False}
+    headers = {
+        "sistr_serovar": text("SISTR serovar", "SISTR serovar (routes the follow-up tools)"),
+        "serogroup": text("Serogroup", "SISTR serogroup"),
+        "antigens": text("O:H1:H2", "SISTR antigenic formula"),
+        "cgmlst_st": text("cgMLST ST", "SISTR cgMLST330 sequence type"),
+        "sistr_qc": text("SISTR QC", "SISTR QC status"),
+        "seqsero2_serotype": text("SeqSero2", "SeqSero2 predicted serotype"),
+        "seqsero2_profile": text("SeqSero2 profile", "SeqSero2 antigenic profile"),
+        "conflict": text("Conflict", "SISTR and SeqSero2 disagree"),
+        "route": text("Follow-up", "Typhi: Mykrobe + GenoTyphi; Paratyphi A: Paratype"),
+        "genotype": text("Genotype", "GenoTyphi (Typhi) or Paratype (Paratyphi A) genotype"),
+        "genotype_confidence": text("Genotype support", "GenoTyphi confidence or Paratype support"),
+    }
+    return [table("microcosm_salmonella", "Bacterial genomes: Salmonella typing", "SISTR and SeqSero2 serovars, the "
+                  "follow-up chosen from the SISTR serovar and the GenoTyphi / Paratype genotype. "
+                  "Files: Bacterial_Analysis/salmonella/.", headers, rows, "Genome")]
+
+
+TOOLS = {f.__name__: f for f in (contig_summary, pyrodigal, genomad, tiara_contigs, skani, tiara_bins, gunc, assembly_stats, rgi_bwt, rgi_amr, sylph, kleborate, salmonella)}
 
 
 def expand(paths: list[Path]) -> list[Path]:

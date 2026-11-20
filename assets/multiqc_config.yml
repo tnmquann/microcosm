@@ -6,7 +6,7 @@ intro_text: >
   read QC (FastQC, fastp, hostile), read-based taxonomic profiles (microcosm = sourmash + YACHT, and/or sylph) and
   AMR genes (RGI bwt), assembly and contig QC (QUAST, Bowtie2, SeqKit, samtools coverage, Pyrodigal / Prokka, geNomad,
   Tiara, skani), bins (Tiara domains, QUAST, assembly_stats.py, CheckM2, CheckM, BUSCO, GUNC, Prokka / Bakta,
-  sourmash / GTDB-Tk taxonomy) and the bacterial genomes (overview, RGI).
+  sourmash / GTDB-Tk taxonomy) and the bacterial genomes (overview, Kleborate, Salmonella typing, RGI).
   Use the toolbox on the right to highlight, rename or hide samples and to export plots and data.
 report_comment: >
   Full result tables are in the pipeline output folders; this report shows summaries only.
@@ -122,6 +122,10 @@ report_section_order:
     order: 964
   microcosm_bacterial_overview:
     order: 950
+  microcosm_kleborate:
+    order: 948
+  microcosm_salmonella:
+    order: 947
   microcosm_rgi_amr:
     order: 945
   microcosm_rgi_amr_families:

@@ -108,6 +108,33 @@ class ToolMultiqcTest(unittest.TestCase):
         self.assertEqual(written["sylph_mqc.json"]["data"]["s1"], {"genomes": 2, "mean_ani": 97.0})
         self.assertEqual(written["sylph_abundance_mqc.json"]["data"][0]["s1"], {"Acinetobacter baumannii ATCC 19606": 70.0, tool.OTHER: 30.0})
 
+    def test_kleborate_presets(self):
+        cols = ["strain", "enterobacterales__species__species", "klebsiella_pneumo_complex__mlst__ST",
+                "klebsiella_pneumo_complex__virulence_score__virulence_score", "klebsiella_pneumo_complex__kaptive__K_locus",
+                "klebsiella__ybst__Yersiniabactin", "escherichia__mlst_achtman__ST", "escherichia__ectyper__Serotype"]
+        rows = [["kp1", "Klebsiella pneumoniae", "ST11", "1", "KL103", "ybt 9; ICEKp3", "", ""],
+                ["unk", "unknown", "Not Tested", "0", "Not Tested", "Not Tested", "", ""],
+                ["ec1", "Escherichia coli / Shigella", "", "", "", "", "ST10", "O16:H48"]]
+        for row in rows:
+            self.write(f"k/{row[0]}.kleborate.txt", "\t".join(cols) + "\n" + "\t".join(row) + "\n")
+        data = self.run_tool("kleborate", self.tmp / "k")["kleborate_mqc.json"]["data"]
+        self.assertEqual(data["kp1"], {"species": "Klebsiella pneumoniae", "st": "ST11", "virulence_score": 1.0,
+                                       "k_locus": "KL103", "yersiniabactin": "ybt 9; ICEKp3"})
+        self.assertEqual(data["unk"], {"species": "unknown"})
+        self.assertEqual(data["ec1"], {"species": "Escherichia coli / Shigella", "st": "ST10", "o_type": "O16:H48"})
+
+    def test_salmonella_tables(self):
+        self.write("s/st1.tab", "genome\tserovar\tserogroup\to_antigen\th1\th2\tcgmlst_ST\tqc_status\nst1\tTyphi\tD1\t9,12[Vi]\td\t-\t259\tPASS\n")
+        self.write("s/st1.seqsero2_result.tsv", "Sample name\tPredicted serotype\tPredicted antigenic profile\nst1\tTyphi\t9:d:-\n")
+        self.write("s/st1.salmonella_routing.tsv", "genome_id\troute_genotyphi\troute_paratype\ttool_conflict\trouting_reason\nst1\ttrue\tfalse\tfalse\tsistr_serovar_Typhi\n")
+        self.write("s/st1.genotype_predictResults.tsv", "genome\tfinal genotype\tconfidence\nst1.mykrobe\t3.2.1\tstrong\n")
+        self.write("s/pa1.tsv", "Strain\tPrimary_clade\tGenotype\tSupport\npa1\t2.0\t2.2\t1.0\n")
+        data = self.run_tool("salmonella", self.tmp / "s")["salmonella_mqc.json"]["data"]
+        self.assertEqual(data["st1"], {"sistr_serovar": "Typhi", "serogroup": "D1", "antigens": "9,12[Vi]:d:-", "cgmlst_st": "259",
+                                       "sistr_qc": "PASS", "seqsero2_serotype": "Typhi", "seqsero2_profile": "9:d:-",
+                                       "route": "GenoTyphi", "conflict": "no", "genotype": "3.2.1", "genotype_confidence": "strong"})
+        self.assertEqual(data["pa1"], {"genotype": "2.2", "genotype_confidence": "support 1.0"})
+
     def test_no_rows_writes_nothing(self):
         self.run_tool("gunc")
         self.assertEqual(list(self.out.glob("*")), [])
