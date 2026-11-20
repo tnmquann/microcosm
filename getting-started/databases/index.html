@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Databases - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Inputs" href="../../usage/inputs/" /><link rel="prev" title="Installation" href="../installation/" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/getting-started/databases/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/getting-started/databases/"/>
+  <meta property="og:title" content="Databases"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="../quickstart/">Quick start</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../installation/">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/overview/">Pipeline overview</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/preprocessing/">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/assembly/">Assembly and contig analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/binning/">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/changelog/">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#setting-up-each-database">Setting up each database</a><ul>
+<li><a class="reference internal" href="#hostile-host-genome-filtering">hostile (host genome filtering)</a></li>
+<li><a class="reference internal" href="#sourmash">sourmash</a></li>
+<li><a class="reference internal" href="#yacht">YACHT</a></li>
+<li><a class="reference internal" href="#card-database-for-rgi-bwt">CARD database (for <code class="docutils literal notranslate"><span class="pre">rgi_bwt</span></code>)</a></li>
+<li><a class="reference internal" href="#genomad">geNomad</a></li>
+<li><a class="reference internal" href="#skani">skani</a></li>
+<li><a class="reference internal" href="#busco">BUSCO</a></li>
+<li><a class="reference internal" href="#checkm-checkm2">CheckM/CheckM2</a></li>
+<li><a class="reference internal" href="#gunc">GUNC</a></li>
+<li><a class="reference internal" href="#bakta">Bakta</a></li>
+<li><a class="reference internal" href="#sylph-and-sylph-tax">sylph and sylph-tax</a></li>
+<li><a class="reference internal" href="#gtdb-tk">GTDB-Tk</a></li>
+<li><a class="reference internal" href="#bacterial-genome-analysis-databases">Bacterial genome analysis databases</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Databases</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="databases">
+<h1>Databases<a class="headerlink" href="#databases" title="Link to this heading">¶</a></h1>
+<p>Some databases must be downloaded by you; the others are downloaded by the pipeline when no path is given and can be saved in <code class="docutils literal notranslate"><span class="pre">&lt;outdir&gt;/Databases/</span></code> for the next run.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Database</p></th>
+<th class="head"><p>Analysis Type</p></th>
+<th class="head"><p>Size (approx.)</p></th>
+<th class="head"><p>Auto-setup Supported</p></th>
+<th class="head"><p>Manual Setup/Links</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>hostile</strong></p></td>
+<td><p>Read-based</p></td>
+<td><p>Variable</p></td>
+<td><p>Yes (default: human-t2t-hla)</p></td>
+<td><p><a class="reference external" href="https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/">human genome refs</a></p></td>
+<td><p>Bowtie2 index required</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>sourmash</strong></p></td>
+<td><p>Read-based</p></td>
+<td><p>Variable</p></td>
+<td><p>No</p></td>
+<td><p><a class="reference external" href="https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/">ctbrown’s farm</a></p></td>
+<td><p>RocksDB format recommended</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>YACHT</strong></p></td>
+<td><p>Read-based</p></td>
+<td><p>Variable</p></td>
+<td><p>No</p></td>
+<td><p><a class="reference external" href="https://zenodo.org/communities/yacht/records">Zenodo</a>, <a class="reference external" href="https://oucruaap-my.sharepoint.com/:f:/g/personal/quantnm_oucru_org/Eu87eLI5JThKg4fNcJEYXAkBUMOSsJB3_MHtNukqVs4oag?e=4tlG0b">Direct link</a></p></td>
+<td><p>Edit JSON manifest after download</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>CARD</strong></p></td>
+<td><p>Read-based/ARG detection</p></td>
+<td><p>~14 GB</p></td>
+<td><p>Yes (default: CARD + CARD-R database)</p></td>
+<td><p><a class="reference external" href="https://card.mcmaster.ca/download">CARD download</a></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">rgi_bwt</span></code> for setup</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>geNomad</strong></p></td>
+<td><p>Assembly-based</p></td>
+<td><p>~2 GB</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference external" href="https://github.com/apcamargo/genomad#downloading-the-database">geNomad docs</a></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">genomad</span> <span class="pre">download-database</span> <span class="pre">.</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>skani</strong></p></td>
+<td><p>Assembly-based</p></td>
+<td><p>~50 GB</p></td>
+<td><p>No</p></td>
+<td><p><a class="reference external" href="https://github.com/bluenote-1577/skani/wiki/Pre%E2%80%90sketched-databases">skani wiki</a></p></td>
+<td><p>Build with <code class="docutils literal notranslate"><span class="pre">skani</span> <span class="pre">sketch</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>BUSCO</strong></p></td>
+<td><p>Assembly-based</p></td>
+<td><p>~60 GB</p></td>
+<td><p>No</p></td>
+<td><p><a class="reference external" href="https://busco.ezlab.org/busco_userguide.html#download-and-automated-update">BUSCO docs</a></p></td>
+<td><p>Large output, use only if needed</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>CheckM</strong></p></td>
+<td><p>Assembly-based</p></td>
+<td><p>~1.5 GB</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference external" href="https://data.ace.uq.edu.au/public/CheckM_databases/">CheckM download</a></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">--save_checkm_data</span></code> to save database</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>CheckM2</strong></p></td>
+<td><p>Assembly-based</p></td>
+<td><p>~3 GB</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference external" href="https://zenodo.org/records/14897628">CheckM2 download</a></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">--save_checkm2_data</span></code> to save database</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GUNC</strong></p></td>
+<td><p>Assembly-based</p></td>
+<td><p>~12.6 GB</p></td>
+<td><p>Yes</p></td>
+<td><p><a class="reference external" href="https://grp-bork.embl-community.io/gunc/usage.html#gunc-download-db">GUNC docs</a></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">--gunc_database_type</span></code> to select</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Bakta</strong></p></td>
+<td><p>Assembly-based/Annotation</p></td>
+<td><p>4–85 GB</p></td>
+<td><p>Yes (default: full)</p></td>
+<td><p><a class="reference external" href="https://zenodo.org/records/14916843">Bakta download</a></p></td>
+<td><p>Use <code class="docutils literal notranslate"><span class="pre">--annotation_bakta_db_downloadtype</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>sylph</strong></p></td>
+<td><p>Read-based (<code class="docutils literal notranslate"><span class="pre">--readbased_taxotools</span> <span class="pre">sylph</span></code>)</p></td>
+<td><p>Variable</p></td>
+<td><p>No</p></td>
+<td><p><a class="reference external" href="https://github.com/bluenote-1577/sylph/wiki/Pre%E2%80%90built-databases">sylph pre-built databases</a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--sylph_database</span></code>; sylph-tax metadata for <code class="docutils literal notranslate"><span class="pre">--sylph_taxonomy</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GTDB-Tk</strong></p></td>
+<td><p>Assembly-based/Bin classification (<code class="docutils literal notranslate"><span class="pre">--bin_classifier</span> <span class="pre">gtdbtk</span></code>)</p></td>
+<td><p>&gt; 100 GB</p></td>
+<td><p>No</p></td>
+<td><p><a class="reference external" href="https://ecogenomics.github.io/GTDBTk/installing/index.html#gtdb-tk-reference-data">GTDB-Tk reference data</a></p></td>
+<td><p>Extract the archive yourself; pass the folder with <code class="docutils literal notranslate"><span class="pre">--gtdbtk_db</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>AMRFinderPlus, CARD (RGI main), ResFinder/PointFinder/DisinFinder, DeepARG, VirulenceFinder, Paratype</strong></p></td>
+<td><p>Bacterial genome analysis</p></td>
+<td><p>~5 GB (DeepARG) to ~12 GB (CARD)</p></td>
+<td><p>Yes</p></td>
+<td><p>See <a class="reference internal" href="#bacterial-genome-analysis-databases">section 13</a></p></td>
+<td><p>Saved to <code class="docutils literal notranslate"><span class="pre">${outdir}/Databases/&lt;Tool&gt;/</span></code> by default (<code class="docutils literal notranslate"><span class="pre">--save_&lt;tool&gt;_db</span></code>)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="setting-up-each-database">
+<h2>Setting up each database<a class="headerlink" href="#setting-up-each-database" title="Link to this heading">¶</a></h2>
+<p>Below are step-by-step guides for manual setup of each supported database. Follow these if you need full control or the pipeline does not support auto-download.</p>
+<section id="hostile-host-genome-filtering">
+<h3>hostile (host genome filtering)<a class="headerlink" href="#hostile-host-genome-filtering" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p><strong>Auto-download:</strong> Default is <code class="docutils literal notranslate"><span class="pre">human-t2t-hla</span></code>. The pipeline can download automatically, but the database is not reusable across runs.</p></li>
+<li><p><strong>Manual build:</strong></p>
+<ul>
+<li><p>Build a Bowtie2 index from your reference sequences:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">bowtie2-build<span class="w"> </span>path/to/sequences.fa<span class="w"> </span>./&lt;db-folder&gt;/&lt;index-name&gt;<span class="w"> </span>--threads<span class="w"> </span><span class="si">${</span><span class="nv">threads</span><span class="si">}</span>
+</span></pre></div>
+</div>
+</li>
+<li><p>Download human genome references:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">wget<span class="w"> </span>https://objectstorage.uk-london-1.oraclecloud.com/n/lrbvkel2wjot/b/human-genome-bucket/o/<span class="o">{</span>object_name<span class="o">}</span>
+</span></pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="sourmash">
+<h3>sourmash<a class="headerlink" href="#sourmash" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p><strong>Option 1:</strong> Use pre-built databases from <a class="reference external" href="https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/">ctbrown’s farm</a>.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/gtdb-rs226/">GTDB-RS226</a></p></li>
+<li><p><a class="reference external" href="https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/genbank-2025.04/">GenBank (04/2025)</a></p></li>
+</ul>
+</li>
+<li><p><strong>Option 2:</strong> Build your own database (recommended format: RocksDB):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Create sketches from FASTA files (default: k-mer = 31, scale = 1000)</span>
+</span><span data-line="2">sourmash<span class="w"> </span>sketch<span class="w"> </span>dna<span class="w"> </span>*.fa<span class="w"> </span>-o<span class="w"> </span>xyz.zip
+</span><span data-line="3"><span class="c1"># Index sketches into a RocksDB database</span>
+</span><span data-line="4">sourmash<span class="w"> </span>scripts<span class="w"> </span>index<span class="w"> </span>xyz.zip<span class="w"> </span>-o<span class="w"> </span>xyz.rocksdb<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">threads</span><span class="si">}</span><span class="w"> </span>-k<span class="w"> </span><span class="si">${</span><span class="nv">ksize</span><span class="si">}</span>
+</span><span data-line="5"><span class="c1"># Or</span>
+</span><span data-line="6">sourmash<span class="w"> </span>index<span class="w"> </span>-F<span class="w"> </span>rocksdb<span class="w"> </span>xyz.rocksdb<span class="w"> </span>xyz.zip
+</span><span data-line="7"><span class="c1"># Verify the database</span>
+</span><span data-line="8">sourmash<span class="w"> </span>scripts<span class="w"> </span>check<span class="w"> </span>xyz.rocksdb
+</span></pre></div>
+</div>
+<blockquote>
+<div><p><strong>Notes:</strong></p>
+<ul class="simple">
+<li><p>Use GTDB-RS226 &quot;genomic representatives&quot; for best performance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">k=31</span></code> for species-level, <code class="docutils literal notranslate"><span class="pre">k=51</span></code> for strain-level resolution.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="yacht">
+<h3>YACHT<a class="headerlink" href="#yacht" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p><strong>Option 1</strong>: Download pre-built databases from <a class="reference external" href="https://zenodo.org/communities/yacht/records?q=&amp;amp;l=list&amp;amp;p=1&amp;amp;s=10&amp;amp;sort=newest">Zenodo</a> (GenBank 2022.03, GTDB-RS214)</p>
+<ul class="simple">
+<li><p>A direct link to the pretrained GTDB-RS226 database (ANI threshold 0.995) is available <a class="reference external" href="https://oucruaap-my.sharepoint.com/:f:/g/personal/quantnm_oucru_org/Eu87eLI5JThKg4fNcJEYXAkBUMOSsJB3_MHtNukqVs4oag?e=4tlG0b">here</a>.</p></li>
+</ul>
+</li>
+<li><p><strong>Option 2:</strong> Build a custom database:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">yacht<span class="w"> </span>train<span class="w"> </span>--ref_file<span class="w"> </span>xyz.zip<span class="w"> </span>--ksize<span class="w"> </span><span class="si">${</span><span class="nv">ksize</span><span class="si">}</span><span class="w"> </span>--num_threads<span class="w"> </span><span class="si">${</span><span class="nv">threads</span><span class="si">}</span><span class="w"> </span>--ani_thresh<span class="w"> </span><span class="m">0</span>.995<span class="w"> </span>--prefix<span class="w"> </span><span class="s1">'xyz_ani_thresh_0.995'</span><span class="w"> </span>--outdir<span class="w"> </span>./
+</span></pre></div>
+</div>
+<blockquote>
+<div><p><strong>Note:</strong> ANI threshold 0.995 recommended (<a class="reference external" href="https://doi.org/10.1093/bioinformatics/btae047">reference</a>).</p>
+</div></blockquote>
+<ul>
+<li><p>After download/train, edit the JSON config in the trained folder to update paths:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2"><span class="w">    </span><span class="nt">"manifest_file_path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/yacht/{database_name}/{database_name}_processed_manifest.tsv"</span><span class="p">,</span>
+</span><span data-line="3"><span class="w">    </span><span class="nt">"intermediate_files_dir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/yacht/{database_name}/{database_name}_intermediate_files"</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">    </span><span class="nt">"scale"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">    </span><span class="nt">"ksize"</span><span class="p">:</span><span class="w"> </span><span class="mi">31</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">    </span><span class="nt">"ani_thresh"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.995</span>
+</span><span data-line="7"><span class="p">}</span>
+</span></pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="card-database-for-rgi-bwt">
+<h3>CARD database (for <code class="docutils literal notranslate"><span class="pre">rgi_bwt</span></code>)<a class="headerlink" href="#card-database-for-rgi-bwt" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p><strong>Option 1:</strong> Let the pipeline setup with <code class="docutils literal notranslate"><span class="pre">--enable_rgi_bwt</span></code> (do not use <code class="docutils literal notranslate"><span class="pre">--rgi_preparecarddb_dir</span></code>).</p></li>
+<li><p><strong>Option 2:</strong> Manual setup (<a class="reference external" href="https://github.com/arpcard/rgi/blob/master/docs/rgi_bwt.rst#running-rgi-bwt-with-fastq-files---all-model-types">RGI docs</a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">mkdir<span class="w"> </span>-p<span class="w"> </span>./rgi_db
+</span><span data-line="2">wget<span class="w"> </span>https://card.mcmaster.ca/latest/data
+</span><span data-line="3">tar<span class="w"> </span>-xvf<span class="w"> </span>data<span class="w"> </span>-C<span class="w"> </span>./rgi_db/
+</span><span data-line="4"><span class="nb">cd</span><span class="w"> </span>./rgi_db
+</span><span data-line="5">rgi<span class="w"> </span>card_annotation<span class="w"> </span>-i<span class="w"> </span>./card.json<span class="w"> </span>&gt;<span class="w"> </span>card_annotation.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Extract database version</span>
+</span><span data-line="8"><span class="nv">DB_VERSION</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>card_database_*_all.fasta<span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s2">"s/card_database_v\([0-9].*[0-9]\).*/\1/"</span><span class="k">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Download and extract wildcard data</span>
+</span><span data-line="11">wget<span class="w"> </span>-O<span class="w"> </span>wildcard_data.tar.bz2<span class="w"> </span>https://card.mcmaster.ca/latest/variants
+</span><span data-line="12">mkdir<span class="w"> </span>-p<span class="w"> </span>wildcard
+</span><span data-line="13">tar<span class="w"> </span>-xjf<span class="w"> </span>wildcard_data.tar.bz2<span class="w"> </span>-C<span class="w"> </span>wildcard
+</span><span data-line="14">gunzip<span class="w"> </span>wildcard/*.gz
+</span><span data-line="15">rgi<span class="w"> </span>wildcard_annotation<span class="w"> </span>-i<span class="w"> </span>wildcard<span class="w"> </span>--card_json<span class="w"> </span>./card.json<span class="w"> </span>-v<span class="w"> </span><span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span><span class="w"> </span>&gt;<span class="w"> </span>wildcard_annotation.log<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="c1"># Finalize database (without k-mer module)</span>
+</span><span data-line="18">rgi<span class="w"> </span>load<span class="w"> </span>--card_json<span class="w"> </span>./card.json<span class="w"> </span><span class="se">\</span>
+</span><span data-line="19"><span class="w">         </span>--wildcard_annotation<span class="w"> </span>wildcard_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="20"><span class="w">         </span>--wildcard_annotation_all_models<span class="w"> </span>wildcard_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>_all.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="21"><span class="w">         </span>--wildcard_index<span class="w"> </span>./wildcard/index-for-model-sequences.txt<span class="w"> </span><span class="se">\</span>
+</span><span data-line="22"><span class="w">         </span>--wildcard_version<span class="w"> </span><span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="23"><span class="w">         </span>--card_annotation<span class="w"> </span>card_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="24"><span class="w">         </span>--card_annotation_all_models<span class="w"> </span>card_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>_all.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="25"><span class="w">         </span>--debug<span class="w"> </span>--local<span class="w"> </span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="c1"># Finalize database (with k-mer module)</span>
+</span><span data-line="28">rgi<span class="w"> </span>load<span class="w"> </span>--card_json<span class="w"> </span>./card.json<span class="w"> </span><span class="se">\</span>
+</span><span data-line="29"><span class="w">         </span>--wildcard_annotation<span class="w"> </span>wildcard_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="30"><span class="w">         </span>--wildcard_annotation_all_models<span class="w"> </span>wildcard_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>_all.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="31"><span class="w">         </span>--wildcard_index<span class="w"> </span>./wildcard/index-for-model-sequences.txt<span class="w"> </span><span class="se">\</span>
+</span><span data-line="32"><span class="w">         </span>--wildcard_version<span class="w"> </span><span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="33"><span class="w">         </span>--card_annotation<span class="w"> </span>card_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="34"><span class="w">         </span>--card_annotation_all_models<span class="w"> </span>card_database_v<span class="si">${</span><span class="nv">DB_VERSION</span><span class="si">}</span>_all.fasta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="35"><span class="w">         </span>--amr_kmers<span class="w"> </span>./wildcard/all_amr_61mers.txt<span class="w"> </span><span class="se">\</span>
+</span><span data-line="36"><span class="w">         </span>--kmer_database<span class="w"> </span>./wildcard/61_kmer_db.json<span class="w"> </span><span class="se">\</span>
+</span><span data-line="37"><span class="w">         </span>--kmer_size<span class="w"> </span><span class="m">61</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="38"><span class="w">         </span>--debug<span class="w"> </span>--local
+</span></pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="genomad">
+<h3>geNomad<a class="headerlink" href="#genomad" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p><strong>Option 1:</strong> Let the pipeline setup (do not use <code class="docutils literal notranslate"><span class="pre">--genomad_db</span></code>). Use <code class="docutils literal notranslate"><span class="pre">--save_genomad_db</span></code> to save database.</p></li>
+<li><p><strong>Option 2:</strong> Manual download (<a class="reference external" href="https://github.com/apcamargo/genomad#downloading-the-database">geNomad docs</a>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">genomad<span class="w"> </span>download-database<span class="w"> </span>.
+</span></pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="skani">
+<h3>skani<a class="headerlink" href="#skani" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p><strong>Option 1:</strong> Use pre-built databases from <a class="reference external" href="https://github.com/bluenote-1577/skani/wiki/Pre%E2%80%90sketched-databases">skani wiki</a>.</p></li>
+<li><p><strong>Option 2:</strong> Build your own:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Option 1</span>
+</span><span data-line="2">skani<span class="w"> </span>sketch<span class="w"> </span><span class="o">{</span>reference_genomes_folder<span class="o">}</span>/*<span class="w"> </span>-o<span class="w"> </span><span class="si">${</span><span class="nv">database_name</span><span class="si">}</span>
+</span><span data-line="3"><span class="c1"># Option 2</span>
+</span><span data-line="4">find<span class="w"> </span><span class="o">{</span>reference_genomes_folder<span class="o">}</span>/<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-E<span class="w"> </span><span class="s1">'\.(fna|fa|fasta)$'</span><span class="w"> </span>&gt;<span class="w"> </span>ref_genomes.txt
+</span><span data-line="5">skani<span class="w"> </span>sketch<span class="w"> </span>-l<span class="w"> </span>ref_genomes.txt<span class="w"> </span>-o<span class="w"> </span><span class="si">${</span><span class="nv">database_name</span><span class="si">}</span><span class="w"> </span>-t<span class="w"> </span><span class="si">${</span><span class="nv">threads</span><span class="si">}</span>
+</span></pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="busco">
+<h3>BUSCO<a class="headerlink" href="#busco" title="Link to this heading">¶</a></h3>
+<ul>
+<li><p>Download and setup as per <a class="reference external" href="https://busco.ezlab.org/busco_userguide.html#download-and-automated-update">BUSCO documentation</a>.</p>
+<blockquote>
+<div><p><strong>Note:</strong> BUSCO databases are large and outputs consume significant disk space. Use only if needed, especially for eukaryote genomes.</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="checkm-checkm2">
+<h3>CheckM/CheckM2<a class="headerlink" href="#checkm-checkm2" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Option 1:</strong> Let the pipeline setup (do not use <code class="docutils literal notranslate"><span class="pre">--checkm_db</span></code>/<code class="docutils literal notranslate"><span class="pre">--checkm2_db</span></code>). Use <code class="docutils literal notranslate"><span class="pre">--save_checkm_data</span></code>/<code class="docutils literal notranslate"><span class="pre">--save_checkm2_data</span></code> to save database.</p></li>
+<li><p><strong>Option 2:</strong> Manual download:</p>
+<ul>
+<li><p><a class="reference external" href="https://data.ace.uq.edu.au/public/CheckM_databases/">CheckM</a>: ~1.5GB after extraction.</p></li>
+<li><p><a class="reference external" href="https://zenodo.org/records/14897628">CheckM2</a>: ~3GB after extraction.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="gunc">
+<h3>GUNC<a class="headerlink" href="#gunc" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Option 1:</strong> Let the pipeline setup (do not use <code class="docutils literal notranslate"><span class="pre">--gunc_db</span></code>). Use <code class="docutils literal notranslate"><span class="pre">--gunc_database_type</span></code> to select database type (‘progenomes’ (default), ‘gtdb’) and <code class="docutils literal notranslate"><span class="pre">--gunc_save_db</span></code> to save database.</p></li>
+<li><p><strong>Option 2:</strong> Manual download (<a class="reference external" href="https://grp-bork.embl-community.io/gunc/usage.html#gunc-download-db">GUNC docs</a>).</p></li>
+</ul>
+</section>
+<section id="bakta">
+<h3>Bakta<a class="headerlink" href="#bakta" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Option 1:</strong> Let the pipeline setup (do not use <code class="docutils literal notranslate"><span class="pre">--annotation_bakta_db</span></code>). Use <code class="docutils literal notranslate"><span class="pre">--annotation_bakta_db_downloadtype</span></code> to select database type (‘full’ (default), ‘light’) and <code class="docutils literal notranslate"><span class="pre">--save_bakta_db</span></code> to save database.</p></li>
+<li><p><strong>Option 2:</strong> Manual download via <a class="reference external" href="https://zenodo.org/records/14916843">Zenodo</a>.</p>
+<ul>
+<li><p>~4GB (light) or ~85GB (full) after extraction.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="sylph-and-sylph-tax">
+<h3>sylph and sylph-tax<a class="headerlink" href="#sylph-and-sylph-tax" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Not downloaded by the pipeline. Download a pre-built database (<code class="docutils literal notranslate"><span class="pre">*.syldb</span></code> or <code class="docutils literal notranslate"><span class="pre">*.syl2db</span></code>, e.g. GTDB R226) from the <a class="reference external" href="https://github.com/bluenote-1577/sylph/wiki/Pre%E2%80%90built-databases">sylph wiki</a> and pass it with <code class="docutils literal notranslate"><span class="pre">--sylph_database</span></code> (comma-separated for several).</p></li>
+<li><p>For taxonomy (<code class="docutils literal notranslate"><span class="pre">--enable_sylphtax</span></code>), download the sylph-tax metadata file matching each database (e.g. <code class="docutils literal notranslate"><span class="pre">gtdb_r226_metadata.tsv.gz</span></code>, see <a class="reference external" href="https://github.com/bluenote-1577/sylph-tax">sylph-tax</a>) and pass it with <code class="docutils literal notranslate"><span class="pre">--sylph_taxonomy</span></code>, one file per database in the same order.</p></li>
+</ul>
+</section>
+<section id="gtdb-tk">
+<h3>GTDB-Tk<a class="headerlink" href="#gtdb-tk" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Not downloaded by the pipeline (the reference data is over 100 GB). Download and extract the GTDB-Tk reference data (release 226 for GTDB-Tk 2.7.2) following the <a class="reference external" href="https://ecogenomics.github.io/GTDBTk/installing/index.html#gtdb-tk-reference-data">GTDB-Tk docs</a>, then pass the extracted folder with <code class="docutils literal notranslate"><span class="pre">--gtdbtk_db</span></code>. Only needed with <code class="docutils literal notranslate"><span class="pre">--bin_classifier</span> <span class="pre">gtdbtk</span></code>.</p></li>
+</ul>
+</section>
+<section id="bacterial-genome-analysis-databases">
+<h3>Bacterial genome analysis databases<a class="headerlink" href="#bacterial-genome-analysis-databases" title="Link to this heading">¶</a></h3>
+<p>Used by <code class="docutils literal notranslate"><span class="pre">--genome_input</span></code> and <code class="docutils literal notranslate"><span class="pre">--enable_bacterial_downstream</span></code>. Every database parameter is optional:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Tool</p></th>
+<th class="head"><p>Parameter</p></th>
+<th class="head"><p>When not set</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>AMRFinderPlus</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--amrfinderplus_db</span></code></p></td>
+<td><p>current release downloaded (<code class="docutils literal notranslate"><span class="pre">amrfinder_update</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>RGI main (CARD)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--rgi_preparecarddb_dir</span></code></p></td>
+<td><p>CARD downloaded and prepared (shared with <code class="docutils literal notranslate"><span class="pre">rgi_bwt</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>ResFinder / PointFinder / DisinFinder</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--resfinder_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--pointfinder_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--disinfinder_db</span></code></p></td>
+<td><p>downloaded at <code class="docutils literal notranslate"><span class="pre">--resfinder_db_revision</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>DeepARG</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--deeparg_db</span></code></p></td>
+<td><p>downloaded (<code class="docutils literal notranslate"><span class="pre">--deeparg_db_version</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>VirulenceFinder</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--virulencefinder_db</span></code></p></td>
+<td><p>downloaded at <code class="docutils literal notranslate"><span class="pre">--virulencefinder_db_revision</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Paratype</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">--paratype_bundle</span></code></p></td>
+<td><p>downloaded at <code class="docutils literal notranslate"><span class="pre">--paratype_revision</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>PlasmidFinder, ABRicate, MLST, Kleborate, SISTR, SeqSero2, Mykrobe</p></td>
+<td><p>-</p></td>
+<td><p>databases bundled with the containers</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>A downloaded database is saved to <code class="docutils literal notranslate"><span class="pre">${outdir}/Databases/&lt;Tool&gt;/</span></code> (<code class="docutils literal notranslate"><span class="pre">--save_amrfinderplus_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_rgi_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_resfinder_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_deeparg_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_virulencefinder_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_paratype_db</span></code>, all <code class="docutils literal notranslate"><span class="pre">true</span></code> by default), so later runs can pass it by path. Nothing is downloaded when no bacterial genome reaches the analysis.</p>
+<blockquote>
+<div><p><strong>Tip:</strong> For most users, pipeline auto-setup is recommended where available. For large or custom databases, follow the manual instructions above. Always verify database paths and formats before running the pipeline.</p>
+</div></blockquote>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../installation/">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Installation</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../../usage/inputs/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Inputs</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

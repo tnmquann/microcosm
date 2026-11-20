@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Read preprocessing - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Read-based analysis" href="../read-based/" /><link rel="prev" title="Pipeline overview" href="../overview/" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/pipeline/preprocessing/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/pipeline/preprocessing/"/>
+  <meta property="og:title" content="Read preprocessing"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/quickstart/">Quick start</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/installation/">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/databases/">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="../overview/">Pipeline overview</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../assembly/">Assembly and contig analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../binning/">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/changelog/">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#fastqc">FastQC</a></li>
+<li><a class="reference internal" href="#fastp">fastp</a></li>
+<li><a class="reference internal" href="#host-read-removal-hostile">Host read removal (hostile)</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Read preprocessing</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="read-preprocessing">
+<h1>Read preprocessing<a class="headerlink" href="#read-preprocessing" title="Link to this heading">¶</a></h1>
+<p>Every route that starts from reads first checks, trims and decontaminates them.</p>
+<p>These steps trim away the adapter sequences present in input reads, remove low-quality bases, and discard reads that are too short. It also removes host contaminants. FastQC is run for visualizing the general quality metrics of the sequencing runs before and after trimming.</p>
+<section id="fastqc">
+<h2>FastQC<a class="headerlink" href="#fastqc" title="Link to this heading">¶</a></h2>
+<p>The pipeline runs FastQC on raw reads (<code class="docutils literal notranslate"><span class="pre">Raw_reads</span></code>) and processed files at each step (<code class="docutils literal notranslate"><span class="pre">Remove_HostGenome</span></code>, <code class="docutils literal notranslate"><span class="pre">Trimming</span></code>) to assess input and output data quality during preprocessing. The pipeline performs trimming and adapter removal first, followed by host genome removal.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Preprocess/QC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">/Raw_reads/[sample_id]/[sample_id]_[1/2]_fastqc.html</span></code>: FastQC report, containing quality metrics for your untrimmed raw fastq files</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">/Remove_HostGenome/[sample_id]/[sample_id]_[1/2]_fastqc.html</span></code>: FastQC report, containing quality metrics for your host-removed fastq files.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">/Trimming/[sample_id]/[sample_id]_[1/2]_fastqc.html</span></code>: FastQC report, containing quality metrics for your trimmed fastq files.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p><a class="reference external" href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/">FastQC</a> gives general quality metrics about your sequenced reads. It provides information about the quality score distribution across your reads, per base sequence content (%A/T/G/C), adapter contamination and overrepresented sequences. For further reading and documentation see the <a class="reference external" href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/">FastQC help pages</a>.</p>
+</section>
+<section id="fastp">
+<h2>fastp<a class="headerlink" href="#fastp" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/OpenGene/fastp">fastp</a> is an all-in-one fastq preprocessor for read/adapter trimming and quality control. It is used in this pipeline for trimming adapter sequences and discarding low-quality reads. Its output is in the results folder and part of the MultiQC report.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Preprocess/Trimming/[sample_id]/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">report/[sample_id].fastp.html</span></code>: Interactive report</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">report/[sample_id].fastp.json</span></code>: Report in json format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id]*.fastq.gz</span></code>: Trimmed reads in FASTQ format (automatically saved by default).</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="host-read-removal-hostile">
+<h2>Host read removal (hostile)<a class="headerlink" href="#host-read-removal-hostile" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/bede/hostile">hostile</a> is a tool for removing host sequences from genomic data, improving precision by removing fewer microbial reads than current methods. It supports single or paired FASTQ input, downloads a human reference genome upon first use, and offers privacy through integer read headers. It operates efficiently, requiring 4GB of RAM for short reads and 13GB for long reads. More details and benchmarks are available in the associated paper. Users must provide the <code class="docutils literal notranslate"><span class="pre">--hostile_ref_name</span></code> parameter matching the reference genome name in <code class="docutils literal notranslate"><span class="pre">--hostile_reference</span></code> (if using a custom database) or <code class="docutils literal notranslate"><span class="pre">--hostile_index</span></code> (if allowing the pipeline to automatically select the database).</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Preprocess/Remove_HostGenome/[sample_id]/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">cleaned_reads/[sample_id]_[1/2].fastp.clean_[1/2].fastq.gz</span></code>: Trimmed and host removed reads in FASTQ format.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">report/[sample_id].json</span></code>: Contains information about the executed processes and the number of removed reads.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../overview/">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Pipeline overview</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../read-based/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Read-based analysis</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

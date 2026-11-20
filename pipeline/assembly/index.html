@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Assembly and contig analysis - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Binning and MAGs" href="../binning/" /><link rel="prev" title="Read-based analysis" href="../read-based/" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/pipeline/assembly/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/pipeline/assembly/"/>
+  <meta property="og:title" content="Assembly and contig analysis"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/quickstart/">Quick start</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/installation/">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/databases/">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="../overview/">Pipeline overview</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../preprocessing/">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Assembly and contig analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../binning/">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/changelog/">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#assembly">Assembly</a><ul>
+<li><a class="reference internal" href="#megahit">MEGAHIT</a></li>
+<li><a class="reference internal" href="#spades">SPAdes</a></li>
+<li><a class="reference internal" href="#metagenome-qc-with-quast">Metagenome QC with QUAST</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contigs-analysis">Contigs analysis</a><ul>
+<li><a class="reference internal" href="#protein-coding-gene-prediction">Protein-coding gene prediction</a><ul>
+<li><a class="reference internal" href="#pyrodigal">Pyrodigal</a></li>
+<li><a class="reference internal" href="#prokka">Prokka</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contigs-classification">Contigs classification</a><ul>
+<li><a class="reference internal" href="#genomad-mobile-genetic-elements-mges-identification">geNomad - Mobile genetic elements (MGEs) identification</a></li>
+<li><a class="reference internal" href="#skani-ani-and-aligned-fraction">skani - ANI and aligned fraction</a></li>
+<li><a class="reference internal" href="#tiara-domain-classification">Tiara - Domain classification</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contigs-evaluations">Contigs evaluations</a><ul>
+<li><a class="reference internal" href="#seqkit-fx2tab">seqkit_fx2tab</a></li>
+<li><a class="reference internal" href="#samtools-coverage">samtools_coverage</a></li>
+<li><a class="reference internal" href="#mapping-reads-against-the-assemblies">Mapping reads against the assemblies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Assembly and contig analysis</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="assembly-and-contig-analysis">
+<h1>Assembly and contig analysis<a class="headerlink" href="#assembly-and-contig-analysis" title="Link to this heading">¶</a></h1>
+<p>Without <code class="docutils literal notranslate"><span class="pre">--enable_readbase</span></code>, microcosm assembles each sample, maps its reads back <strong>once</strong> and characterises the contigs.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Step</p></th>
+<th class="head text-left"><p>Default</p></th>
+<th class="head text-left"><p>Change with</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>Assembly</p></td>
+<td class="text-left"><p>MEGAHIT and metaSPAdes</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--skip_megahit</span></code>, <code class="docutils literal notranslate"><span class="pre">--skip_spades</span></code>, <code class="docutils literal notranslate"><span class="pre">--assembly_input</span></code> (pre-computed assemblies)</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Assembly QC</p></td>
+<td class="text-left"><p>QUAST</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--skip_quast</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>Read mapping (shared by contig coverage and binning)</p></td>
+<td class="text-left"><p>Bowtie2</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--binprepare_mappertool</span> <span class="pre">bwamem2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Contig statistics and coverage</p></td>
+<td class="text-left"><p>SeqKit, samtools coverage</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--skip_contig_analysis</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>Gene prediction</p></td>
+<td class="text-left"><p>Pyrodigal</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--annotation_tool</span> <span class="pre">prokka</span></code>, <code class="docutils literal notranslate"><span class="pre">--skip_contig_annotation</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Plasmids and viruses</p></td>
+<td class="text-left"><p>geNomad</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--skip_genomad_e2e</span></code>, <code class="docutils literal notranslate"><span class="pre">--genomad_db</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>Domain (bacteria / archaea / eukarya)</p></td>
+<td class="text-left"><p>Tiara</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--skip_tiara_contigqc</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Closest reference per contig</p></td>
+<td class="text-left"><p>skani</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--skip_skani_search</span> <span class="pre">false</span> <span class="pre">--skani_db</span> <span class="pre">&lt;db&gt;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="assembly">
+<h2>Assembly<a class="headerlink" href="#assembly" title="Link to this heading">¶</a></h2>
+<p>Trimmed (short) reads are assembled with both megahit and SPAdes.</p>
+<section id="megahit">
+<h3>MEGAHIT<a class="headerlink" href="#megahit" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/voutcn/megahit">MEGAHIT</a> is a single node assembler for large and complex metagenomics short reads.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Assembly/MEGAHIT/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id].contigs.fa.gz</span></code>: Compressed metagenome assembly in fasta format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id].log</span></code>: Log file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">QC/[sample_id]/QUAST</span></code>: Directory containing QUAST files.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="spades">
+<h3>SPAdes<a class="headerlink" href="#spades" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="http://cab.spbu.ru/software/spades/">SPAdes</a> was originally a single genome assembler that later added support for assembling metagenomes.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Assembly/SPAdes/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id].scaffolds.fa.gz</span></code>: Compressed assembled scaffolds in fasta format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id].assembly.gfa.gz</span></code>: Compressed assembly graph in gfa format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id].contigs.fa.gz</span></code>: Compressed assembled contigs in fasta format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id].spades.log</span></code>: Log file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">QC/[sample_id]/QUAST</span></code>: Directory containing QUAST files.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="metagenome-qc-with-quast">
+<h3>Metagenome QC with QUAST<a class="headerlink" href="#metagenome-qc-with-quast" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="http://cab.spbu.ru/software/quast/">QUAST</a> is a tool that evaluates metagenome assemblies by computing various metrics. The QUAST output is also included in the MultiQC report, as well as in the assembly directories themselves.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Assembly/[assembler]/QC/[sample_id]/QUAST/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">report.*</span></code>: QUAST report in various formats, such as html, pdf, tex, tsv, or txt</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">transposed_report.*</span></code>: QUAST report that has been transposed into wide format (tex, tsv, or txt)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">quast.log</span></code>: QUAST log file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">metaquast.log</span></code>: MetaQUAST log file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">icarus.html</span></code>: Icarus main menu with links to interactive viewers</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">icarus_viewers/contig_size_viewer.html</span></code>: Diagram of contigs that are ordered from longest to shortest</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/cumulative_plot.pdf</span></code>: Shows the growth of contig lengths (contigs are ordered from largest to shortest)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/GC_content_plot.pdf</span></code>: Shows the distribution of GC content in the contigs</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/[assembler]-[sample_id]_GC_content_plot.pdf</span></code>: Histogram of the GC percentage for the contigs</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/Nx_plot.pdf</span></code>: Plot of Nx values as x varies from 0 to 100%.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">predicted_genes/[assembler]-[sample_id].rna.gff</span></code>: Contig positions for rRNA genes in gff version 3 format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">predicted_genes/barrnap.log</span></code>: Barrnap log file (ribosomal RNA predictor)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+</section>
+<section id="contigs-analysis">
+<h2>Contigs analysis<a class="headerlink" href="#contigs-analysis" title="Link to this heading">¶</a></h2>
+<section id="protein-coding-gene-prediction">
+<h3>Protein-coding gene prediction<a class="headerlink" href="#protein-coding-gene-prediction" title="Link to this heading">¶</a></h3>
+<p>Protein-coding genes are predicted for each assembly.</p>
+<section id="pyrodigal">
+<h4>Pyrodigal<a class="headerlink" href="#pyrodigal" title="Link to this heading">¶</a></h4>
+<p><a class="reference external" href="https://github.com/althonos/pyrodigal">Pyrodigal</a> annotates whole (meta-)genomes by identifying ORFs in a set of genomic DNA sequences. It produces the same results as <a class="reference external" href="https://github.com/hyattpd/Prodigal">Prodigal</a> while being more resource-optimized, thus faster. Unlike Prodigal, Pyrodigal cannot produce output in GenBank format.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">ContigsAnalysis/annotation/pyrodigal/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].pyrodigal.gbk.gz</span></code>: Annotation in GBK format, containing both sequences and annotations.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].pyrodigal.faa.gz</span></code>: The protein translation file consists of all the proteins from all the sequences in multiple FASTA format.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].pyrodigal.fna.gz</span></code>: Nucleotide sequences of the predicted proteins using the DNA alphabet, not mRNA (so you will see 'T' in the output and not 'U').</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].pyrodigal.score.gz</span></code>: Information about all potential genes (with scores).</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="prokka">
+<h4>Prokka<a class="headerlink" href="#prokka" title="Link to this heading">¶</a></h4>
+<p><a class="reference external" href="https://github.com/tseemann/prokka">Prokka</a> performs whole genome annotation to identify features of interest in a set of (meta-)genomic DNA sequences.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">ContigsAnalysis/annotation/prokka/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.gff</span></code>: annotation in GFF3 format, containing both sequences and annotations.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.gbk</span></code>: standard Genbank file derived from the master <code class="docutils literal notranslate"><span class="pre">.gff</span></code>.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.faa</span></code>: protein FASTA file of the translated CDS sequences.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.fna</span></code>: nucleotide FASTA file of the input contig sequences.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.ffn</span></code>: nucleotide FASTA file of all the prediction transcripts (CDS, rRNA, tRNA, tmRNA, misc_RNA).</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.sqn</span></code>: Sequin file for GenBank submission.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.fsa</span></code>: FASTA file of the input contig sequences, used by “tbl2asn” to create the .sqn file.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.tbl</span></code>: Table file used by “tbl2asn” to create the .sqn file.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.log</span></code>: log file.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.txt</span></code>: statistics relating to the annotated features found.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.err</span></code>: unacceptable annotations - the NCBI discrepancy report.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].contigs.prokka.tsv</span></code>: tab-delimited feature table.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+</section>
+<section id="contigs-classification">
+<h3>Contigs classification<a class="headerlink" href="#contigs-classification" title="Link to this heading">¶</a></h3>
+<section id="genomad-mobile-genetic-elements-mges-identification">
+<h4>geNomad - Mobile genetic elements (MGEs) identification<a class="headerlink" href="#genomad-mobile-genetic-elements-mges-identification" title="Link to this heading">¶</a></h4>
+<p><a class="reference external" href="https://github.com/apcamargo/genomad">geNomad</a> identifies viruses and plasmids in sequencing data (isolates, metagenomes, and metatranscriptomes)</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">ContigsAnalysis/geNomad/[assembler]-[sample_id]*/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_annotate</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_taxonomy.tsv</span></code>: Taxonomic assignment data</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_aggregated_classification</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_aggregated_classification.tsv</span></code>: Sequence classification in tabular format</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_find_proviruses</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_provirus.tsv</span></code>: Characteristics of proviruses identified by geNomad</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_summary</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_virus_summary.tsv</span></code>: Virus classification summary file in tabular format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_plasmid_summary.tsv</span></code>: Plasmid classification summary file in tabular format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_viruses_genes.tsv</span></code>: Virus gene annotation data in tabular format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_plasmids_genes.tsv</span></code>: Plasmid gene annotation data in tabular format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_viruses.fna</span></code>: Virus nucleotide sequences in FASTA format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_plasmids.fna</span></code>: Plasmid nucleotide sequences in FASTA format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_viruses_proteins.faa</span></code>: Virus protein sequences in FASTA format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*_plasmids_proteins.faa</span></code>: Plasmid protein sequences in FASTA format</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]*.log</span></code>: Plain text log file detailing the steps executed by geNomad (annotate, find-proviruses, marker-classification, nn-classification, aggregated-classification and summary)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="skani-ani-and-aligned-fraction">
+<h4>skani - ANI and aligned fraction<a class="headerlink" href="#skani-ani-and-aligned-fraction" title="Link to this heading">¶</a></h4>
+<p><a class="reference external" href="https://github.com/bluenote-1577/skani">skani</a> is a high-performance tool for calculating average nucleotide identity (ANI) and aligned fraction (AF) among DNA sequences such as contigs, MAGs, and complete genomes, optimized for comparisons above ~80% ANI. It employs an approximate mapping strategy without base-level alignment, achieving accuracy comparable to BLAST-based methods while being orders of magnitude faster. skani is particularly reliable for incomplete and medium-quality MAGs, reports genome aligned fractions, and supports rapid, memory-efficient searches against large genome databases.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">ContigsAnalysis/skani/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].skani.tsv</span></code>: TSV file containing ANI and AF as predicted by skani.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="tiara-domain-classification">
+<h4>Tiara - Domain classification<a class="headerlink" href="#tiara-domain-classification" title="Link to this heading">¶</a></h4>
+<p>Tiara is a contig classifier that identifies the domain (prokarya, eukarya) of contigs within an assembly. This is used in this pipeline to rapidly and with few resources identify the most likely domain classification of each bin or unbin based on its contig identities.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Taxonomy/Tiara/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].tiara.txt</span></code> - Tiara output classifications (with probabilities) for all contigs within the specified sample/group assembly</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">log_[assembler]-[sample_id].txt</span></code> - log file detailing the parameters used by the Tiara model for contig classification.</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/Tiara/tiara_summary.tsv</span></code> - Summary of Tiara domain classification for all bins.</p></li>
+</ul>
+</div>
+</details><p>Typically, you would use <code class="docutils literal notranslate"><span class="pre">tiara_summary.tsv</span></code> as the primary file to see which bins or unbins have been classified to which domains at a glance, whereas the files in <code class="docutils literal notranslate"><span class="pre">Taxonomy/Tiara</span></code> provide classifications for each contig.</p>
+</section>
+</section>
+<section id="contigs-evaluations">
+<h3>Contigs evaluations<a class="headerlink" href="#contigs-evaluations" title="Link to this heading">¶</a></h3>
+<section id="seqkit-fx2tab">
+<h4>seqkit_fx2tab<a class="headerlink" href="#seqkit-fx2tab" title="Link to this heading">¶</a></h4>
+<p><a class="reference external" href="https://github.com/shenwei356/seqkit">seqkit_fx2tab</a> is a cross-platform and ultrafast toolkit for FASTA/Q file manipulation. This option is convert FASTA/Q to tabular format, and provide various information, like sequence length, GC content/GC skew.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">ContigsAnalysis/contig_stats/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].seqkit.txt</span></code>: Text file in tabular format.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="samtools-coverage">
+<h4>samtools_coverage<a class="headerlink" href="#samtools-coverage" title="Link to this heading">¶</a></h4>
+<p><a class="reference external" href="http://www.htslib.org/doc/samtools-coverage.html">samtools_coverage</a> computes coverage statistics for contigs based on read alignments in BAM format.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">ContigsAnalysis/contig_stats/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].coverage.txt</span></code>: Text file in tabular format.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="mapping-reads-against-the-assemblies">
+<h4>Mapping reads against the assemblies<a class="headerlink" href="#mapping-reads-against-the-assemblies" title="Link to this heading">¶</a></h4>
+<p>The trimmed, host-removed reads of each sample are mapped <strong>once</strong> to its assembly with <a class="reference external" href="https://github.com/BenLangmead/bowtie2">Bowtie2</a> (default) or <a class="reference external" href="https://github.com/bwa-mem2/bwa-mem2">BWA-MEM2</a> (<code class="docutils literal notranslate"><span class="pre">--binprepare_mappertool</span> <span class="pre">bwamem2</span></code>). The same sorted BAM is used for the contig coverage above and for the binning depths below, so the BAM files are written only once.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/mapping/sorted_bam/[assembler]/[sample_id]/</span></code> (<code class="docutils literal notranslate"><span class="pre">--save_assembly_mapped_reads</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>)</p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].sorted.bam</span></code>: reads mapped to the assembly, sorted by position.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].sorted.bam.bai</span></code>: BAM index.</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/mapping/bowtie2/log/[assembler]/[sample_id]/*.log</span></code>: Bowtie2 mapping logs (also in the MultiQC report).</p></li>
+</ul>
+</div>
+</details></section>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../read-based/">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Read-based analysis</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../binning/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Binning and MAGs</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

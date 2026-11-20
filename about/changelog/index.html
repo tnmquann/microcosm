@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Changelog - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Roadmap" href="../roadmap/" /><link rel="prev" title="Troubleshooting &amp; FAQ" href="../../reference/troubleshooting/" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/about/changelog/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/about/changelog/"/>
+  <meta property="og:title" content="Changelog"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/quickstart/">Quick start</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/installation/">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/databases/">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/overview/">Pipeline overview</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/preprocessing/">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/assembly/">Assembly and contig analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/binning/">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#id1">2.0.0 - 2026-11-20</a><ul>
+<li><a class="reference internal" href="#breaking-changes">Breaking changes</a></li>
+<li><a class="reference internal" href="#added">Added</a><ul>
+<li><a class="reference internal" href="#read-based-analysis-84">Read-based analysis (#84)</a></li>
+<li><a class="reference internal" href="#bacterial-genome-downstream-analysis-86">Bacterial genome downstream analysis (#86)</a></li>
+<li><a class="reference internal" href="#multiqc-report">MultiQC report</a></li>
+<li><a class="reference internal" href="#other">Other</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#changed">Changed</a></li>
+<li><a class="reference internal" href="#fixed">Fixed</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Changelog</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">¶</a></h1>
+<p>All releases: <a class="reference external" href="https://github.com/tnmquann/microcosm/releases">GitHub releases</a>.</p>
+<section id="id1">
+<h2>2.0.0 - 2026-11-20<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<p>First release under the name <strong>microcosm</strong> (formerly <strong>metaflow</strong>; the GitHub repository moved from
+<code class="docutils literal notranslate"><span class="pre">tnmquann/metaflow</span></code> to <code class="docutils literal notranslate"><span class="pre">tnmquann/microcosm</span></code>, old links redirect). Requires <strong>Nextflow ≥ 26.04</strong> (strict syntax).</p>
+<section id="breaking-changes">
+<h3>Breaking changes<a class="headerlink" href="#breaking-changes" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Rename metaflow → microcosm.</strong> The main workflow is <code class="docutils literal notranslate"><span class="pre">workflow/microcosm.nf</span></code> and every process is now named
+<code class="docutils literal notranslate"><span class="pre">MICROCOSM:...</span></code> instead of <code class="docutils literal notranslate"><span class="pre">METAFLOW:...</span></code>: update custom configs that select processes by their full name, and expect
+<code class="docutils literal notranslate"><span class="pre">-resume</span></code> not to reuse tasks of runs made with 1.x.</p></li>
+<li><p><strong>Read-based output file renamed:</strong> <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;.processed_metaflow.csv</span></code> → <code class="docutils literal notranslate"><span class="pre">&lt;prefix&gt;.processed_microcosm.csv</span></code>;
+<code class="docutils literal notranslate"><span class="pre">post_processing.py</span> <span class="pre">--input_format</span> <span class="pre">raw_metaflow</span></code> → <code class="docutils literal notranslate"><span class="pre">raw_microcosm</span></code>.</p></li>
+<li><p><strong>Nextflow 26.04 strict syntax</strong> (<a class="reference external" href="https://github.com/tnmquann/microcosm/issues/83">#83</a>): the pipeline needs
+Nextflow ≥ 26.04; the custom <code class="docutils literal notranslate"><span class="pre">check_max</span></code> helper is replaced by native <code class="docutils literal notranslate"><span class="pre">resourceLimits</span></code> (set limits with
+<code class="docutils literal notranslate"><span class="pre">process.resourceLimits</span></code> in a custom config).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--postprocess_options</span></code> is renamed <code class="docutils literal notranslate"><span class="pre">--readbased_postprocess_options</span></code> and now defaults to <code class="docutils literal notranslate"><span class="pre">--min_coverage</span> <span class="pre">0.05</span></code>.</p></li>
+</ul>
+</section>
+<section id="added">
+<h3>Added<a class="headerlink" href="#added" title="Link to this heading">¶</a></h3>
+<section id="read-based-analysis-84">
+<h4>Read-based analysis (<a class="reference external" href="https://github.com/tnmquann/microcosm/issues/84">#84</a>)<a class="headerlink" href="#read-based-analysis-84" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Post-processing modes</strong> <code class="docutils literal notranslate"><span class="pre">--readbased_postprocess</span> <span class="pre">all|phyloseq|taxburst|rgi_bwt</span></code> for batch and single-sketch runs,
+published below <code class="docutils literal notranslate"><span class="pre">Readbased_Analysis/Post_processing/</span></code> (<code class="docutils literal notranslate"><span class="pre">&lt;batch-prefix&gt;_&lt;mode&gt;/</span></code> in batch mode, <code class="docutils literal notranslate"><span class="pre">&lt;sample_id&gt;/&lt;mode&gt;/</span></code>
+plus all-sample aggregates in single-sketch mode). <code class="docutils literal notranslate"><span class="pre">all</span></code> also writes the standard processed CSV; RGI-BWT results are
+included when <code class="docutils literal notranslate"><span class="pre">--enable_rgi_bwt</span></code> is set (otherwise a warning, and the other modes continue).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--readbased_postprocess_options</span></code>: extra <code class="docutils literal notranslate"><span class="pre">post_processing.py</span></code> options, tokenized safely (module-managed arguments
+cannot be overridden); directory input accepts both <code class="docutils literal notranslate"><span class="pre">_1/_2</span></code> and <code class="docutils literal notranslate"><span class="pre">_R1/_R2</span></code> read pairs.</p></li>
+<li><p><strong>sylph profiler:</strong> <code class="docutils literal notranslate"><span class="pre">--readbased_taxotools</span> <span class="pre">microcosm|sylph|microcosm,sylph</span></code> chooses sourmash + YACHT (default), sylph,
+or both. New parameters <code class="docutils literal notranslate"><span class="pre">--sylph_database</span></code> (one or several <code class="docutils literal notranslate"><span class="pre">*.syldb</span></code>/<code class="docutils literal notranslate"><span class="pre">*.syl2db</span></code>), <code class="docutils literal notranslate"><span class="pre">--sylph_args</span></code>, <code class="docutils literal notranslate"><span class="pre">--enable_sylphtax</span></code>
+with <code class="docutils literal notranslate"><span class="pre">--sylph_taxonomy</span></code> (sylph-tax <code class="docutils literal notranslate"><span class="pre">taxprof</span></code>, one metadata file per database), <code class="docutils literal notranslate"><span class="pre">--sylph_datatype</span></code>
+(<code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code> or <code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code>). Outputs in <code class="docutils literal notranslate"><span class="pre">Readbased_Analysis/sylph/</span></code> (profiles, <code class="docutils literal notranslate"><span class="pre">.sylphmpa</span></code>,
+clade × sample table, phyloseq tables with <code class="docutils literal notranslate"><span class="pre">--readbased_postprocess</span> <span class="pre">phyloseq|all</span></code>). RGI-BWT also runs with sylph alone.</p></li>
+<li><p>Several sourmash databases (<code class="docutils literal notranslate"><span class="pre">--sourmash_database</span> <span class="pre">db1.zip,db2.zip</span></code> with one taxonomy each in
+<code class="docutils literal notranslate"><span class="pre">--sourmash_taxonomy_csv</span></code>); YACHT, which takes one database, is skipped in that case.</p></li>
+<li><p>Per-sample YACHT in single-sketch mode; <code class="docutils literal notranslate"><span class="pre">--enable_copymergedseqs</span></code>, <code class="docutils literal notranslate"><span class="pre">--enable_copysketch</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--enable_copysketch_singles</span></code> and <code class="docutils literal notranslate"><span class="pre">--enable_copyintermediate</span></code> control publishing of intermediate files.</p></li>
+</ul>
+</section>
+<section id="bacterial-genome-downstream-analysis-86">
+<h4>Bacterial genome downstream analysis (<a class="reference external" href="https://github.com/tnmquann/microcosm/issues/86">#86</a>)<a class="headerlink" href="#bacterial-genome-downstream-analysis-86" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Standalone genomes:</strong> <code class="docutils literal notranslate"><span class="pre">--genome_input</span></code> CSV (<code class="docutils literal notranslate"><span class="pre">sample_id,fasta</span></code>, optional <code class="docutils literal notranslate"><span class="pre">run_id,group,assembler,lineage</span></code>). A valid
+GTDB lineage is used as given; a blank lineage is classified by the pipeline. Relative FASTA paths are resolved
+against the CSV location.</p></li>
+<li><p><strong>Bins from the assembly route</strong> go through the same layer with <code class="docutils literal notranslate"><span class="pre">--enable_bacterial_downstream</span></code>.</p></li>
+<li><p>Only genomes resolved as <code class="docutils literal notranslate"><span class="pre">d__Bacteria</span></code> are analysed; the others are listed in
+<code class="docutils literal notranslate"><span class="pre">Bacterial_Analysis/routing/{excluded,unresolved}_genomes.tsv</span></code>, with the classifier's reason for unresolved genomes
+(e.g. <code class="docutils literal notranslate"><span class="pre">no_resolved_lineage_from_BIN_CLASSIFICATION</span> <span class="pre">(gtdbtk:</span> <span class="pre">No</span> <span class="pre">bacterial</span> <span class="pre">or</span> <span class="pre">archaeal</span> <span class="pre">marker)</span></code>).</p></li>
+<li><p><strong>Optional GTDB-Tk classifier:</strong> <code class="docutils literal notranslate"><span class="pre">--bin_classifier</span> <span class="pre">gtdbtk</span> <span class="pre">--gtdbtk_db</span> <span class="pre">&lt;R226&gt;</span></code> (<code class="docutils literal notranslate"><span class="pre">classify_wf</span></code>, results in
+<code class="docutils literal notranslate"><span class="pre">Taxonomy/GTDB-Tk/</span></code>; <code class="docutils literal notranslate"><span class="pre">--gtdbtk_args</span></code>, <code class="docutils literal notranslate"><span class="pre">--gtdbtk_pplacer_cpus</span></code>, <code class="docutils literal notranslate"><span class="pre">--gtdbtk_pplacer_scratch</span></code>). sourmash stays the default.</p></li>
+<li><p><strong>General typing:</strong> MLST, VirulenceFinder, PlasmidFinder.</p></li>
+<li><p><strong>AMR:</strong> AMRFinderPlus (<code class="docutils literal notranslate"><span class="pre">--plus</span></code>, organism chosen from the lineage), ABRicate, RGI main (contig mode), ResFinder with
+PointFinder and DisinFinder, DeepARG; every report converted with hAMRonization, summarised, and normalised with
+ARGnorm.</p></li>
+<li><p><strong>Klebsiella / Escherichia:</strong> Kleborate v3 with the preset chosen from the lineage (<code class="docutils literal notranslate"><span class="pre">kpsc</span></code>, <code class="docutils literal notranslate"><span class="pre">kosc</span></code>, <code class="docutils literal notranslate"><span class="pre">escherichia</span></code>).</p></li>
+<li><p><strong>Salmonella:</strong> SISTR and SeqSero2; the SISTR serovar routes <code class="docutils literal notranslate"><span class="pre">Typhi</span></code> to Mykrobe + GenoTyphi and <code class="docutils literal notranslate"><span class="pre">Paratyphi</span> <span class="pre">A</span></code> to
+Paratype.</p></li>
+<li><p><strong>Configurable steps:</strong> <code class="docutils literal notranslate"><span class="pre">--skip_&lt;tool&gt;</span></code> for every tool, <code class="docutils literal notranslate"><span class="pre">--&lt;tool&gt;_args</span></code> for every tool, lineage rule tables
+(<code class="docutils literal notranslate"><span class="pre">--kleborate_preset_map</span></code>, <code class="docutils literal notranslate"><span class="pre">--amrfinderplus_organism_map</span></code>; GTDB placeholder suffixes such as <code class="docutils literal notranslate"><span class="pre">_A</span></code> are ignored when
+matching), and an optional per-lineage decision table <code class="docutils literal notranslate"><span class="pre">--bacterial_decision_table</span></code> (y/n step columns plus per-lineage
+<code class="docutils literal notranslate"><span class="pre">&lt;tool&gt;_args</span></code>, <code class="docutils literal notranslate"><span class="pre">amrfinderplus_organism</span></code> and <code class="docutils literal notranslate"><span class="pre">resfinder_species</span></code> columns; example in
+<code class="docutils literal notranslate"><span class="pre">assets/bacterial_decision_table_example.tsv</span></code>).</p></li>
+<li><p><strong>Databases:</strong> every database parameter is optional; a missing database is downloaded at a fixed version (database
+revisions selectable with <code class="docutils literal notranslate"><span class="pre">--virulencefinder_db_revision</span></code>, <code class="docutils literal notranslate"><span class="pre">--resfinder_db_revision</span></code>, <code class="docutils literal notranslate"><span class="pre">--paratype_revision</span></code>) and saved
+to <code class="docutils literal notranslate"><span class="pre">${outdir}/Databases/&lt;Tool&gt;/</span></code> (<code class="docutils literal notranslate"><span class="pre">--save_amrfinderplus_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_rgi_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_resfinder_db</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--save_deeparg_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_virulencefinder_db</span></code>, <code class="docutils literal notranslate"><span class="pre">--save_paratype_db</span></code>, default <code class="docutils literal notranslate"><span class="pre">true</span></code>).</p></li>
+<li><p><strong>Outputs</strong> in <code class="docutils literal notranslate"><span class="pre">${outdir}/Bacterial_Analysis/</span></code> (<code class="docutils literal notranslate"><span class="pre">routing/</span></code>, <code class="docutils literal notranslate"><span class="pre">amr/</span></code>, <code class="docutils literal notranslate"><span class="pre">general_typing/</span></code>, <code class="docutils literal notranslate"><span class="pre">klebsiella/</span></code>, <code class="docutils literal notranslate"><span class="pre">salmonella/</span></code>),
+one file per genome and one <code class="docutils literal notranslate"><span class="pre">summary/&lt;prefix&gt;_&lt;tool&gt;.tsv</span></code> per tool.</p></li>
+<li><p>Console task tags name the genome / bin being analysed (e.g. <code class="docutils literal notranslate"><span class="pre">VIRULENCEFINDER_TYPING</span> <span class="pre">(MEGAHIT-COMEBin-sample.0)</span></code>).</p></li>
+</ul>
+</section>
+<section id="multiqc-report">
+<h4>MultiQC report<a class="headerlink" href="#multiqc-report" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>New microcosm-styled <strong>MultiQC report</strong> <code class="docutils literal notranslate"><span class="pre">${outdir}/MultiQC/&lt;prefix&gt;_multiqc_report.html</span></code> (<code class="docutils literal notranslate"><span class="pre">--skip_multiqc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--multiqc_config</span></code>, <code class="docutils literal notranslate"><span class="pre">--multiqc_extra_config</span></code>, <code class="docutils literal notranslate"><span class="pre">--multiqc_logo</span></code>, <code class="docutils literal notranslate"><span class="pre">--multiqc_replace_names</span></code>, <code class="docutils literal notranslate"><span class="pre">--multiqc_sample_names</span></code>).</p></li>
+<li><p>Sections: read QC (FastQC raw / after host removal, fastp, hostile); microcosm top taxa (tab per rank, following
+<code class="docutils literal notranslate"><span class="pre">--readbased_postprocess_options</span></code>); sylph profile and sylph-tax; RGI bwt (table + AMR gene families); QUAST and Bowtie2
+for assemblies; contigs (SeqKit + samtools coverage, Pyrodigal or Prokka, geNomad, Tiara, skani); bins (Tiara domains,
+QUAST, assembly_stats, CheckM2, CheckM, BUSCO, GUNC, Prokka / Bakta, GTDB-Tk or sourmash gather, bin taxonomy and
+summary); bacterial genomes (overview: species, MLST, SISTR serovar, AMR genes per tool; Kleborate: ST, scores, K/O
+locus, virulence loci; Salmonella: SISTR/SeqSero2 serovars, cgMLST, follow-up route, GenoTyphi/Paratype genotype; RGI
+main table + gene families); run summary (parameters that differ from the defaults) and software versions.</p></li>
+<li><p>Tools without a MultiQC module are summarised by <code class="docutils literal notranslate"><span class="pre">bin/py_scripts/multiqc/tool_multiqc.py</span></code>, one task per tool, so a
+skipped or failing tool never affects the other sections.</p></li>
+<li><p>All software versions of a run are collected in <code class="docutils literal notranslate"><span class="pre">${outdir}/pipeline_info/microcosm_software_versions.yml</span></code>.</p></li>
+</ul>
+</section>
+<section id="other">
+<h4>Other<a class="headerlink" href="#other" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p>Bakta and Prokka annotation options exposed as parameters (<code class="docutils literal notranslate"><span class="pre">--annotation_bakta_*</span></code>, <code class="docutils literal notranslate"><span class="pre">--annotation_prokka_*</span></code>,
+<code class="docutils literal notranslate"><span class="pre">--annotation_pyrodigal_usespecialstopcharacter</span></code>, <code class="docutils literal notranslate"><span class="pre">--prokka_bins_with_compliance</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--skani_search_options</span></code>, <code class="docutils literal notranslate"><span class="pre">--exclude_unbins_from_postbinning</span></code>, <code class="docutils literal notranslate"><span class="pre">--help</span></code>, <code class="docutils literal notranslate"><span class="pre">--help_full</span></code>, <code class="docutils literal notranslate"><span class="pre">--show_hidden</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">test_data/</span></code>: small reusable inputs (eight RefSeq bacterial genomes with <code class="docutils literal notranslate"><span class="pre">genome_input</span></code> CSVs and decision tables, a
+skani database, a GTDB-Tk failure case, two sourmash databases, a read simulation script), documented in
+<code class="docutils literal notranslate"><span class="pre">test_data/README.md</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Strict-syntax refactor of all local modules and subworkflows (nf-core-style layout, <code class="docutils literal notranslate"><span class="pre">channel.*</span></code> factories, explicit
+closure parameters, helper scripts staged as inputs, topic-based version outputs).</p></li>
+<li><p>nf-schema plugin 2.7.2; schema updated with all new parameters.</p></li>
+<li><p>Every local module has a pinned container for Docker / Singularity / Apptainer and a Conda definition; short
+<code class="docutils literal notranslate"><span class="pre">biocontainers/</span></code> image names resolve on quay.io.</p></li>
+<li><p>Read-based post-processing applies <code class="docutils literal notranslate"><span class="pre">--min_coverage</span> <span class="pre">0.05</span></code> by default.</p></li>
+<li><p>Copyright: 2026 TON NGOC MINH QUAN.</p></li>
+</ul>
+</section>
+<section id="fixed">
+<h3>Fixed<a class="headerlink" href="#fixed" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Random Bakta crash <code class="docutils literal notranslate"><span class="pre">AttributeError:</span> <span class="pre">'str'</span> <span class="pre">object</span> <span class="pre">has</span> <span class="pre">no</span> <span class="pre">attribute</span> <span class="pre">'decode'</span></code> (upstream bakta#424).</p></li>
+<li><p>Reads were mapped twice per assembly (BWA-MEM2 for contig analysis, <code class="docutils literal notranslate"><span class="pre">--binprepare_mappertool</span></code> for binning) and two
+BAM sets were published. Reads are now mapped once with <code class="docutils literal notranslate"><span class="pre">--binprepare_mappertool</span></code> (<code class="docutils literal notranslate"><span class="pre">bowtie2</span></code> default, or <code class="docutils literal notranslate"><span class="pre">bwamem2</span></code>);
+contig coverage and binning share the sorted BAM, published once in <code class="docutils literal notranslate"><span class="pre">Binning/mapping/sorted_bam/</span></code>
+(<code class="docutils literal notranslate"><span class="pre">ContigsAnalysis/mapped_reads/</span></code> is gone).</p></li>
+<li><p>MultiQC put Prokka results of Binette bins (no <code class="docutils literal notranslate"><span class="pre">.fa</span></code> in the name) in &quot;Prokka: contigs&quot;. Contig Prokka files are
+now named <code class="docutils literal notranslate"><span class="pre">&lt;assembler&gt;-&lt;sample&gt;.contigs.prokka.*</span></code>, and every other Prokka file is reported under &quot;Prokka: bins&quot;.</p></li>
+<li><p>Clean tool versions in <code class="docutils literal notranslate"><span class="pre">microcosm_software_versions.yml</span></code>: Kleborate (no <code class="docutils literal notranslate"><span class="pre">tput</span></code> warning), <code class="docutils literal notranslate"><span class="pre">sed</span></code> in sourmash fastmultigather, <code class="docutils literal notranslate"><span class="pre">cat</span></code> in read merging.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ASSEMBLY_STATS</span></code> null handling; <code class="docutils literal notranslate"><span class="pre">BIN_CLASSIFICATION</span></code> version export; <code class="docutils literal notranslate"><span class="pre">DOMAIN_CLASSIFICATION</span></code> for MAGs given with
+<code class="docutils literal notranslate"><span class="pre">--postbinning_input</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HOSTILE_CLEAN</span></code> outputs sometimes not recognised; <code class="docutils literal notranslate"><span class="pre">--spades_options</span></code> not applied; <code class="docutils literal notranslate"><span class="pre">SAMTOOLS_SORT</span></code> input errors.</p></li>
+<li><p>Duplicate input declarations in the read-based finalization module; <code class="docutils literal notranslate"><span class="pre">SEQKIT_FX2TAB</span></code> <code class="docutils literal notranslate"><span class="pre">ext.suffix</span></code> usage.</p></li>
+</ul>
+</section>
+<section id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Tool</p></th>
+<th class="head"><p>1.0.2</p></th>
+<th class="head"><p>2.0.0</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Nextflow</p></td>
+<td><p>≥ 25.04.6</p></td>
+<td><p>≥ 26.04</p></td>
+</tr>
+<tr class="row-odd"><td><p>nf-schema</p></td>
+<td><p>-</p></td>
+<td><p>2.7.2</p></td>
+</tr>
+<tr class="row-even"><td><p>Bakta</p></td>
+<td><p>1.11.4</p></td>
+<td><p>1.12.0 (db download 1.11.4)</p></td>
+</tr>
+<tr class="row-odd"><td><p>CheckM</p></td>
+<td><p>1.2.3</p></td>
+<td><p>1.2.5</p></td>
+</tr>
+<tr class="row-even"><td><p>csvtk</p></td>
+<td><p>0.31.0</p></td>
+<td><p>0.37.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>fastp</p></td>
+<td><p>0.24.0</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-even"><td><p>geNomad</p></td>
+<td><p>1.11.0</p></td>
+<td><p>1.12.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>GTDB-Tk</p></td>
+<td><p>2.5.2</p></td>
+<td><p>2.7.2</p></td>
+</tr>
+<tr class="row-even"><td><p>GUNC</p></td>
+<td><p>1.0.6</p></td>
+<td><p>1.1.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>hostile</p></td>
+<td><p>2.0.1</p></td>
+<td><p>2.0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>MultiQC</p></td>
+<td><p>1.29</p></td>
+<td><p>1.35</p></td>
+</tr>
+<tr class="row-odd"><td><p>Pyrodigal</p></td>
+<td><p>3.6.3</p></td>
+<td><p>3.7.1</p></td>
+</tr>
+<tr class="row-even"><td><p>RGI</p></td>
+<td><p>6.0.5</p></td>
+<td><p>6.0.8</p></td>
+</tr>
+<tr class="row-odd"><td><p>skani</p></td>
+<td><p>0.3.0</p></td>
+<td><p>0.2.2 (current nf-core <code class="docutils literal notranslate"><span class="pre">skani/search</span></code> module)</p></td>
+</tr>
+<tr class="row-even"><td><p>sylph / sylph-tax</p></td>
+<td><p>-</p></td>
+<td><p>1.0.0 / 1.9.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>AMRFinderPlus</p></td>
+<td><p>-</p></td>
+<td><p>4.2.7</p></td>
+</tr>
+<tr class="row-even"><td><p>ABRicate</p></td>
+<td><p>-</p></td>
+<td><p>1.0.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ResFinder</p></td>
+<td><p>-</p></td>
+<td><p>4.7.2</p></td>
+</tr>
+<tr class="row-even"><td><p>DeepARG</p></td>
+<td><p>-</p></td>
+<td><p>1.0.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>hAMRonization</p></td>
+<td><p>-</p></td>
+<td><p>1.1.9</p></td>
+</tr>
+<tr class="row-even"><td><p>ARGnorm</p></td>
+<td><p>-</p></td>
+<td><p>0.8.0</p></td>
+</tr>
+<tr class="row-odd"><td><p>MLST</p></td>
+<td><p>-</p></td>
+<td><p>2.25.0</p></td>
+</tr>
+<tr class="row-even"><td><p>VirulenceFinder</p></td>
+<td><p>-</p></td>
+<td><p>3.2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>PlasmidFinder</p></td>
+<td><p>-</p></td>
+<td><p>2.1.6</p></td>
+</tr>
+<tr class="row-even"><td><p>Kleborate</p></td>
+<td><p>-</p></td>
+<td><p>3.2.4</p></td>
+</tr>
+<tr class="row-odd"><td><p>SISTR</p></td>
+<td><p>-</p></td>
+<td><p>1.1.1</p></td>
+</tr>
+<tr class="row-even"><td><p>SeqSero2</p></td>
+<td><p>-</p></td>
+<td><p>1.2.1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Mykrobe / GenoTyphi</p></td>
+<td><p>-</p></td>
+<td><p>0.11.0 / 1.9.1</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Full changelog</strong>: <a class="reference external" href="https://github.com/tnmquann/microcosm/compare/1.0.2...2.0.0">1.0.2...2.0.0</a></p>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../../reference/troubleshooting/">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Troubleshooting &amp; FAQ</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../roadmap/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Roadmap</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

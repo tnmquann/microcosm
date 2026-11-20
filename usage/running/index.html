@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Running the pipeline - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Cookbook" href="../cookbook/" /><link rel="prev" title="Inputs" href="../inputs/" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/usage/running/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/usage/running/"/>
+  <meta property="og:title" content="Running the pipeline"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/quickstart/">Quick start</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/installation/">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/databases/">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="../inputs/">Inputs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/overview/">Pipeline overview</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/preprocessing/">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/assembly/">Assembly and contig analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/binning/">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/changelog/">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#id1">Running the pipeline</a></li>
+<li><a class="reference internal" href="#updating-the-pipeline">Updating the pipeline</a></li>
+<li><a class="reference internal" href="#version-control">Version Control</a></li>
+<li><a class="reference internal" href="#reproducibility">Reproducibility</a></li>
+<li><a class="reference internal" href="#nextflow-arguments">Nextflow arguments</a><ul>
+<li><a class="reference internal" href="#profile"><code class="docutils literal notranslate"><span class="pre">-profile</span></code></a></li>
+<li><a class="reference internal" href="#resume"><code class="docutils literal notranslate"><span class="pre">-resume</span></code></a></li>
+<li><a class="reference internal" href="#c"><code class="docutils literal notranslate"><span class="pre">-c</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#resource-requests">Resource Requests</a></li>
+<li><a class="reference internal" href="#custom-containers-tool-arguments">Custom containers &amp; tool arguments</a></li>
+<li><a class="reference internal" href="#nf-core-configs">nf-core/configs</a></li>
+<li><a class="reference internal" href="#background-execution">Background execution</a></li>
+<li><a class="reference internal" href="#memory-requirements">Memory requirements</a></li>
+<li><a class="reference internal" href="#bin-refinement-notes">Bin refinement notes</a><ul>
+<li><a class="reference internal" href="#dastool">DASTool</a></li>
+<li><a class="reference internal" href="#binette">Binette</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Running the pipeline</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="running-the-pipeline">
+<h1>Running the pipeline<a class="headerlink" href="#running-the-pipeline" title="Link to this heading">¶</a></h1>
+<section id="id1">
+<h2>Running the pipeline<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<p>For read-based sub-workflow, the typical command for running the pipeline is as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>run<span class="w"> </span>tnmquann/microcosm<span class="w"> </span>-r<span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>-profile<span class="w"> </span>conda<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--input<span class="w"> </span>/path/to/your/samples.csv<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--input_format<span class="w"> </span>csv<span class="w"> </span><span class="se">\</span>
+</span><span data-line="5"><span class="w">    </span>--outdir<span class="w"> </span>/path/to/output/directory<span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">    </span>--enable_readbase<span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">    </span>--sourmash_database<span class="w"> </span>/path/to/your/sourmash_database<span class="w"> </span><span class="se">\</span>
+</span><span data-line="8"><span class="w">    </span>--sourmash_taxonomy_csv<span class="w"> </span>/path/to/your/lineages.csv<span class="w"> </span><span class="se">\</span>
+</span><span data-line="9"><span class="w">    </span>--yacht_database<span class="w"> </span>/path/to/your/yacht_database.json<span class="w"> </span><span class="se">\</span>
+</span><span data-line="10"><span class="w">    </span>--sourmash_ksize<span class="w"> </span><span class="m">31</span>
+</span></pre></div>
+</div>
+<p>For assembly-based sub-workflow (the default when <code class="docutils literal notranslate"><span class="pre">--enable_readbase</span></code> is not given), the typical command is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>run<span class="w"> </span>tnmquann/microcosm<span class="w"> </span>-r<span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>-profile<span class="w"> </span>conda<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--input<span class="w"> </span>/path/to/your/samples.csv<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--input_format<span class="w"> </span>csv<span class="w"> </span><span class="se">\</span>
+</span><span data-line="5"><span class="w">    </span>--outdir<span class="w"> </span>/path/to/output/directory<span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">    </span>--sourmash_database<span class="w"> </span>/path/to/your/sourmash_database<span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">    </span>--sourmash_taxonomy_csv<span class="w"> </span>/path/to/your/lineages.csv
+</span></pre></div>
+</div>
+<p>For your own genome FASTA files (bacterial genome analysis only), use <code class="docutils literal notranslate"><span class="pre">--genome_input</span></code> instead of <code class="docutils literal notranslate"><span class="pre">--input</span></code> (see <a class="reference internal" href="../inputs/#genome-input"><span class="std std-ref">Genome Input</span></a>).</p>
+<p>This will launch the pipeline with the <code class="docutils literal notranslate"><span class="pre">conda</span></code> configuration profile. See below for more information about profiles.</p>
+<p>Note that the pipeline will create the following files in your working directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">work</span> <span class="c1"># Directory containing the nextflow working files</span>
+</span><span data-line="2"><span class="o">&lt;</span><span class="n">OUTDIR</span><span class="o">&gt;</span> <span class="c1"># Finished results in specified location (defined with --outdir)</span>
+</span><span data-line="3"><span class="o">.</span><span class="n">nextflow_log</span> <span class="c1"># Log files from Nextflow</span>
+</span><span data-line="4"><span class="c1"># Other nextflow hidden files, eg. history of pipeline runs and old logs.</span>
+</span></pre></div>
+</div>
+<p>If you wish to repeatedly use the same parameters for multiple runs, rather than specifying each flag in the command, you can specify these in a params file.</p>
+<p>Pipeline settings can be provided in a <code class="docutils literal notranslate"><span class="pre">yaml</span></code> or <code class="docutils literal notranslate"><span class="pre">json</span></code> file via <code class="docutils literal notranslate"><span class="pre">-params-file</span> <span class="pre">&lt;file&gt;</span></code>.</p>
+<p>Do not use <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">&lt;file&gt;</span></code> to specify parameters as this will result in errors. Custom config files specified with <code class="docutils literal notranslate"><span class="pre">-c</span></code> must only be used for <a class="reference external" href="https://nf-co.re/docs/usage/configuration#tuning-workflow-resources">tuning process resource specifications</a>, other infrastructural tweaks (such as output directories), or module arguments (args).</p>
+<p>The above pipeline run specified with a params file in yaml format:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>run<span class="w"> </span>main.nf<span class="w"> </span>-profile<span class="w"> </span>conda<span class="w"> </span>-params-file<span class="w"> </span>params.yaml
+</span></pre></div>
+</div>
+<p>with:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nt">input</span><span class="p">:</span><span class="w"> </span><span class="s">'./samplesheet.csv'</span>
+</span><span data-line="2"><span class="nt">input_format</span><span class="p">:</span><span class="w"> </span><span class="s">'csv'</span>
+</span><span data-line="3"><span class="nt">outdir</span><span class="p">:</span><span class="w"> </span><span class="s">'./results/'</span>
+</span><span data-line="4"><span class="l l-Scalar l-Scalar-Plain">&lt;...&gt;</span>
+</span></pre></div>
+</div>
+<p>You can also generate such <code class="docutils literal notranslate"><span class="pre">YAML</span></code>/<code class="docutils literal notranslate"><span class="pre">JSON</span></code> files via <a class="reference external" href="https://nf-co.re/launch">nf-core/launch</a>.</p>
+</section>
+<section id="updating-the-pipeline">
+<h2>Updating the pipeline<a class="headerlink" href="#updating-the-pipeline" title="Link to this heading">¶</a></h2>
+<p>When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you’re running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>pull<span class="w"> </span>tnmquann/microcosm
+</span></pre></div>
+</div>
+</section>
+<section id="version-control">
+<h2>Version Control<a class="headerlink" href="#version-control" title="Link to this heading">¶</a></h2>
+<p>Specify the pipeline version with <code class="docutils literal notranslate"><span class="pre">-r</span></code> to ensure reproducibility:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>run<span class="w"> </span>tnmquann/microcosm<span class="w"> </span>-r<span class="w"> </span><span class="m">2</span>.0.0
+</span></pre></div>
+</div>
+<p>Find available versions on the <a class="reference external" href="https://github.com/tnmquann/microcosm/releases">releases page</a>.</p>
+</section>
+<section id="reproducibility">
+<h2>Reproducibility<a class="headerlink" href="#reproducibility" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Use parameter files for consistent runs.</p></li>
+<li><p>Do not include cluster-specific paths or institutional profiles if sharing.</p></li>
+<li><p>For reproducible assembly results, use <code class="docutils literal notranslate"><span class="pre">--spades_fix_cpus</span></code> or <code class="docutils literal notranslate"><span class="pre">--spadeshybrid_fix_cpus</span></code> for SPAdes, and <code class="docutils literal notranslate"><span class="pre">--megahit_fix_cpu_1</span></code> for MEGAHIT.</p></li>
+<li><p>MetaBAT2 uses a fixed seed by default.</p></li>
+<li><p>For BUSCO, download required lineage datasets in advance and specify with <code class="docutils literal notranslate"><span class="pre">--busco_db</span></code> for reproducible results.</p></li>
+</ul>
+</section>
+<section id="nextflow-arguments">
+<h2>Nextflow arguments<a class="headerlink" href="#nextflow-arguments" title="Link to this heading">¶</a></h2>
+<section id="profile">
+<h3><code class="docutils literal notranslate"><span class="pre">-profile</span></code><a class="headerlink" href="#profile" title="Link to this heading">¶</a></h3>
+<p>Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments.</p>
+<p>Several generic profiles are bundled with the pipeline which instruct the pipeline to use software packaged using different methods (Docker, Singularity, Podman, Shifter, Charliecloud, Apptainer, Conda) - see below.</p>
+<p>The pipeline also dynamically loads configurations from <a class="reference external" href="https://github.com/nf-core/configs">https://github.com/nf-core/configs</a> when it runs, making multiple config profiles for various institutional clusters available at run time. For more information and to check if your system is supported, please see the <a class="reference external" href="https://github.com/nf-core/configs#documentation">nf-core/configs documentation</a>.</p>
+<p>Note that multiple profiles can be loaded, for example: <code class="docutils literal notranslate"><span class="pre">-profile</span> <span class="pre">test,docker</span></code> - the order of arguments is important! They are loaded in sequence, so later profiles can overwrite earlier profiles.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">-profile</span></code> is not specified, the pipeline will run locally and expect all software to be installed and available on the <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. This is <em>not</em> recommended, since it can lead to different results on different machines dependent on the computer environment.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">test</span></code></p>
+<ul>
+<li><p>A profile with a complete configuration for automated testing</p></li>
+<li><p>Includes links to test data so needs no other parameters</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docker</span></code></p>
+<ul>
+<li><p>A generic configuration profile to be used with <a class="reference external" href="https://docker.com/">Docker</a></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">singularity</span></code></p>
+<ul>
+<li><p>A generic configuration profile to be used with <a class="reference external" href="https://sylabs.io/docs/">Singularity</a></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">apptainer</span></code></p>
+<ul>
+<li><p>A generic configuration profile to be used with <a class="reference external" href="https://apptainer.org/">Apptainer</a></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wave</span></code></p>
+<ul>
+<li><p>A generic configuration profile to enable <a class="reference external" href="https://seqera.io/wave/">Wave</a> containers. Use together with one of the above (requires Nextflow <code class="docutils literal notranslate"><span class="pre">24.03.0-edge</span></code> or later).</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conda</span></code></p>
+<ul>
+<li><p>A generic configuration profile to be used with <a class="reference external" href="https://conda.io/docs/">Conda</a>. Please only use Conda as a last resort i.e. when it’s not possible to run the pipeline with Docker, Singularity, Podman, Shifter, Charliecloud, or Apptainer.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="resume">
+<h3><code class="docutils literal notranslate"><span class="pre">-resume</span></code><a class="headerlink" href="#resume" title="Link to this heading">¶</a></h3>
+<p>Specify this when restarting a pipeline. Nextflow will use cached results from any pipeline steps where the inputs are the same, continuing from where it got to previously. For input to be considered the same, not only the names must be identical but the files’ contents as well. For more info about this parameter, see <a class="reference external" href="https://www.nextflow.io/blog/2019/demystifying-nextflow-resume.html">this blog post</a>.</p>
+<p>You can also supply a run name to resume a specific run: <code class="docutils literal notranslate"><span class="pre">-resume</span> <span class="pre">[run-name]</span></code>. Use the <code class="docutils literal notranslate"><span class="pre">nextflow</span> <span class="pre">log</span></code> command to show previous run names.</p>
+</section>
+<section id="c">
+<h3><code class="docutils literal notranslate"><span class="pre">-c</span></code><a class="headerlink" href="#c" title="Link to this heading">¶</a></h3>
+<p>Specify the path to a specific config file (this is a core Nextflow command). See the <a class="reference external" href="https://nf-co.re/usage/configuration">nf-core website documentation</a> for more information.</p>
+</section>
+</section>
+<section id="resource-requests">
+<h2>Resource Requests<a class="headerlink" href="#resource-requests" title="Link to this heading">¶</a></h2>
+<p>Default resource settings per process label:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Label</p></th>
+<th class="head"><p>CPU</p></th>
+<th class="head"><p>Memory</p></th>
+<th class="head"><p>Time</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Default</p></td>
+<td><p>1</p></td>
+<td><p>16 GB</p></td>
+<td><p>8 hours</p></td>
+</tr>
+<tr class="row-odd"><td><p>process_single</p></td>
+<td><p>1</p></td>
+<td><p>6 GB</p></td>
+<td><p>4 hours</p></td>
+</tr>
+<tr class="row-even"><td><p>process_low</p></td>
+<td><p>4</p></td>
+<td><p>12 GB</p></td>
+<td><p>4 hours</p></td>
+</tr>
+<tr class="row-odd"><td><p>process_medium</p></td>
+<td><p>12</p></td>
+<td><p>60 GB</p></td>
+<td><p>16 hours</p></td>
+</tr>
+<tr class="row-even"><td><p>process_high</p></td>
+<td><p>25</p></td>
+<td><p>120 GB</p></td>
+<td><p>24 hours</p></td>
+</tr>
+<tr class="row-odd"><td><p>process_long</p></td>
+<td><p>—</p></td>
+<td><p>—</p></td>
+<td><p>72 hours</p></td>
+</tr>
+<tr class="row-even"><td><p>process_high_memory</p></td>
+<td><p>—</p></td>
+<td><p>256 GB</p></td>
+<td><p>—</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For most of the pipeline steps, if the job exits with any of the error codes specified <a class="reference external" href="https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18">here</a> it will automatically be resubmitted with higher resources request (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.</p>
+<p>All requests are capped by <code class="docutils literal notranslate"><span class="pre">--max_cpus</span></code>, <code class="docutils literal notranslate"><span class="pre">--max_memory</span></code> and <code class="docutils literal notranslate"><span class="pre">--max_time</span></code> (Nextflow <code class="docutils literal notranslate"><span class="pre">process.resourceLimits</span></code>). To change the resource requests, please see the <a class="reference external" href="https://nf-co.re/docs/usage/configuration#max-resources">max resources</a> and <a class="reference external" href="https://nf-co.re/docs/usage/configuration#tuning-workflow-resources">tuning workflow resources</a> section of the nf-core website.</p>
+</section>
+<section id="custom-containers-tool-arguments">
+<h2>Custom containers &amp; tool arguments<a class="headerlink" href="#custom-containers-tool-arguments" title="Link to this heading">¶</a></h2>
+<p>Override containers or conda environments for specific tools using the <code class="docutils literal notranslate"><span class="pre">process</span></code> scope and <code class="docutils literal notranslate"><span class="pre">withName</span></code> selector in a custom config file.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-groovy notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">process</span><span class="w"> </span><span class="o">{</span>
+</span><span data-line="2"><span class="w">    </span><span class="nl">withName:</span><span class="w"> </span><span class="n">TOOL_NAME</span><span class="w"> </span><span class="o">{</span>
+</span><span data-line="3"><span class="w">        </span><span class="n">container</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'quay.io/biocontainers/tool:version'</span>
+</span><span data-line="4"><span class="w">    </span><span class="o">}</span>
+</span><span data-line="5"><span class="o">}</span>
+</span></pre></div>
+</div>
+<p>Pass the config file with <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">/path/to/custom.config</span></code>.
+Please see the <a class="reference external" href="https://nf-co.re/docs/usage/configuration#updating-tool-versions">updating tool versions</a> section of the nf-core website for more information.</p>
+</section>
+<section id="nf-core-configs">
+<h2>nf-core/configs<a class="headerlink" href="#nf-core-configs" title="Link to this heading">¶</a></h2>
+<p>In most cases, you will only need to create a custom config as a one-off but if you and others within your organisation are likely to be running nf-core pipelines regularly and need to use the same settings regularly it may be a good idea to request that your custom config file is uploaded to the <code class="docutils literal notranslate"><span class="pre">nf-core/configs</span></code> git repository. Before you do this please can you test that the config file works with your pipeline of choice using the <code class="docutils literal notranslate"><span class="pre">-c</span></code> parameter. For institutional or shared configs, request addition to the <a class="reference external" href="https://github.com/nf-core/configs">nf-core/configs</a> repository.</p>
+<p>See the main <a class="reference external" href="https://www.nextflow.io/docs/latest/config.html">Nextflow documentation</a> for more information about creating your own configuration files.</p>
+</section>
+<section id="background-execution">
+<h2>Background execution<a class="headerlink" href="#background-execution" title="Link to this heading">¶</a></h2>
+<p>Nextflow handles job submissions and supervises the running jobs. The Nextflow process must run until the pipeline is finished. You can run Nextflow in the background with <code class="docutils literal notranslate"><span class="pre">-bg</span></code>, or use <code class="docutils literal notranslate"><span class="pre">screen</span></code>/<code class="docutils literal notranslate"><span class="pre">tmux</span></code> for detached sessions.</p>
+</section>
+<section id="memory-requirements">
+<h2>Memory requirements<a class="headerlink" href="#memory-requirements" title="Link to this heading">¶</a></h2>
+<p>In some cases, the Nextflow Java virtual machines can start to request a large amount of memory. We recommend adding the following line to your environment to limit this (typically in <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code> or <code class="docutils literal notranslate"><span class="pre">~/.bash_profile</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nv">NXF_OPTS</span><span class="o">=</span><span class="s1">'-Xms1g -Xmx4g'</span>
+</span></pre></div>
+</div>
+</section>
+<section id="bin-refinement-notes">
+<h2>Bin refinement notes<a class="headerlink" href="#bin-refinement-notes" title="Link to this heading">¶</a></h2>
+<section id="dastool">
+<h3>DASTool<a class="headerlink" href="#dastool" title="Link to this heading">¶</a></h3>
+<p>DAS Tool may not always be able to refine bins due to insufficient recovery of enough single-copy genes. In these cases you will get a NOTE such as</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="o">[</span><span class="m">16</span>/d330a6<span class="o">]</span><span class="w"> </span>NOTE:<span class="w"> </span>Process<span class="w"> </span>MICROCOSM:BINNING_REFINEMENT:DASTOOL_DASTOOL<span class="w"> </span><span class="o">(</span>test_minigut_sample2<span class="o">)</span>
+</span></pre></div>
+</div>
+<p>In this case, bin refinement has not necessarily failed but was unable to complete the refinement. You will therefore not expect to find any output files in the <code class="docutils literal notranslate"><span class="pre">Binning/DASTool/</span></code> results directory for that particular sample.</p>
+<p>If you are regularly getting such errors, you can try reducing the <code class="docutils literal notranslate"><span class="pre">--refine_bins_dastool_threshold</span></code> value, which will modify the scoring threshold defined in the <a class="reference external" href="https://www.nature.com/articles/s41564-018-0171-1">DAS Tool publication</a>.</p>
+</section>
+<section id="binette">
+<h3>Binette<a class="headerlink" href="#binette" title="Link to this heading">¶</a></h3>
+<p>Binette requires CheckM2 database to proceed. When using this tool, you need to provide the additional parameter <code class="docutils literal notranslate"><span class="pre">--checkm2_db</span></code>.</p>
+<p>Binette may not always be able to refine bins due to insufficient recovery of enough single-copy genes. In these cases you will get a NOTE such as</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="o">[</span><span class="m">16</span>/d330a6<span class="o">]</span><span class="w"> </span>NOTE:<span class="w"> </span>Process<span class="w"> </span>MICROCOSM:BINNING_REFINEMENT:BINETTE_BINETTE<span class="w"> </span><span class="o">(</span>test_minigut_sample2<span class="o">)</span>
+</span></pre></div>
+</div>
+<p>In this case, bin refinement has not necessarily failed but was unable to complete the refinement. You will therefore not expect to find any output files in the <code class="docutils literal notranslate"><span class="pre">Binning/Binette/</span></code> results directory for that particular sample.</p>
+<p>If you are regularly getting such errors, you can try reducing the <code class="docutils literal notranslate"><span class="pre">--refine_bins_binette_min_completeness</span></code> or<code class="docutils literal notranslate"><span class="pre">--refine_bins_binette_contamination_weight</span></code>value.</p>
+<p>The output folders are described in <a class="reference internal" href="../../reference/outputs/"><span class="std std-doc">Outputs</span></a>.</p>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../inputs/">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Inputs</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../cookbook/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Cookbook</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

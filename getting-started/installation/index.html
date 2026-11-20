@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Installation - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Databases" href="../databases/" /><link rel="prev" title="Quick start" href="../quickstart/" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/getting-started/installation/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/getting-started/installation/"/>
+  <meta property="og:title" content="Installation"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="../quickstart/">Quick start</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../databases/">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/overview/">Pipeline overview</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/preprocessing/">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/assembly/">Assembly and contig analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/binning/">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/changelog/">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#software">Software</a></li>
+<li><a class="reference internal" href="#hardware">Hardware</a></li>
+<li><a class="reference internal" href="#install-the-pipeline">Install the pipeline</a><ul>
+<li><a class="reference internal" href="#clone-the-pipeline">1. Clone the Pipeline</a></li>
+<li><a class="reference internal" href="#install-nextflow">2. Install Nextflow</a></li>
+<li><a class="reference internal" href="#install-conda-mamba">3. Install Conda/Mamba</a></li>
+<li><a class="reference internal" href="#install-container-runtime-optional">4. Install Container runtime (Optional)</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Installation</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
+<p>microcosm runs with <a class="reference external" href="https://www.nextflow.io/">Nextflow</a> and gets every tool from containers or Conda: you install Nextflow and one software runtime, then the databases you need (<a class="reference internal" href="../databases/"><span class="std std-doc">Databases</span></a>).</p>
+<section id="software">
+<h2>Software<a class="headerlink" href="#software" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.nextflow.io/docs/latest/install.html">Nextflow</a> <strong>version 26.04.0 or later</strong> (required since microcosm 2.0.0, which uses the Nextflow strict syntax)</p></li>
+<li><p><a class="reference external" href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java</a> (version 16 to 22, required by Nextflow)</p></li>
+<li><p><a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html">Conda</a> and/or <a class="reference external" href="https://github.com/conda-forge/miniforge">Mamba</a> for package and environment management.</p></li>
+<li><p>Optional: A container runtime engine like <a class="reference external" href="https://www.docker.com/">Docker</a> or <a class="reference external" href="https://apptainer.org/docs/admin/main/installation.html">Apptainer</a>.</p></li>
+</ul>
+</section>
+<section id="hardware">
+<h2>Hardware<a class="headerlink" href="#hardware" title="Link to this heading">¶</a></h2>
+<ul>
+<li><p>A POSIX-compatible operating system (e.g., Linux, macOS) or Windows with <a class="reference external" href="https://learn.microsoft.com/en-us/windows/wsl/">WSL</a>. We strongly recommend using a Unix-based OS for best compatibility with all tools.</p></li>
+<li><p>At least 32 GB of RAM for MEGAHIT, or 128 GB if you plan to use metaSPAdes for assembly.</p></li>
+<li><p>At least 256 GB of disk space.</p>
+<blockquote>
+<div><p>ℹ️ <strong>Storage Estimates</strong> (based on shallow shotgun metagenomics):</p>
+<ul class="simple">
+<li><p>Nextflow installation: ~150 MB</p></li>
+<li><p>Databases: ~120 GB</p></li>
+<li><p>Environment folder: ~20 GB</p></li>
+<li><p>Intermediate/cache files: 20–50 GB (varies with sample size and quality)</p></li>
+<li><p>Output per sample: ~9 GB</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<ul class="simple">
+<li><p>Optional: Some steps in assembly-based analysis (for example, <code class="docutils literal notranslate"><span class="pre">COMEBin</span></code> in the binning step) will run faster if your system is equipped with a GPU.</p></li>
+</ul>
+</section>
+<section id="install-the-pipeline">
+<h2>Install the pipeline<a class="headerlink" href="#install-the-pipeline" title="Link to this heading">¶</a></h2>
+<section id="clone-the-pipeline">
+<h3>1. Clone the Pipeline<a class="headerlink" href="#clone-the-pipeline" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">git<span class="w"> </span>clone<span class="w"> </span>--single-branch<span class="w"> </span>--branch<span class="w"> </span>main<span class="w"> </span>https://github.com/tnmquann/microcosm.git
+</span></pre></div>
+</div>
+<ul class="simple">
+<li><p>Or download the <a class="reference external" href="https://github.com/tnmquann/microcosm/releases/latest">latest release</a>.</p></li>
+<li><p>Or use this command to download and unzip in one step:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>pull<span class="w"> </span>tnmquann/microcosm
+</span><span data-line="2"><span class="c1"># Use this command to check pipeline info (if necessary)</span>
+</span><span data-line="3">nextflow<span class="w"> </span>info<span class="w"> </span>tnmquann/microcosm
+</span></pre></div>
+</div>
+</section>
+<section id="install-nextflow">
+<h3>2. Install Nextflow<a class="headerlink" href="#install-nextflow" title="Link to this heading">¶</a></h3>
+<p><strong>a.</strong> Check Java installation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">java<span class="w"> </span>-version
+</span></pre></div>
+</div>
+<p>If missing, follow <a class="reference external" href="https://www.nextflow.io/docs/latest/install.html">Java install instructions</a>.</p>
+<p><strong>b.</strong> Download Nextflow:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">curl<span class="w"> </span>-s<span class="w"> </span>https://get.nextflow.io<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+</span><span data-line="2">chmod<span class="w"> </span>+x<span class="w"> </span>nextflow
+</span></pre></div>
+</div>
+<p><strong>c.</strong> (Optional) Move Nextflow to your <code class="docutils literal notranslate"><span class="pre">$PATH</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">sudo<span class="w"> </span>mv<span class="w"> </span>nextflow<span class="w"> </span>/usr/local/bin
+</span></pre></div>
+</div>
+<p><strong>d.</strong> Test Nextflow:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>info
+</span></pre></div>
+</div>
+</section>
+<section id="install-conda-mamba">
+<h3>3. Install Conda/Mamba<a class="headerlink" href="#install-conda-mamba" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Mamba (Recommended):</strong> Install via <a class="reference external" href="https://github.com/conda-forge/miniforge">Miniforge</a>.</p></li>
+<li><p><strong>Conda:</strong> <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html">Install guide</a>.</p></li>
+</ul>
+</section>
+<section id="install-container-runtime-optional">
+<h3>4. Install Container runtime (Optional)<a class="headerlink" href="#install-container-runtime-optional" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Apptainer:</strong> <a class="reference external" href="https://apptainer.org/docs/admin/main/installation.html">Install guide</a>. Users are recommended to use the unprivileged version to avoid unexpected errors.</p></li>
+<li><p><strong>Docker:</strong> <a class="reference external" href="https://docs.docker.com/engine/install/ubuntu/">Install guide</a></p></li>
+</ul>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../quickstart/">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Quick start</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../databases/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Databases</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

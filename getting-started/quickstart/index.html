@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Quick start - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Installation" href="../installation/" /><link rel="prev" title="microcosm" href="../../" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/getting-started/quickstart/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/getting-started/quickstart/"/>
+  <meta property="og:title" content="Quick start"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick start</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../installation/">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../databases/">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/overview/">Pipeline overview</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/preprocessing/">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/assembly/">Assembly and contig analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/binning/">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../pipeline/report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/changelog/">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#install-nextflow-and-a-software-profile">1. Install Nextflow and a software profile</a></li>
+<li><a class="reference internal" href="#choose-what-you-want-to-run">2. Choose what you want to run</a></li>
+<li><a class="reference internal" href="#get-the-databases-you-need">3. Get the databases you need</a></li>
+<li><a class="reference internal" href="#describe-your-samples">4. Describe your samples</a></li>
+<li><a class="reference internal" href="#run">5. Run</a></li>
+<li><a class="reference internal" href="#look-at-the-results">6. Look at the results</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Quick start</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="quick-start">
+<h1>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h1>
+<p>From nothing to your first report in six steps. Each step links to the page with the details.</p>
+<section id="install-nextflow-and-a-software-profile">
+<h2>1. Install Nextflow and a software profile<a class="headerlink" href="#install-nextflow-and-a-software-profile" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.nextflow.io/docs/latest/install.html">Nextflow</a> <strong>≥ 26.04</strong> (needs Java 17 or later): <code class="docutils literal notranslate"><span class="pre">curl</span> <span class="pre">-s</span> <span class="pre">https://get.nextflow.io</span> <span class="pre">|</span> <span class="pre">bash</span></code></p></li>
+<li><p>One way to get the tools: <strong>Singularity/Apptainer</strong> or <strong>Docker</strong> (recommended, <code class="docutils literal notranslate"><span class="pre">-profile</span> <span class="pre">singularity</span></code>, <code class="docutils literal notranslate"><span class="pre">-profile</span> <span class="pre">apptainer</span></code>, <code class="docutils literal notranslate"><span class="pre">-profile</span> <span class="pre">docker</span></code>), or <strong>Conda/Mamba</strong> (<code class="docutils literal notranslate"><span class="pre">-profile</span> <span class="pre">conda</span></code>).</p></li>
+</ul>
+<p>Check: <code class="docutils literal notranslate"><span class="pre">nextflow</span> <span class="pre">-version</span></code> and <code class="docutils literal notranslate"><span class="pre">nextflow</span> <span class="pre">run</span> <span class="pre">tnmquann/microcosm</span> <span class="pre">-r</span> <span class="pre">2.0.0</span> <span class="pre">--help</span></code>.</p>
+<p>Details: <a class="reference internal" href="../installation/"><span class="std std-doc">Installation</span></a>.</p>
+</section>
+<section id="choose-what-you-want-to-run">
+<h2>2. Choose what you want to run<a class="headerlink" href="#choose-what-you-want-to-run" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>I want to...</p></th>
+<th class="head text-left"><p>Route</p></th>
+<th class="head text-left"><p>Main switch</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>know <strong>who is in my samples</strong> (fast, from reads)</p></td>
+<td class="text-left"><p>read-based</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--enable_readbase</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>find <strong>AMR genes in my reads</strong></p></td>
+<td class="text-left"><p>read-based</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--enable_readbase</span> <span class="pre">--enable_rgi_bwt</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p><strong>recover genomes (MAGs)</strong> and check their quality</p></td>
+<td class="text-left"><p>assembly-based (default)</p></td>
+<td class="text-left"><p>no switch needed</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><strong>type bacterial genomes and find AMR genes</strong> in those MAGs</p></td>
+<td class="text-left"><p>assembly-based + bacterial analysis</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--enable_bacterial_downstream</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p><strong>type my own genome FASTA files</strong> (isolates, MAGs made elsewhere)</p></td>
+<td class="text-left"><p>bacterial analysis only</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--genome_input</span> <span class="pre">genomes.csv</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Overview of every step: <a class="reference internal" href="../../pipeline/overview/"><span class="std std-doc">Overview</span></a>.</p>
+</section>
+<section id="get-the-databases-you-need">
+<h2>3. Get the databases you need<a class="headerlink" href="#get-the-databases-you-need" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Route</p></th>
+<th class="head text-left"><p>You must download</p></th>
+<th class="head text-left"><p>The pipeline downloads (when no path is given)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>read-based</p></td>
+<td class="text-left"><p>sourmash database + lineages, YACHT database (or a sylph database)</p></td>
+<td class="text-left"><p>hostile host index, CARD (RGI)</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>assembly-based</p></td>
+<td class="text-left"><p>sourmash database + lineages (bin classification)</p></td>
+<td class="text-left"><p>hostile, geNomad, CheckM2, Bakta, GUNC, ...</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>bacterial analysis</p></td>
+<td class="text-left"><p>sourmash (or GTDB-Tk) only for genomes without a lineage</p></td>
+<td class="text-left"><p>AMRFinderPlus, CARD, ResFinder, DeepARG, VirulenceFinder, Paratype</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Downloaded databases are saved in <code class="docutils literal notranslate"><span class="pre">&lt;outdir&gt;/Databases/</span></code> so the next run can reuse them. Details: <a class="reference internal" href="../databases/"><span class="std std-doc">Installation → Database Preparation</span></a>.</p>
+</section>
+<section id="describe-your-samples">
+<h2>4. Describe your samples<a class="headerlink" href="#describe-your-samples" title="Link to this heading">¶</a></h2>
+<p>Reads, one row per sample (<code class="docutils literal notranslate"><span class="pre">--input</span> <span class="pre">samples.csv</span></code>):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><span data-line="1">sample_id,run_id,group,short_reads_1,short_reads_2,long_reads
+</span><span data-line="2">sample1,1,0,data/sample1_1.fq.gz,data/sample1_2.fq.gz,
+</span><span data-line="3">sample2,1,0,data/sample2_1.fq.gz,data/sample2_2.fq.gz,
+</span></pre></div>
+</div>
+<p>or a folder of paired FASTQ files (<code class="docutils literal notranslate"><span class="pre">--input</span> <span class="pre">reads/</span> <span class="pre">--input_format</span> <span class="pre">directory</span></code>), or genome FASTA files (<code class="docutils literal notranslate"><span class="pre">--genome_input</span> <span class="pre">genomes.csv</span></code> with <code class="docutils literal notranslate"><span class="pre">sample_id,fasta[,lineage]</span></code>). Details: <a class="reference internal" href="../../usage/inputs/"><span class="std std-doc">Usage → Input Specifications</span></a>.</p>
+</section>
+<section id="run">
+<h2>5. Run<a class="headerlink" href="#run" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">nextflow<span class="w"> </span>run<span class="w"> </span>tnmquann/microcosm<span class="w"> </span>-r<span class="w"> </span><span class="m">2</span>.0.0<span class="w"> </span>-profile<span class="w"> </span>singularity<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--input<span class="w"> </span>samples.csv<span class="w"> </span>--outdir<span class="w"> </span>results<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--enable_readbase<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--sourmash_database<span class="w"> </span>/db/gtdb-rs226-reps.k31.rocksdb<span class="w"> </span><span class="se">\</span>
+</span><span data-line="5"><span class="w">    </span>--sourmash_taxonomy_csv<span class="w"> </span>/db/gtdb-rs226.lineages.csv<span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">    </span>--yacht_database<span class="w"> </span>/db/yacht_k31.json
+</span></pre></div>
+</div>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">-resume</span></code> to continue a stopped run without redoing finished steps.</p></li>
+<li><p>Limit the machine use with <code class="docutils literal notranslate"><span class="pre">--max_cpus</span> <span class="pre">16</span> <span class="pre">--max_memory</span> <span class="pre">64.GB</span></code>.</p></li>
+<li><p>More commands, one per goal: <a class="reference internal" href="../../usage/cookbook/"><span class="std std-doc">Cookbook</span></a>.</p></li>
+</ul>
+</section>
+<section id="look-at-the-results">
+<h2>6. Look at the results<a class="headerlink" href="#look-at-the-results" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">results/MultiQC/results_multiqc_report.html</span></code> in a browser: one report with every step that ran.</p></li>
+<li><p>Go to the folder of the step you care about (<code class="docutils literal notranslate"><span class="pre">Readbased_Analysis/</span></code>, <code class="docutils literal notranslate"><span class="pre">Assembly/</span></code>, <code class="docutils literal notranslate"><span class="pre">Binning/</span></code>, <code class="docutils literal notranslate"><span class="pre">Bacterial_Analysis/</span></code>, ...). What each file contains: <a class="reference internal" href="../../reference/outputs/"><span class="std std-doc">Outputs</span></a>.</p></li>
+<li><p>Something odd? <a class="reference internal" href="../../reference/troubleshooting/"><span class="std std-doc">Troubleshooting &amp; FAQ</span></a>.</p></li>
+</ol>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../../">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Home</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../installation/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Installation</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>

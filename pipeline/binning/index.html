@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="grass" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Binning and MAGs - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Bacterial genome analysis" href="../bacterial/" /><link rel="prev" title="Assembly and contig analysis" href="../assembly/" />
+      <link rel="canonical" href="https://tnmquann.github.io/microcosm/pipeline/binning/" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=44020203" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Spectral:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap"
+  rel="stylesheet">
+
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght,XOPQ,XTRA,YOPQ,YTDE,YTFI,YTLC,YTUC@8..144,100..1000,96,468,79,-203,738,514,712&display=swap"
+  rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Cabin:ital,wght@0,400..700;1,400..700&family=Fira+Code:wght@300..700&family=Inconsolata:wght@200..900&display=swap"
+  rel="stylesheet">
+<style>
+  :root {
+    --sy-f-heading: 'Cabin', 'Roboto Flex', 'Spectral', var(--sy-f-sys), sans-serif;
+    --sy-f-text: 'Roboto Flex', 'Newsreader', 'Source Serif 4', 'Spectral', var(--sy-f-sys), sans-serif;
+    /* --sy-f-mono: 'Fira Code', 'Inconsolata', var(--sy-f-mono-sys), monospace; */
+  }
+</style>
+    <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://tnmquann.github.io/microcosm/pipeline/binning/"/>
+  <meta property="og:title" content="Binning and MAGs"/>
+    <meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="https://tnmquann.github.io/microcosm/">
+      <img class="light-logo" src="../../_static/microcosm_logo.png" alt="microcosm" height="28" loading="lazy" />
+      <img class="dark-logo" src="../../_static/microcosm_logo_dark.png" alt="microcosm" height="28" loading="lazy" />
+      <strong>microcosm</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"><ul><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/getting-started/quickstart/">
+            <span>Quick start</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
+            <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
+            <span>Cookbook</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/reference/parameters/">
+            <span>Parameters</span></a>
+        </li><li class="link">
+          <a href="https://github.com/tnmquann/microcosm/releases">
+            <span>Releases</span></a>
+        </li></ul></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search/" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials">
+  <a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+    <iconify-icon icon="simple-icons:github"></iconify-icon>
+  </a></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="1"><p class="caption" role="heading" aria-level="3"><span class="caption-text">Getting started</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/quickstart/">Quick start</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/installation/">Installation</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../getting-started/databases/">Databases</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Pipeline</span></p>
+<ul class="current">
+<li class="toctree-l1 _expand"><a class="reference internal" href="../overview/">Pipeline overview</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../preprocessing/">Read preprocessing</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../read-based/">Read-based analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../assembly/">Assembly and contig analysis</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Binning and MAGs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../bacterial/">Bacterial genome analysis</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../report/">MultiQC report</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/parameters/">Parameters</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/outputs/">Outputs</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../reference/troubleshooting/">Troubleshooting &amp; FAQ</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">About</span></p>
+<ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/changelog/">Changelog</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/roadmap/">Roadmap</a></li>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../about/citation/">Citation, authors and license</a></li>
+</ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#binning-and-binning-refinement">Binning and binning refinement</a><ul>
+<li><a class="reference internal" href="#contig-sequencing-depth">Contig sequencing depth</a></li>
+<li><a class="reference internal" href="#metabat2">MetaBAT2</a></li>
+<li><a class="reference internal" href="#maxbin2">MaxBin2</a></li>
+<li><a class="reference internal" href="#concoct">CONCOCT</a></li>
+<li><a class="reference internal" href="#comebin">COMEBin</a></li>
+<li><a class="reference internal" href="#semibin2">SemiBin2</a></li>
+<li><a class="reference internal" href="#vamb">VAMB</a></li>
+<li><a class="reference internal" href="#das-tool">DAS Tool</a></li>
+<li><a class="reference internal" href="#binette">Binette</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bins-quality-evaluation">Bins quality evaluation</a><ul>
+<li><a class="reference internal" href="#qc-for-metagenome-assembled-genomes-with-quast">QC for metagenome assembled genomes with QUAST</a></li>
+<li><a class="reference internal" href="#busco">BUSCO</a></li>
+<li><a class="reference internal" href="#checkm">CheckM</a></li>
+<li><a class="reference internal" href="#checkm2">CheckM2</a></li>
+<li><a class="reference internal" href="#gunc">GUNC</a></li>
+<li><a class="reference internal" href="#assembly-statistics-assembly-stats-py">Assembly statistics (<code class="docutils literal notranslate">py</span></code>)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#taxonomic-classification-of-binned-genomes">Taxonomic classification of binned genomes</a><ul>
+<li><a class="reference internal" href="#sourmash">sourmash</a></li>
+<li><a class="reference internal" href="#gtdb-tk">GTDB-Tk</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#genome-annotation-of-binned-genomes">Genome annotation of binned genomes</a><ul>
+<li><a class="reference internal" href="#prokka">Prokka</a></li>
+<li><a class="reference internal" href="#bakta">Bakta</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#bin-refinement-notes">Bin refinement notes</a><ul>
+<li><a class="reference internal" href="#dastool">DASTool</a></li>
+<li><a class="reference internal" href="#id1">Binette</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../"><span itemprop="name">microcosm</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Binning and MAGs</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+  <article class="yue" role="main">
+          <section id="binning-and-mags">
+<h1>Binning and MAGs<a class="headerlink" href="#binning-and-mags" title="Link to this heading">¶</a></h1>
+<p>Contigs are grouped into bins (metagenome-assembled genomes, MAGs), refined, checked and annotated.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Step</p></th>
+<th class="head text-left"><p>Default</p></th>
+<th class="head text-left"><p>Change with</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>Binning</p></td>
+<td class="text-left"><p>MetaBAT2, MaxBin2, COMEBin, SemiBin2</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--skip_&lt;binner&gt;</span></code>; CONCOCT and VAMB with <code class="docutils literal notranslate"><span class="pre">--skip_concoct</span> <span class="pre">false</span></code>, <code class="docutils literal notranslate"><span class="pre">--skip_vamb</span> <span class="pre">false</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Refinement</p></td>
+<td class="text-left"><p>Binette</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--refine_tool</span> <span class="pre">dastool</span></code>, <code class="docutils literal notranslate"><span class="pre">--skip_binning_refinement</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>Which bins go downstream</p></td>
+<td class="text-left"><p>raw and refined</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--postbinning_input</span> <span class="pre">raw_bins_only|refined_bins_only|both</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Domain of each bin</p></td>
+<td class="text-left"><p>off</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--bin_domain_classification</span></code> (Tiara)</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>Quality</p></td>
+<td class="text-left"><p>CheckM2</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--binqc_tool</span> <span class="pre">checkm2,checkm,busco</span></code>, <code class="docutils literal notranslate"><span class="pre">--run_gunc</span></code></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>Annotation</p></td>
+<td class="text-left"><p>Prokka</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--bin_annotation_tool</span> <span class="pre">bakta</span></code></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>Taxonomy</p></td>
+<td class="text-left"><p>sourmash</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--bin_classifier</span> <span class="pre">gtdbtk</span> <span class="pre">--gtdbtk_db</span> <span class="pre">&lt;release226&gt;</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="binning-and-binning-refinement">
+<h2>Binning and binning refinement<a class="headerlink" href="#binning-and-binning-refinement" title="Link to this heading">¶</a></h2>
+<section id="contig-sequencing-depth">
+<h3>Contig sequencing depth<a class="headerlink" href="#contig-sequencing-depth" title="Link to this heading">¶</a></h3>
+<p>Sequencing depth per contig and sample is generated by MetaBAT2's <code class="docutils literal notranslate"><span class="pre">jgi_summarize_bam_contig_depths</span> <span class="pre">--outputDepth</span></code>. The values correspond to <code class="docutils literal notranslate"><span class="pre">(sum</span> <span class="pre">of</span> <span class="pre">exactly</span> <span class="pre">aligned</span> <span class="pre">bases)</span> <span class="pre">/</span> <span class="pre">((contig</span> <span class="pre">length)-2*75)</span></code>. For example, for two reads aligned exactly with <code class="docutils literal notranslate"><span class="pre">10</span></code> and <code class="docutils literal notranslate"><span class="pre">9</span></code> bases on a 1000 bp long contig the depth is calculated by <code class="docutils literal notranslate"><span class="pre">(10+9)/(1000-2*75)</span></code> (1000bp length of contig minus 75bp from each end, which is excluded).</p>
+<p>These depth files are used for downstream binning steps.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/depths/contigs/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]-depth.txt.gz</span></code>: Sequencing depth for each contig and sample or group, only for short reads.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="metabat2">
+<h3>MetaBAT2<a class="headerlink" href="#metabat2" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://bitbucket.org/berkeleylab/metabat">MetaBAT2</a> recovers genome bins (that is, contigs/scaffolds that all belongs to a same organism) from metagenome assemblies.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/MetaBAT2/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-[binner]-[sample_id].*.fa.gz</span></code>: Genome bins retrieved from input assembly</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">unbinned/[assembler]-[binner]-[sample_id].unbinned.[1-9]*.fa.gz</span></code>: Contigs that were not binned with other contigs but considered interesting. By default, these are at least 1 Mbp (<code class="docutils literal notranslate"><span class="pre">--min_length_unbinned_contigs</span></code>) in length and at most the 100 longest contigs (<code class="docutils literal notranslate"><span class="pre">--max_unbinned_contigs</span></code>) are reported</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>All the files and contigs in these folders will be assessed by QUAST and BUSCO.</p>
+<p>All other files that were discarded by the tool, or from the low-quality unbinned contigs, can be found here.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/MetaBAT2/discarded/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.lowDepth.fa.gz</span></code>: Low depth contigs that are filtered by MetaBAT2</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.tooShort.fa.gz</span></code>: Too short contigs that are filtered by MetaBAT2</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/MetaBAT2/unbinned/discarded/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.unbinned.pooled.fa.gz</span></code>: Pooled unbinned contigs equal or above <code class="docutils literal notranslate"><span class="pre">--min_contig_size</span></code>, by default 1500 bp.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.unbinned.remaining.fa.gz</span></code>: Remaining unbinned contigs below <code class="docutils literal notranslate"><span class="pre">--min_contig_size</span></code>, by default 1500 bp, but not in any other file.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>All the files in this folder contain small and/or unbinned contigs that are not further processed.</p>
+<p>Files in these two folders contain all contigs of an assembly.</p>
+</section>
+<section id="maxbin2">
+<h3>MaxBin2<a class="headerlink" href="#maxbin2" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://sourceforge.net/projects/maxbin2/">MaxBin2</a> recovers genome bins (that is, contigs/scaffolds that all belongs to a same organism) from metagenome assemblies.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/MaxBin2/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[sample_id].summary</span></code>: Summary file describing bins' information.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-[binner]-[sample_id].*.fa.gz</span></code>: Genome bins retrieved from input assembly</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">unbinned/[assembler]-[binner]-[sample_id].noclass.[1-9]*.fa.gz</span></code>: Contigs that were not binned with other contigs but considered interesting. By default, these are at least 1 Mbp (<code class="docutils literal notranslate"><span class="pre">--min_length_unbinned_contigs</span></code>) in length and at most the 100 longest contigs (<code class="docutils literal notranslate"><span class="pre">--max_unbinned_contigs</span></code>) are reported.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>All the files and contigs in these folders will be assessed by QUAST and BUSCO.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/MaxBin2/discarded/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.tooshort.gz</span></code>: Too short contigs that are filtered by MaxBin2</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/MaxBin2/unbinned/discarded/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.noclass.pooled.fa.gz</span></code>: Pooled unbinned contigs equal or above <code class="docutils literal notranslate"><span class="pre">--min_contig_size</span></code>, by default 1500 bp.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.noclass.remaining.fa.gz</span></code>: Remaining unbinned contigs below <code class="docutils literal notranslate"><span class="pre">--min_contig_size</span></code>, by default 1500 bp, but not in any other file.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>All the files in this folder contain small and/or unbinned contigs that are not further processed.</p>
+<p>Files in these two folders contain all contigs of an assembly.</p>
+</section>
+<section id="concoct">
+<h3>CONCOCT<a class="headerlink" href="#concoct" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/BinPro/CONCOCT">CONCOCT</a> performs unsupervised binning of metagenomic contigs by using nucleotide composition, coverage data in multiple samples and linkage data from paired end reads.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/CONCOCT/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-[binner]-[sample_id].*.fa.gz</span></code>: Genome bins retrieved from input assembly</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id].csv</span></code>: Table indicating which contig goes with which cluster bin.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]*_gt1000.csv</span></code>: Various intermediate PCA statistics used for clustering.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]_*.tsv</span></code>: Coverage statistics of each sub-contig cut up by CONCOCT prior in an intermediate step prior to binning. Likely not useful in most cases.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id].log.txt</span></code>: CONCOCT execution log file.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]_*.args</span></code>: List of arguments used in CONCOCT execution.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>All the files and contigs in these folders will be assessed by QUAST and BUSCO, if the parameter <code class="docutils literal notranslate"><span class="pre">--postbinning_input</span></code> is not set to <code class="docutils literal notranslate"><span class="pre">refined_bins_only</span></code>.</p>
+<p>Note that CONCOCT does not output what it considers 'unbinned' contigs, therefore no 'discarded' contigs are produced here. You may still need to do your own manual curation of the resulting bins.</p>
+</section>
+<section id="comebin">
+<h3>COMEBin<a class="headerlink" href="#comebin" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/ziyewang/COMEBin">COMEBin</a> allows effective binning of metagenomic contigs using COntrastive Multi-viEw representation learning.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/COMEBin/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-[binner]-[sample_id]/comebin_res_bins/[assembler]-[binner]-[sample_id].*.fa.gz</span></code>: Genome bins retrieved from input assembly.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]/comebin.log</span></code>: COMEBin log file.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]/comebin_res.tsv</span></code>: TSV mapping the output clusters to contigs.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]/covembeddings.tsv</span></code>: TSV describing the embeddings of the contigs.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]/embeddings.tsv</span></code>: TSV describing the embeddings of the contigs.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>All the files and contigs in these folders will be assessed by QUAST and BUSCO, if the parameter <code class="docutils literal notranslate"><span class="pre">--postbinning_input</span></code> is not set to <code class="docutils literal notranslate"><span class="pre">refined_bins_only</span></code>.</p>
+<p>Note that COMEBin does not output what it considers 'unbinned' contigs, therefore no 'discarded' contigs are produced here. You may still need to do your own manual curation of the resulting bins.</p>
+</section>
+<section id="semibin2">
+<h3>SemiBin2<a class="headerlink" href="#semibin2" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/BigDataBiology/SemiBin">SemiBin2</a> is a deep siamese neural network with preset environments (single samples) or self-supervised (multiple samples).</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/SemiBin2/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-[binner]-[sample_id]_._*.fa.gz</span></code>: Genome bins retrieved from input assembly.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">log/[assembler]-[binner]-[sample_id].SemiBinRun.log</span></code>: Log file.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>All the files and contigs in these folders will be assessed by QUAST and binning QC tools, if the parameter <code class="docutils literal notranslate"><span class="pre">--postbinning_input</span></code> is not set to <code class="docutils literal notranslate"><span class="pre">refined_bins_only</span></code>.</p>
+<p>Note that SemiBin2 does not output what it considers 'unbinned' contigs, therefore no 'discarded' contigs are produced here. You may still need to do your own manual curation of the resulting bins.</p>
+</section>
+<section id="vamb">
+<h3>VAMB<a class="headerlink" href="#vamb" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/RasmussenLab/vamb">VAMB</a> is a variational autoencoder for metagenomic binning which feeds kmer composition and abundance into a variational autoencoder and clusters the embedding to form bins representing individual genomes.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/VAMB/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-[binner]-[sample_id].*.fna.gz</span></code>: Genome bins retrieved from input assembly.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]-vae*_clusters_metadata.tsv</span></code>: TSV describing the metadata of the output bin clusters.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]-vae*_clusters_split.tsv</span></code>: TSV defining the output bin clusters if binsplitting enabled.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]-vae*_clusters_unsplit.tsv</span></code>: TSV defining the output bin clusters without binsplitting.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-[binner]-[sample_id]-log.txt</span></code>: VAMB log file.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">trainedfiles/[assembler]-[binner]-[sample_id]-latent.npz</span></code>: Numpy array of the latent embedding of the contigs.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">trainedfiles/[assembler]-[binner]-[sample_id]-abundance.npz</span></code>: Numpy array of the abundance of the contigs.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">trainedfiles/[assembler]-[binner]-[sample_id]-composition.npz</span></code>: Numpy array of the kmer composition of the contigs.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>Note that VAMB does not output what it considers 'unbinned' contigs, therefore no 'discarded' contigs are produced here. You may still need to do your own manual curation of the resulting bins.</p>
+</section>
+<section id="das-tool">
+<h3>DAS Tool<a class="headerlink" href="#das-tool" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/cmks/DAS_Tool">DAS Tool</a> is an automated binning refinement method that integrates the results of a flexible number of binning algorithms to calculate an optimized, non-redundant set of bins from a single assembly. nf-core/mag uses this tool to attempt to further improve bins based on combining the MetaBAT2 and MaxBin2 binning output, assuming sufficient quality is met for those bins.</p>
+<p>DAS Tool will remove contigs from bins that do not pass additional filtering criteria, and will discard redundant lower-quality output from binners that represent the same estimated 'organism', until the single highest quality bin is represented.</p>
+<blockquote>
+<div><p>⚠️ If DAS Tool does not find any bins passing your selected threshold it will exit with an error. Therefore you will not find files in the <code class="docutils literal notranslate"><span class="pre">Binning/DASTool/</span></code> results directory for that particular sample.</p>
+</div></blockquote>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/DASTool/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]_allBins.eval</span></code>: Tab-delimited description with quality and completeness metrics for the input bin sets. Quality and completeness are estimated by DAS TOOL using a scoring function based on the frequency of bacterial or archaeal reference single-copy genes (SCG). Please see note at the bottom of this section on file names.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]_DASTool_summary.tsv</span></code>: Tab-delimited description with quality and completeness metrics for the refined output bin sets.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]_DASTool_contig2bin.tsv</span></code>: File describing which contig is associated to which bin from the input binners.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id]_DASTool.log</span></code>: Log file from the DAS Tool run describing the command executed and additional runtime information.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[sample_id].seqlength</span></code>: Tab-delimited file describing the length of each contig.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-[binner]Refined-[sample_id].*.fa</span></code>: Refined bins in fasta format.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">unbinned/[assembler]-DASToolUnbinned-[sample_id].*.fa</span></code>: Unbinned contigs from bin refinement in fasta format.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>By default, both the raw bins (and unbinned contigs) from the actual binning methods and the binning refinement with DAS Tool will be used for downstream bin quality control, annotation and taxonomic classification. The parameter <code class="docutils literal notranslate"><span class="pre">--postbinning_input</span></code> can be used to change this behaviour.</p>
+<p>⚠️ Due to ability to perform downstream QC of both raw and refined bins in parallel (via <code class="docutils literal notranslate"><span class="pre">--postbinning_input)</span></code>, bin names in DAS Tools's <code class="docutils literal notranslate"><span class="pre">*_allBins.eval</span></code> file will include <code class="docutils literal notranslate"><span class="pre">Refined</span></code>. However for this particular file, they <em>actually</em> refer to the 'raw' input bins. The pipeline renames the input files prior to running DASTool to ensure they can be disambiguated from the original bin files in the downstream QC steps.</p>
+</section>
+<section id="binette">
+<h3>Binette<a class="headerlink" href="#binette" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/genotoul-bioinfo/Binette">Binette</a> is a fast and accurate bioinformatics tool developed for binning refinement in metagenomics. It is designed to construct high-quality Metagenome-Assembled Genomes (MAGs) by combining and refining the outputs from multiple binning tools. By creating new &quot;hybrid bins&quot; through set operations—such as intersections, differences, and unions—and evaluating their quality using CheckM2, Binette ensures the selection of the most complete and least contaminated genomic bins. It offers significant improvements over existing solutions like metaWRAP by providing enhanced processing speed and supporting an unlimited number of input bin sets, making it a powerful choice for researchers working with complex microbial genomic data.</p>
+<p>Binette will remove contigs from bins that do not pass additional filtering criteria, and will discard redundant lower-quality output from binners that represent the same estimated 'organism', until the single highest quality bin is represented.</p>
+<blockquote>
+<div><p>⚠️ Binette requires CheckM2 database to proceed. Please provide the <code class="docutils literal notranslate"><span class="pre">--checkm2_db</span></code> parameter with the path to a pre-prepared CheckM2 database.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ If Binette does not find any bins passing your selected threshold it will exit with an error. Therefore you will not find files in the <code class="docutils literal notranslate"><span class="pre">Binning/Binette/</span></code> results directory for that particular sample.</p>
+</div></blockquote>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/Binette/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-Binette-[sample_id]_final_bins_quality_reports.tsv</span></code>: Tab-delimited description with quality and completeness metrics for the refined output bin sets.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">stats/[assembler]-Binette-[sample_id]_input_bins_quality_reports/input_bins_*.[assembler]-[binner]-[sample_id].tsv</span></code>: Quality reports for the input bin sets.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">logs/[assembler]-Binette-[sample_id].log</span></code>: Log file from Binette run describing the command executed and additional runtime information.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins/[assembler]-Binette-[sample_id]-Refined-bin_*.fa</span></code>: Refined bins in fasta format.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">unbinned/[assembler]-Binette-[sample_id]-Unbinned-bin_*.fa</span></code>: Unbinned contigs from bin refinement in fasta format.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>By default, both the raw bins (and unbinned contigs) from the actual binning methods and the binning refinement with Binette will be used for downstream bin quality control, annotation and taxonomic classification. The parameter <code class="docutils literal notranslate"><span class="pre">--postbinning_input</span></code> can be used to change this behaviour.</p>
+</section>
+</section>
+<section id="bins-quality-evaluation">
+<h2>Bins quality evaluation<a class="headerlink" href="#bins-quality-evaluation" title="Link to this heading">¶</a></h2>
+<section id="qc-for-metagenome-assembled-genomes-with-quast">
+<h3>QC for metagenome assembled genomes with QUAST<a class="headerlink" href="#qc-for-metagenome-assembled-genomes-with-quast" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="http://cab.spbu.ru/software/quast/">QUAST</a> is a tool that evaluates genome assemblies by computing various metrics. The QUAST output is in the bin directories shown below. This QUAST output is not shown in the MultiQC report.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/QUAST/[bin_filename]/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">report.*</span></code>: QUAST report in various formats, such as html, pdf, tex, tsv, or txt</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">transposed_report.*</span></code>: QUAST report that has been transposed into wide format (tex, tsv, or txt)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">quast.log</span></code>: QUAST log file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">metaquast.log</span></code>: MetaQUAST log file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">icarus.html</span></code>: Icarus main menu with links to interactive viewers</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">icarus_viewers/contig_size_viewer.html</span></code>: Diagram of contigs that are ordered from longest to shortest</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/cumulative_plot.pdf</span></code>: Shows the growth of contig lengths (contigs are ordered from largest to shortest)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/GC_content_plot.pdf</span></code>: Shows the distribution of GC content in the contigs</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/[assembler]-[bin]_GC_content_plot.pdf</span></code>: Histogram of the GC percentage for the contigs</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">basic_stats/Nx_plot.pdf</span></code>: Plot of Nx values as x varies from 0 to 100%.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">predicted_genes/[assembler]-[bin].rna.gff</span></code>: Contig positions for rRNA genes in gff version 3 format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">predicted_genes/barrnap.log</span></code>: Barrnap log file (ribosomal RNA predictor)</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[refinement]-[sample_id]-quast_summary.tsv</span></code>: QUAST output summarized per sample/condition.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">quast_summary.tsv</span></code>: QUAST output for all bins summarized</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="busco">
+<h3>BUSCO<a class="headerlink" href="#busco" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://busco.ezlab.org/">BUSCO</a> is a tool used to assess the completeness of a genome assembly. It is run on all the genome bins and high quality contigs obtained by the applied binning and/or binning refinement methods (depending on the <code class="docutils literal notranslate"><span class="pre">--postbinning_input</span></code> parameter).
+By default, BUSCO is run in automated lineage selection mode in which it first tries to select the domain and then a more specific lineage based on phylogenetic placement.
+If available, result files for the selected lineage are placed in the output directory.
+If a lineage dataset is specified already with <code class="docutils literal notranslate"><span class="pre">--busco_db</span></code>, only results for this specific lineage will be generated.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/BUSCO/[assembler]-[binner]-[sample_id]/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id]-[lineage]-busco.batch_summary.txt</span></code>: Summary table of the BUSCO results for the bins in the sample.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">short_summary.generic.[lineage].[assembler]-[bin].{txt,json}</span></code>: A detailed BUSCO summary for each bin, available in both plain text and JSON format.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[sample_id]-[lineage]-busco.log</span></code>: Log file of the BUSCO run.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[bin]/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">prodigal_output/predicted_genes/predicted.{fna,faa}</span></code>: Predicted genes by Prodigal in FASTA format.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">logs/</span></code>: Logs for each of the tools used by BUSCO.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">run-[specific_lineage]:</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">full_table.tsv</span></code>: A detailed table indicating the complete BUSCO gene list for the lineage, detailing their presence in the assembly.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">missing_busco_list.tsv</span></code>: List of BUSCOs that were not found in the assembly.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">busco_sequences/*/*.{fna,faa}</span></code>: Nucleotide and aminoacid sequences of all identified BUSCOs (single copy, multi copy and fragmented).</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>If the parameter <code class="docutils literal notranslate"><span class="pre">busco_clean</span></code> is set to <code class="docutils literal notranslate"><span class="pre">false</span></code>, the BUSCO directory will preserve additional files, including outputs from the tools BUSCO utilizes and the <code class="docutils literal notranslate"><span class="pre">auto_lineage/</span></code> directory. This directory contains results for each lineage tested during automated lineage selection.</p>
+<p>If the parameter <code class="docutils literal notranslate"><span class="pre">--save_busco_db</span></code> is set, additionally the used BUSCO lineage datasets are stored in the output directory.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Databases/BUSCO/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">busco_downloads/lineages/</span></code>: All files and lineage datasets downloaded by BUSCO when run in automated lineage selection mode. (Can currently not be used to reproduce analysis).</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>Besides the reference files or output files created by BUSCO, the following summary files will be generated:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">busco_summary.tsv</span></code>: A summary table of the BUSCO results, with % of marker genes found. If run in automated lineage selection mode, both the results for the selected domain and for the selected more specific lineage will be given, if available.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="checkm">
+<h3>CheckM<a class="headerlink" href="#checkm" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://ecogenomics.github.io/CheckM/">CheckM</a> provides a set of tools for assessing the quality of genomes recovered from isolates, single cells, or metagenomes. It provides robust estimates of genome completeness and contamination by using collocated sets of genes that are ubiquitous and single-copy within a phylogenetic lineage</p>
+<p>By default, microcosm runs CheckM with the <code class="docutils literal notranslate"><span class="pre">check_lineage</span></code> workflow that places genome bins on a reference tree to define lineage-marker sets, to check for completeness and contamination based on lineage-specific marker genes. and then subsequently runs <code class="docutils literal notranslate"><span class="pre">qa</span></code> to generate the summary files.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/CheckM/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[rawbins/Binette/DASTool]-[sample_id]_qa.txt</span></code>: Detailed statistics about bins informing completeness and contamination scores (output of <code class="docutils literal notranslate"><span class="pre">checkm</span> <span class="pre">qa</span></code>). This should normally be your main file to use to evaluate your results.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[rawbins/Binette/DASTool]-[sample_id]_lineagewf.tsv</span></code>: Overall summary file for completeness and contamination (output of <code class="docutils literal notranslate"><span class="pre">checkm</span> <span class="pre">lineage_wf</span></code>).</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[rawbins/Binette/DASTool]-[sample_id]_lineagewf/</span></code>: Intermediate files for CheckM results, including CheckM generated annotations, log, lineage markers etc.</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkm_summary.tsv</span></code>: A summary table of the CheckM results for all bins (output of <code class="docutils literal notranslate"><span class="pre">checkm</span> <span class="pre">qa</span></code>).</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>If the parameter <code class="docutils literal notranslate"><span class="pre">--save_checkm_data</span></code> is set, additionally the used the CheckM reference datasets are stored in the output directory.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Databases/CheckM/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkm_downloads/</span></code>: All CheckM reference files downloaded from the CheckM FTP server, when not supplied by the user.</p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkm_data_2015_01_16/*</span></code>: a range of directories and files required for CheckM to run.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>Besides the reference files or output files created by CheckM, the following summary files will be generated:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkm_summary.tsv</span></code>: A summary table of the CheckM results.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="checkm2">
+<h3>CheckM2<a class="headerlink" href="#checkm2" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/chklovski/CheckM2">CheckM2</a> is a tool for assessing the quality of metagenome-derived genomes. It uses a machine learning approach to predict the completeness and contamination of a genome regardless of its taxonomic lineage.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/CheckM2/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[rawbins/Binette/DASTool]-[sample_id]_checkm2_report.tsv</span></code>: Detailed statistics about bins informing completeness and contamination scores. This should normally be your main file to use to evaluate your results.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[rawbins/Binette/DASTool]-[sample_id]/</span></code>: Intermediate files for CheckM2 results, including CheckM2 generated annotations, log, and DIAMOND alignment results.</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkm2_summary.tsv</span></code>: A summary table of the CheckM2 results for all bins.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>If the parameter <code class="docutils literal notranslate"><span class="pre">--save_checkm2_data</span></code> is set, the CheckM2 reference datasets will be stored in the output directory.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Databases/CheckM2/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkm2_downloads/CheckM2_database/*.dmnd</span></code>: Diamond database used by CheckM2.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>Besides the reference files or output files created by CheckM, the following summary files will be generated:</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkm2_summary.tsv</span></code>: A summary table of the CheckM2 results.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="gunc">
+<h3>GUNC<a class="headerlink" href="#gunc" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://grp-bork.embl-community.io/gunc/index.html">Genome UNClutterer (GUNC)</a> is a tool for detection of chimerism and contamination in prokaryotic genomes resulting from mis-binning of genomic contigs from unrelated lineages. It does so by applying an entropy based score on taxonomic assignment and contig location of all genes in a genome. It is generally considered as a additional complement to CheckM results.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/gunc_summary.tsv</span></code></p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/gunc_checkm_summary.tsv</span></code></p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[gunc-database].dmnd</span></code></p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">GUNC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">raw/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[refinement]-[sample_id]/[fasta</span> <span class="pre">input</span> <span class="pre">file</span> <span class="pre">name]/GUNC_checkM.merged.tsv</span></code>: Per sample GUNC <a class="reference external" href="https://grp-bork.embl-community.io/gunc/output.html">output</a> containing with taxonomic and completeness QC statistics.</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">checkmmerged/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[assembler]-[binner]-[refinement]-[sample_id]/[checkm</span> <span class="pre">input</span> <span class="pre">file</span> <span class="pre">name]/GUNC.progenomes_2.1.maxCSS_level.tsv</span></code>: Per sample GUNC output merged with output from <a class="reference internal" href="#checkm">CheckM</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>If <code class="docutils literal notranslate"><span class="pre">--gunc_save_db</span></code> is specified, the output directory will also contain the requested database (progenomes, or GTDB) in DIAMOND format.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Databases/GUNC/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">*.dmnd</span></code>: Diamond database used by GUNC.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="assembly-statistics-assembly-stats-py">
+<h3>Assembly statistics (<code class="docutils literal notranslate"><span class="pre">assembly_stats.py</span></code>)<a class="headerlink" href="#assembly-statistics-assembly-stats-py" title="Link to this heading">¶</a></h3>
+<p>The assembly statistics script computes per-assembly metrics used by the pipeline for QC and summary reporting. It is a small Python utility that parses one or more assembly FASTA files and calculates common assembly-level statistics such as contig counts, total assembly length, N50/L50, longest contig, GC content, and counts of contigs above configurable length thresholds. The script is intended to be invoked by Nextflow processes (e.g., <code class="docutils literal notranslate"><span class="pre">modules/local/finalize/assemblybased/assembly_stats.nf</span></code>) and the bin QC subworkflow (<code class="docutils literal notranslate"><span class="pre">subworkflows/local/bin_qc.nf</span></code>).</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">What it does</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text">Reads an assembly FASTA and computes per-assembly metrics:</p>
+<ul>
+<li><p class="sd-card-text">number of contigs (optionally applying a minimum contig length filter)</p></li>
+<li><p class="sd-card-text">total assembly length (sum of contig lengths)</p></li>
+<li><p class="sd-card-text">N50 and L50</p></li>
+<li><p class="sd-card-text">longest contig length</p></li>
+<li><p class="sd-card-text">mean and median contig lengths</p></li>
+<li><p class="sd-card-text">GC percentage (overall)</p></li>
+<li><p class="sd-card-text">counts of contigs above common thresholds (e.g., &gt;1 kb, &gt;5 kb, &gt;10 kb)</p></li>
+</ul>
+</li>
+<li><p class="sd-card-text">Produces a per-assembly TSV (one row per input FASTA / sample) for programmatic consumption.</p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Binning/QC/AssemblyStats/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]-[sample_id].assembly_stats.tsv</span></code></p></li>
+</ul>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Columns explained</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text">sample_id: pipeline/sample identifier</p></li>
+<li><p class="sd-card-text">input_fasta: input FASTA filename</p></li>
+<li><p class="sd-card-text">assembler: assembler name or pipeline-provided tag (optional)</p></li>
+<li><p class="sd-card-text">n_contigs: number of contigs counted (respecting min_contig_length if set)</p></li>
+<li><p class="sd-card-text">total_length: sum of counted contig lengths (bp)</p></li>
+<li><p class="sd-card-text">n50: N50 length (bp)</p></li>
+<li><p class="sd-card-text">l50: L50 count (number of contigs reaching N50)</p></li>
+<li><p class="sd-card-text">longest_contig: length of the longest contig (bp)</p></li>
+<li><p class="sd-card-text">mean_contig_length: arithmetic mean of contig lengths (bp)</p></li>
+<li><p class="sd-card-text">median_contig_length: median contig length (bp)</p></li>
+<li><p class="sd-card-text">gc_percent: percentage of G or C bases across all counted contigs</p></li>
+<li><p class="sd-card-text">contigs_gt_1000bp / contigs_gt_5000bp / contigs_gt_10000bp: counts above thresholds (thresholds configurable)</p></li>
+<li><p class="sd-card-text">min_contig_length_used: minimum contig length used for counts (e.g., 0 or 1000)</p></li>
+<li><p class="sd-card-text">runtime_seconds: elapsed time for the script run</p></li>
+</ul>
+</div>
+</details><p>Notes and recommendations</p>
+<ul class="simple">
+<li><p>By default the script can count all contigs (min contig length = 0). For comparability across datasets, consider setting a minimum contig length (e.g., 1000).</p></li>
+<li><p>N50/L50 are computed in the conventional manner: sort contigs by descending length, compute cumulative sum, find the length where cumulative sum &gt;= 50% of the total; L50 is the number of contigs contributing to that cumulative sum.</p></li>
+</ul>
+</section>
+</section>
+<section id="taxonomic-classification-of-binned-genomes">
+<h2>Taxonomic classification of binned genomes<a class="headerlink" href="#taxonomic-classification-of-binned-genomes" title="Link to this heading">¶</a></h2>
+<section id="sourmash">
+<h3>sourmash<a class="headerlink" href="#sourmash" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://sourmash.readthedocs.io/en/latest/">sourmash</a> is a tool for computing and comparing MinHash sketches of DNA sequences. It is used in this pipeline for taxonomic classification of trimmed reads. This significantly expands the range of operations that can be done quickly and in low memory.</p>
+<p>Currently, the pipeline does not automatically download the sourmash database. Users must obtain pre-built databases from <a class="reference external" href="https://farm.cse.ucdavis.edu/~ctbrown/sourmash-db/">ctbrown’s farm</a> or build their own following the instructions <a class="reference internal" href="../../getting-started/databases/#sourmash"><span class="std std-ref">here</span></a>, and provide the <code class="docutils literal notranslate"><span class="pre">--sourmash_database</span></code> and <code class="docutils literal notranslate"><span class="pre">--sourmash_ksize</span></code> parameters corresponding to the database path and its k-mer length.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Taxonomy/sourmash</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bins_csv/sourmash_csv_collected_mag.csv</span></code>: Path to the bins of <code class="docutils literal notranslate"><span class="pre">[sample_id]</span></code>, located in the Nextflow <code class="docutils literal notranslate"><span class="pre">/work/</span></code> cache folder. The CSV header is <code class="docutils literal notranslate"><span class="pre">name,genome_filename,protein_filename</span></code>.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">sketches/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]-[sample_id].batch.manysketch.zip</span></code>: Result of running <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">scripts</span> <span class="pre">manysketch</span></code>.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">sketches/single_sketches/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]/manysketch_output/zip_files/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]-[sample_id]_[ksize].sig.zip</span></code>: Result for <code class="docutils literal notranslate"><span class="pre">[sample_id]</span></code> and <code class="docutils literal notranslate"><span class="pre">[ksize]</span></code> extracted from <code class="docutils literal notranslate"><span class="pre">*.batch.manysketch.zip</span></code>. This profile can be adjusted via the <code class="docutils literal notranslate"><span class="pre">--sourmash_profile</span></code> parameter.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">fastmultigather/fastmultigather/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]-[sample_id].batch.manysketch_sourmash_gather.csv</span></code>: Result of running <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">fastmultigather</span></code> on <code class="docutils literal notranslate"><span class="pre">batch.batch.manysketch.zip</span></code> with the database provided in <code class="docutils literal notranslate"><span class="pre">--sourmash_database</span></code>. This file contains all raw information returned by <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">fastmultigather</span></code> for all <code class="docutils literal notranslate"><span class="pre">[sample_id]</span></code>.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">taxannotate/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]-[sample_id].batch.manysketch_sourmash_gather.with-lineages.csv.gz</span></code>: Result of running <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">taxannotate</span></code> on <code class="docutils literal notranslate"><span class="pre">*.batch.manysketch_sourmash_gather.csv</span></code> with the database provided in <code class="docutils literal notranslate"><span class="pre">--sourmash_taxonomy_csv</span></code>. This file contains all raw information returned by <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">taxannotate</span></code> for all <code class="docutils literal notranslate"><span class="pre">[sample_id]</span></code>.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">taxgenome/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]-[sample_id].classifications.csv</span></code>: Result of running <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">taxgenome</span></code> on <code class="docutils literal notranslate"><span class="pre">*.batch.manysketch_sourmash_gather.with-lineages.csv.gz</span></code>. This file contains aggregated taxonomic abundance information for all <code class="docutils literal notranslate"><span class="pre">[sample_id]</span></code>.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">summary/[sample_id]_combined_{sourmash_gather,sourmash_gather.with-lineages,genome_classification}.csv</span></code>: Summary files for each step: <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">fastmultigather</span></code>, <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">taxannotate</span></code>, and <code class="docutils literal notranslate"><span class="pre">sourmash</span> <span class="pre">taxgenome</span></code> for each <code class="docutils literal notranslate"><span class="pre">[sample_id]</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="gtdb-tk">
+<h3>GTDB-Tk<a class="headerlink" href="#gtdb-tk" title="Link to this heading">¶</a></h3>
+<p>With <code class="docutils literal notranslate"><span class="pre">--bin_classifier</span> <span class="pre">gtdbtk</span> <span class="pre">--gtdbtk_db</span> <span class="pre">&lt;release226&gt;</span></code>, bins (and <code class="docutils literal notranslate"><span class="pre">--genome_input</span></code> genomes without a lineage) are classified with <a class="reference external" href="https://github.com/Ecogenomics/GTDBTk">GTDB-Tk</a> <code class="docutils literal notranslate"><span class="pre">classify_wf</span></code> instead of sourmash, one call per sample. The summaries are converted to the same table as sourmash, so the bacterial routing works the same way.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Taxonomy/GTDB-Tk/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[bin_set]/[bin_set].{bac120,ar53}.summary.tsv</span></code>: GTDB-Tk classification summaries (lineage, closest reference, ANI, <code class="docutils literal notranslate"><span class="pre">warnings</span></code>).</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[bin_set]/[bin_set].log</span></code>, <code class="docutils literal notranslate"><span class="pre">[bin_set].warnings.log</span></code>, <code class="docutils literal notranslate"><span class="pre">gtdbtk.json</span></code>, <code class="docutils literal notranslate"><span class="pre">classify/</span></code>: GTDB-Tk logs and intermediate files.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">summary/[bin_set].gtdbtk_classification.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">summary/[sample_id]_combined_genome_classification.csv</span></code>: classifications in the sourmash <code class="docutils literal notranslate"><span class="pre">genome_classification</span></code> format, used for routing.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+</section>
+<section id="genome-annotation-of-binned-genomes">
+<h2>Genome annotation of binned genomes<a class="headerlink" href="#genome-annotation-of-binned-genomes" title="Link to this heading">¶</a></h2>
+<section id="prokka">
+<h3>Prokka<a class="headerlink" href="#prokka" title="Link to this heading">¶</a></h3>
+<p>Whole genome annotation is the process of identifying features of interest in a set of genomic DNA sequences, and labelling them with useful information. <a class="reference external" href="https://github.com/tseemann/prokka">Prokka</a> is a software tool to annotate bacterial, archaeal and viral genomes quickly and produce standards-compliant output files.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Annotation/Prokka/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]/[bin_filename].prokka</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.gff</span></code>: annotation in GFF3 format, containing both sequences and annotations</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.gbk</span></code>: annotation in GenBank format, containing both sequences and annotations</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.fna</span></code>: nucleotide FASTA file of the input contig sequences</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.faa</span></code>: protein FASTA file of the translated CDS sequences</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.ffn</span></code>: nucleotide FASTA file of all the prediction transcripts (CDS, rRNA, tRNA, tmRNA, misc_RNA)</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.sqn</span></code>: an ASN1 format &quot;Sequin&quot; file for submission to Genbank</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.fsa</span></code>: nucleotide FASTA file of the input contig sequences, used by &quot;tbl2asn&quot; to create the .sqn file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.tbl</span></code>: feature Table file, used by &quot;tbl2asn&quot; to create the .sqn file</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.err</span></code>: unacceptable annotations - the NCBI discrepancy report.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.log</span></code>: contains all the output that Prokka produced during its run</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.txt</span></code>: statistics relating to the annotated features found</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.tsv</span></code>: tab-separated file of all features (locus_tag, ftype, len_bp, gene, EC_number, COG, product)</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+<section id="bakta">
+<h3>Bakta<a class="headerlink" href="#bakta" title="Link to this heading">¶</a></h3>
+<p><a class="reference external" href="https://github.com/oschwengers/bakta">Bakta</a> is a tool for the rapid &amp; standardised annotation of bacterial genomes and plasmids from both isolates and MAGs. It provides dbxref-rich, sORF-including and taxon-independent annotations in machine-readable JSON &amp; bioinformatics standard file formats for automated downstream analysis. The output is used by some of the functional screening tools.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Annotation/Prokka/[assembler]-[binner/binrefine]-[rawbins/Binette/DASTool]/[bin_filename].bakta/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.gff3</span></code>: annotations &amp; sequences in GFF3 format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.gbff</span></code>: annotations &amp; sequences in (multi) GenBank format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.ffn</span></code>: feature nucleotide sequences as FASTA</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.fna</span></code>: replicon/contig DNA sequences as FASTA</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.embl</span></code>: annotations &amp; sequences in (multi) EMBL format</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.faa</span></code>: CDS/sORF amino acid sequences as FASTA</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;_hypothetical.faa</span></code>: further information on hypothetical protein CDS as simple human readble tab separated values</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;_hypothetical.tsv</span></code>: hypothetical protein CDS amino acid sequences as FASTA</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.tsv</span></code>: annotations as simple human readble TSV</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">&lt;samplename&gt;.txt</span></code>: summary in TXT format</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details><p>If <code class="docutils literal notranslate"><span class="pre">--save_bakta_db</span></code> is specified, the output directory will also contain the requested database.</p>
+<details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">Output files</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<ul class="simple">
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Databases/Bakta/</span></code></p>
+<ul>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">bakta_database/</span></code>: Bakta database files used for annotation.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</details></section>
+</section>
+<section id="bin-refinement-notes">
+<h2>Bin refinement notes<a class="headerlink" href="#bin-refinement-notes" title="Link to this heading">¶</a></h2>
+<section id="dastool">
+<h3>DASTool<a class="headerlink" href="#dastool" title="Link to this heading">¶</a></h3>
+<p>DAS Tool may not always be able to refine bins due to insufficient recovery of enough single-copy genes. In these cases you will get a NOTE such as</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="o">[</span><span class="m">16</span>/d330a6<span class="o">]</span><span class="w"> </span>NOTE:<span class="w"> </span>Process<span class="w"> </span>MICROCOSM:BINNING_REFINEMENT:DASTOOL_DASTOOL<span class="w"> </span><span class="o">(</span>test_minigut_sample2<span class="o">)</span>
+</span></pre></div>
+</div>
+<p>In this case, bin refinement has not necessarily failed but was unable to complete the refinement. You will therefore not expect to find any output files in the <code class="docutils literal notranslate"><span class="pre">Binning/DASTool/</span></code> results directory for that particular sample.</p>
+<p>If you are regularly getting such errors, you can try reducing the <code class="docutils literal notranslate"><span class="pre">--refine_bins_dastool_threshold</span></code> value, which will modify the scoring threshold defined in the <a class="reference external" href="https://www.nature.com/articles/s41564-018-0171-1">DAS Tool publication</a>.</p>
+</section>
+<section id="id1">
+<h3>Binette<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>Binette requires CheckM2 database to proceed. When using this tool, you need to provide the additional parameter <code class="docutils literal notranslate"><span class="pre">--checkm2_db</span></code>.</p>
+<p>Binette may not always be able to refine bins due to insufficient recovery of enough single-copy genes. In these cases you will get a NOTE such as</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="o">[</span><span class="m">16</span>/d330a6<span class="o">]</span><span class="w"> </span>NOTE:<span class="w"> </span>Process<span class="w"> </span>MICROCOSM:BINNING_REFINEMENT:BINETTE_BINETTE<span class="w"> </span><span class="o">(</span>test_minigut_sample2<span class="o">)</span>
+</span></pre></div>
+</div>
+<p>In this case, bin refinement has not necessarily failed but was unable to complete the refinement. You will therefore not expect to find any output files in the <code class="docutils literal notranslate"><span class="pre">Binning/Binette/</span></code> results directory for that particular sample.</p>
+<p>If you are regularly getting such errors, you can try reducing the <code class="docutils literal notranslate"><span class="pre">--refine_bins_binette_min_completeness</span></code> or<code class="docutils literal notranslate"><span class="pre">--refine_bins_binette_contamination_weight</span></code>value.</p>
+<p>The output folders are described in <a class="reference internal" href="../../reference/outputs/"><span class="std std-doc">Outputs</span></a>.</p>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="../assembly/">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Assembly and contig analysis</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="../bacterial/">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Bacterial genome analysis</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+    <div class="sy-foot-inner sy-container mx-auto">
+      <div class="sy-foot-reserved md:flex justify-between items-center">
+        <div class="sy-foot-copyright">
+  <p>
+    By Minh-Quan Ton-Ngoc, Si-Nguyen Mai
+  </p><p>© Copyright 2026, Minh-Quan Ton-Ngoc, Si-Nguyen Mai.</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+        <div class="sy-foot-socials">
+<a href="https://github.com/tnmquann/microcosm" aria-label="GitHub">
+  <iconify-icon icon="simple-icons:github"></iconify-icon>
+</a></div>
+      </div>
+    </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=b21b538c"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=a5fa425f"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
+      <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+</html>
