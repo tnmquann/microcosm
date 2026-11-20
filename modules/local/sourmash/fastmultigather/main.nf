@@ -63,7 +63,7 @@ process SOURMASH_FASTMULTIGATHER {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sourmash: \$(sourmash --version 2>&1 | sed 's/sourmash //g; s/ version//g' | head -n 1)
-        sed: \$(sed --version 2>&1 | head -n 1)
+        sed: \$(sed --version 2>&1 | head -n 1 | sed 's/^.* //')
     END_VERSIONS
     """
 
