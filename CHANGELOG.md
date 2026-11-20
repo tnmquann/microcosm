@@ -105,6 +105,8 @@ First release under the name **microcosm** (formerly **metaflow**; the GitHub re
   BAM sets were published. Reads are now mapped once with `--binprepare_mappertool` (`bowtie2` default, or `bwamem2`);
   contig coverage and binning share the sorted BAM, published once in `Binning/mapping/sorted_bam/`
   (`ContigsAnalysis/mapped_reads/` is gone).
+- MultiQC put Prokka results of Binette bins (no `.fa` in the name) in "Prokka: contigs". Contig Prokka files are
+  now named `<assembler>-<sample>.contigs.prokka.*`, and every other Prokka file is reported under "Prokka: bins".
 - Clean tool versions in `microcosm_software_versions.yml`: Kleborate (no `tput` warning), `sed` in sourmash fastmultigather, `cat` in read merging.
 - `ASSEMBLY_STATS` null handling; `BIN_CLASSIFICATION` version export; `DOMAIN_CLASSIFICATION` for MAGs given with
   `--postbinning_input`.

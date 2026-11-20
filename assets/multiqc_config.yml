@@ -27,7 +27,8 @@ data_format: "tsv"
 extra_fn_clean_exts:
   - ".sylphmpa"
   - ".bowtie2"
-  # Prokka: <bin>.fa.prokka.txt (bins), <assembler>-<sample>.prokka.txt (contigs); BUSCO: short_summary.specific.<lineage>_odbNN.<bin>.txt
+  # Prokka: <assembler>-<sample>.contigs.prokka.txt (contigs), <bin>[.fa].prokka.txt (bins); BUSCO: short_summary.specific.<lineage>_odbNN.<bin>.txt
+  - ".contigs.prokka"
   - ".fa.prokka"
   - ".prokka"
   - type: regex
@@ -85,18 +86,14 @@ module_order:
       name: "Prokka: contigs"
       anchor: "prokka_contigs"
       info: "Prokka annotation of the assembly contigs (--annotation_tool prokka)."
-      path_filters_exclude:
-        - "*.fa.prokka.txt"
-        - "*.fasta.prokka.txt"
-        - "*.fna.prokka.txt"
+      path_filters:
+        - "*.contigs.prokka.txt"
   - prokka:
       name: "Prokka: bins"
       anchor: "prokka_bins"
       info: "Prokka annotation of the bins (--bin_annotation_tool prokka)."
-      path_filters:
-        - "*.fa.prokka.txt"
-        - "*.fasta.prokka.txt"
-        - "*.fna.prokka.txt"
+      path_filters_exclude:
+        - "*.contigs.prokka.txt"
   - bakta
   - gtdbtk
   - sourmash
