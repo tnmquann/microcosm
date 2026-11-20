@@ -184,9 +184,12 @@
         onclick: function () { if (!active) { onPick(o.value); commit(true); } }
       }, o.label));
     });
+    var blocked = options.filter(function (o) { return o.disabled && o.why; });
     return h('div', { class: 'mcb-field' + (opts.wide ? ' is-wide' : '') },
       h('span', { class: 'mcb-label' }, label, opts.param ? h('span', { class: 'mcb-flag' }, '--' + opts.param) : null),
-      group, opts.help ? h('p', { class: 'mcb-help' }, opts.help) : null);
+      group,
+      blocked.map(function (o) { return h('p', { class: 'mcb-help mcb-why' }, o.label + ' is not available: ' + o.why + '.'); }),
+      opts.help ? h('p', { class: 'mcb-help' }, opts.help) : null);
   }
   function paramSeg(name, label, options, help) {
     return segmented(label, options, String(get(name)), function (v) { setP(name, v); }, { param: name, help: help });
@@ -294,8 +297,9 @@
         if (pp) {
           var items = [];
           if (useMicrocosm()) items.push(['YACHT on, with one sourmash database', yachtRuns()]);
-          if (pp === 'rgi_bwt' || pp === 'all') items.push(['AMR genes in reads (RGI bwt)' + (pp === 'all' ? ', for the RGI tables' : ''), pp === 'all' && !on('enable_rgi_bwt') ? false : on('enable_rgi_bwt')]);
-          if (pp === 'taxburst' || pp === 'rgi_bwt') items.push(['sourmash + YACHT among the profilers', useMicrocosm()]);
+          if (pp === 'rgi_bwt') items.push(['AMR genes in reads (RGI bwt)', on('enable_rgi_bwt')]);
+          if (pp === 'all') items.push(['AMR genes in reads (RGI bwt), only for the AMR results', on('enable_rgi_bwt') || null]);
+          if (pp === 'taxburst') items.push(['sourmash + YACHT among the profilers', useMicrocosm()]);
           if ((pp === 'phyloseq' || pp === 'all') && useSylph()) items.push(['sylph-tax on, for the sylph lineages', on('enable_sylphtax')]);
           need('Post-processing: ' + pp, items);
         }
@@ -428,11 +432,11 @@
       render: renderReadsAmr
     },
     {
-      id: 'postprocess', title: 'Tables for analysis', lead: 'Merge the samples into phyloseq and taxburst tables.',
+      id: 'postprocess', title: 'Tables for analysis', lead: 'Tables and charts that bring all samples of the run together.',
       when: reads,
       summary: function () { return get('readbased_postprocess') || 'none'; },
       params: [always('readbased_postprocess'),
-        cond('readbased_postprocess_options', function () { return !!get('readbased_postprocess'); })],
+        cond('readbased_postprocess_options', function () { return !!get('readbased_postprocess') && useMicrocosm(); })],
       render: renderPostprocess
     },
     {
@@ -792,30 +796,63 @@
     return out;
   }
 
-  function renderPostprocess() {
-    var mic = useMicrocosm(), rgi = on('enable_rgi_bwt'), sylphOnly = useSylph() && !mic;
-    var needTax = useSylph() && !on('enable_sylphtax');
-    var micBlocked = mic && !yachtRuns();
-    function why(mode) {
-      if (micBlocked) return 'Needs YACHT (one sourmash database, YACHT on)';
-      if (mode === 'rgi_bwt' && !rgi) return 'Turn on AMR genes in reads first';
-      if ((mode === 'taxburst' || mode === 'rgi_bwt') && sylphOnly) return 'Uses the sourmash + YACHT result';
-      if ((mode === 'phyloseq' || mode === 'all') && needTax) return 'sylph needs sylph-tax for phyloseq';
-      return null;
+  // What each post-processing mode gives with the profilers chosen, or why it cannot run (rules of workflow/microcosm.nf).
+  function postprocessInfo(mode) {
+    var mic = useMicrocosm(), syl = useSylph(), rgi = on('enable_rgi_bwt'), tax = on('enable_sylphtax');
+    var toProfile = { step: 'profile', label: 'Go to Taxonomic profiling' };
+    if (!mode) return { gives: 'Only the per-sample results.' };
+    if (mic && !yachtRuns()) return { why: 'Post-processing reads the sourmash + YACHT result, so YACHT must be on with a single sourmash database.', fix: toProfile };
+    if (mode === 'phyloseq') {
+      if (syl && !tax) return { why: 'sylph results need lineages: turn on sylph-tax.', fix: toProfile };
+      return { gives: 'Abundance, taxonomy and sample tables to load in R (phyloseq), from ' + [mic ? 'sourmash + YACHT' : null, syl ? 'sylph-tax' : null].filter(Boolean).join(' and ') + '.' };
     }
-    var modes = [['', 'No'], ['phyloseq', 'Tables for R (phyloseq)'], ['taxburst', 'Interactive charts (taxburst)'], ['rgi_bwt', 'AMR gene tables'], ['all', 'All of them']];
-    var out = [segmented('Do you want tables ready for statistics and plots?', modes.map(function (m) {
-      var w = m[0] ? why(m[0]) : null;
-      return { value: m[0], label: m[1], disabled: !!w && get('readbased_postprocess') !== m[0], why: w };
-    }), get('readbased_postprocess') || '', function (v) { setP('readbased_postprocess', v); }, {
-      param: 'readbased_postprocess', wide: true,
-      help: 'Merges all samples of the run. phyloseq: abundance, taxonomy and sample tables to load in R for diversity and differential abundance. taxburst: sunburst charts to explore in a browser. AMR gene tables: one table of RGI results across samples.'
-    })];
-    var w = get('readbased_postprocess') ? why(get('readbased_postprocess')) : null;
-    if (w) out.push(note('error', w + '.'));
-    if (get('readbased_postprocess')) {
+    if (mode === 'taxburst') {
+      if (!mic) return { why: 'taxburst charts are drawn from the sourmash + YACHT result; with sylph only there is nothing to draw. Add sourmash + YACHT as a profiler.', fix: toProfile };
+      return { gives: 'Interactive sunburst charts to explore in a browser, from sourmash + YACHT' + (syl ? ' (sylph results are not drawn).' : '.') };
+    }
+    if (mode === 'rgi_bwt') {
+      if (!rgi) return { why: 'Needs the AMR genes in reads step (RGI bwt) to be on.', fix: { step: 'readsamr', label: 'Go to AMR genes in reads' } };
+      return { gives: 'The RGI bwt results of every sample gathered in one folder, ready to compare across samples. Works with either profiler.' };
+    }
+    if (syl && !tax) return { why: 'sylph results need lineages for the phyloseq tables: turn on sylph-tax.', fix: toProfile };
+    var parts = ['phyloseq tables (' + [mic ? 'sourmash + YACHT' : null, syl ? 'sylph-tax' : null].filter(Boolean).join(', ') + ')'];
+    if (mic) parts.push('taxburst charts', 'the processed microcosm table');
+    if (rgi) parts.push('the RGI bwt results of all samples');
+    var missing = [];
+    if (!mic) missing.push('taxburst charts, which need sourmash + YACHT');
+    if (!rgi) missing.push('AMR results, since RGI bwt is off');
+    return { gives: 'Everything that applies: ' + parts.join(', ') + '.' + (missing.length ? ' Not made: ' + missing.join('; ') + '.' : ''), same: !mic && !rgi ? 'phyloseq' : null };
+  }
+
+  function renderPostprocess() {
+    var current = get('readbased_postprocess') || '';
+    var modes = [['', 'No'], ['phyloseq', 'Tables for R (phyloseq)'], ['taxburst', 'Interactive charts (taxburst)'],
+      ['rgi_bwt', 'AMR results of all samples (RGI bwt)'], ['all', 'All that apply']];
+    var list = h('div', { class: 'mcb-opts', role: 'radiogroup', 'aria-label': 'Post-processing' });
+    modes.forEach(function (m) {
+      var info = postprocessInfo(m[0]), active = current === m[0], blocked = !!info.why;
+      var id = nextId('opt');
+      list.appendChild(h('div', { class: 'mcb-opt' + (active ? ' is-on' : '') + (blocked ? ' is-blocked' : '') },
+        h('button', {
+          type: 'button', role: 'radio', id: id, class: 'mcb-opt-btn', 'aria-checked': active ? 'true' : 'false',
+          'aria-disabled': blocked && !active ? 'true' : null, 'aria-describedby': id + '-d',
+          onclick: function () { if (!active && !blocked) { setP('readbased_postprocess', m[0]); commit(true); } }
+        }, h('span', { class: 'mcb-opt-radio', 'aria-hidden': 'true' }),
+        h('span', { class: 'mcb-opt-text' },
+          h('span', { class: 'mcb-opt-title' }, m[1], m[0] ? h('span', { class: 'mcb-flag' }, m[0]) : null),
+          h('span', { class: 'mcb-opt-desc', id: id + '-d' },
+            blocked ? h('span', { class: 'mcb-opt-why' }, (active ? 'Will fail: ' : 'Not available: ') + info.why) : info.gives))),
+        blocked && info.fix ? h('button', { type: 'button', class: 'mcb-linkbtn mcb-opt-fix', onclick: function () { go(info.fix.step); } }, info.fix.label) : null));
+    });
+    var out = [h('div', { class: 'mcb-field is-wide' },
+      h('span', { class: 'mcb-label' }, 'Do you want tables and charts that merge all samples?', h('span', { class: 'mcb-flag' }, '--readbased_postprocess')),
+      list)];
+    var cur = postprocessInfo(current);
+    if (current === 'all' && cur.same) out.push(note('info', 'With sylph only and RGI bwt off, "All that apply" gives the same files as phyloseq.'));
+    if (current && useMicrocosm()) {
       out.push(textInput('readbased_postprocess_options', { label: 'Post-processing options', wide: true,
-        help: 'Passed to the post-processing script as typed, e.g. --min_coverage 0.1 --remove_unclassified.' }));
+        help: 'Passed to the post-processing script as typed, e.g. --min_coverage 0.1 --remove_unclassified.' +
+          (useSylph() ? ' They apply to the sourmash + YACHT tables; the sylph tables have no options.' : '') }));
     }
     return out;
   }
@@ -1151,9 +1188,9 @@
       if (pp) {
         if (useMicrocosm() && !yachtRuns()) err('postprocess', 'post-processing needs YACHT on and one sourmash database');
         if (pp === 'rgi_bwt' && !on('enable_rgi_bwt')) err('postprocess', 'RGI tables need AMR genes in reads');
-        if ((pp === 'taxburst' || pp === 'rgi_bwt') && !useMicrocosm()) err('postprocess', pp + ' uses the sourmash + YACHT result');
+        if (pp === 'taxburst' && !useMicrocosm()) err('postprocess', 'taxburst draws the sourmash + YACHT result');
         if ((pp === 'all' || pp === 'phyloseq') && useSylph() && !on('enable_sylphtax')) err('postprocess', 'sylph phyloseq tables need sylph-tax');
-        if (pp === 'all' && !on('enable_rgi_bwt')) warn('postprocess', 'without AMR genes in reads, "all" writes no RGI tables');
+        if (pp === 'all' && !on('enable_rgi_bwt')) warn('postprocess', 'without AMR genes in reads, "all" collects no AMR results');
       }
     }
     if (asm()) {

@@ -697,7 +697,7 @@ Run <code class="docutils literal notranslate"><span class="pre">nextflow</span>
 <tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--readbased_postprocess</span></code></p></td>
 <td class="text-left"><p>string</p></td>
 <td class="text-left"><p></p></td>
-<td class="text-left"><p>Optional post-processing mode for merged read-based Sourmash-YACHT results. Requires enable_readbase. The all mode creates default, phyloseq, and taxburst outputs and also collects RGI-BWT outputs when enable_rgi_bwt is enabled. Choices: <code class="docutils literal notranslate"><span class="pre">all</span></code>, <code class="docutils literal notranslate"><span class="pre">phyloseq</span></code>, <code class="docutils literal notranslate"><span class="pre">taxburst</span></code>, <code class="docutils literal notranslate"><span class="pre">rgi_bwt</span></code>. <a class="reference internal" href="#help-readbased-postprocess"><span class="std std-ref">more</span></a></p></td>
+<td class="text-left"><p>Optional post-processing mode for merged read-based results. Requires enable_readbase. The all mode creates default, phyloseq, and taxburst outputs and also collects RGI-BWT outputs when enable_rgi_bwt is enabled. Choices: <code class="docutils literal notranslate"><span class="pre">all</span></code>, <code class="docutils literal notranslate"><span class="pre">phyloseq</span></code>, <code class="docutils literal notranslate"><span class="pre">taxburst</span></code>, <code class="docutils literal notranslate"><span class="pre">rgi_bwt</span></code>. <a class="reference internal" href="#help-readbased-postprocess"><span class="std std-ref">more</span></a></p></td>
 </tr>
 <tr class="row-odd"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--readbased_postprocess_options</span></code></p></td>
 <td class="text-left"><p>string</p></td>
@@ -725,7 +725,7 @@ Run <code class="docutils literal notranslate"><span class="pre">nextflow</span>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="help-readbased-postprocess">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">--readbased_postprocess</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">Valid values: all, phyloseq, taxburst, rgi_bwt. The rgi_bwt mode requires --enable_rgi_bwt. With all and RGI-BWT disabled, only the RGI-BWT output is skipped and the pipeline continues with a warning.</p>
+<p class="sd-card-text">Valid values: all, phyloseq, taxburst, rgi_bwt. default and taxburst use the microcosm (sourmash + YACHT) result; phyloseq also works with sylph (--enable_sylphtax). The rgi_bwt mode collects the RGI-BWT folders of all samples, needs --enable_rgi_bwt and works with either profiler. With all and RGI-BWT disabled, only the RGI-BWT output is skipped and the pipeline continues with a warning.</p>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="help-readbased-postprocess-options">
 <summary class="sd-summary-title sd-card-header">

@@ -387,3 +387,30 @@ html.dark .mcb-btn.is-primary { color: #08130d; }
 }
 .yue .mcb .mcb-issues li { padding: 7px 10px; }
 .yue .mcb .mcb-kicker { margin-bottom: 6px; }
+
+/* ---------- option cards with what each choice gives ---------- */
+.mcb-opts { display: flex; flex-direction: column; gap: 8px; }
+.mcb-opt {
+    display: flex; flex-direction: column; gap: 4px; border: 1.5px solid var(--b-line); border-radius: 10px; background: var(--b-ground);
+    transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s var(--b-ease);
+}
+.mcb-opt:not(.is-blocked):hover { transform: translateY(-2px); border-color: var(--b-accent-line); }
+.mcb-opt.is-on { border-color: var(--b-accent); background: var(--b-accent-soft); }
+.mcb-opt.is-blocked { background: var(--b-sunk); }
+.mcb-opt.is-blocked.is-on { border-color: var(--b-error); background: var(--b-error-soft); }
+.mcb-opt-btn {
+    display: flex; gap: 12px; align-items: flex-start; width: 100%; min-height: 48px; padding: 10px 14px 4px; text-align: left;
+    background: none; border: 0; cursor: pointer;
+}
+.mcb-opt.is-blocked .mcb-opt-btn { cursor: not-allowed; }
+.mcb-opt-radio { flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--b-line); position: relative; }
+.mcb-opt.is-on .mcb-opt-radio { border-color: var(--b-accent); }
+.mcb-opt.is-on .mcb-opt-radio::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--b-accent); animation: mcb-pop 0.25s var(--b-ease); }
+.mcb-opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-bottom: 6px; }
+.mcb-opt-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-weight: 600; font-size: 0.92rem; }
+.mcb-opt.is-blocked .mcb-opt-title { color: var(--sy-c-light); }
+.mcb-opt-desc { font-size: 0.82rem; color: var(--sy-c-light); }
+.mcb-opt-why { color: var(--b-warn); }
+.mcb-opt.is-on .mcb-opt-why { color: var(--b-error); }
+.yue .mcb .mcb-opt-fix { align-self: flex-start; margin: -2px 0 10px 44px; font-size: 0.82rem; }
+.mcb-why { color: var(--b-warn); }
