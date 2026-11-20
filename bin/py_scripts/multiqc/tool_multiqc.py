@@ -415,7 +415,7 @@ def rgi_amr(paths: list[Path], top: int) -> list:
     }
     return [
         table("microcosm_rgi_amr", "Bacterial genomes: AMR genes (RGI)", "RGI main on each bacterial genome. "
-              "Files: Assembly/Bacterial_Analysis/amr/rgi/.", headers, rows, "Genome"),
+              "Files: Bacterial_Analysis/amr/rgi/.", headers, rows, "Genome"),
         family_plot("microcosm_rgi_amr_families", "Bacterial genomes: AMR gene families (RGI)", f"RGI hits per AMR gene family "
                     f"(top {top}).", families, top, "Hits"),
     ]

@@ -294,7 +294,7 @@ SISTR alone routes Salmonella follow-up, so `--skip_sistr` also stops
 GenoTyphi and Paratype. CPUs/memory per tool are set with the usual
 `process.withName` selectors in a custom config.
 
-Results are published below `${outdir}/Assembly/Bacterial_Analysis/`, one
+Results are published below `${outdir}/Bacterial_Analysis/`, one
 folder per tool and one file per genome (`<genome_id>.<tool>.*`). Folders of
 tools that did not run are absent. `<prefix>` is the last component of
 `--outdir`, as for the read-based post-processing tables.

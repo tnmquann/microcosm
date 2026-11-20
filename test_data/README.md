@@ -43,7 +43,7 @@ with `--skip_contig_analysis false --skip_skani_search false`.
 
 Two random 50 kb sequences (Python `random.seed(1)`) with no marker genes. `--genome_input
 test_data/gtdbtk_no_markers/genome_input.csv --bin_classifier gtdbtk --gtdbtk_db <R226>` must finish and list both
-genomes in `Assembly/Bacterial_Analysis/routing/unresolved_genomes.tsv` with reason
+genomes in `Bacterial_Analysis/routing/unresolved_genomes.tsv` with reason
 `no_resolved_lineage_from_BIN_CLASSIFICATION (gtdbtk: No bacterial or archaeal marker)`.
 
 ## Several sourmash databases (`sourmash_multidb/`)

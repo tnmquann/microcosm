@@ -51,7 +51,7 @@ def write_table(path: Path, columns: list[str], rows: dict[str, dict], tools_lab
     header = [
         "# id: 'microcosm_bacterial_overview'",
         "# section_name: 'Bacterial genomes'",
-        f"# description: 'Genomes routed to the bacterial downstream analysis: GTDB species, MLST, SISTR serovar and distinct AMR genes per tool ({tools_label}). Full tables: Assembly/Bacterial_Analysis/*/summary.'",
+        f"# description: 'Genomes routed to the bacterial downstream analysis: GTDB species, MLST, SISTR serovar and distinct AMR genes per tool ({tools_label}). Full tables: Bacterial_Analysis/*/summary.'",
         "# plot_type: 'table'",
         "# pconfig:",
         "#     id: 'microcosm_bacterial_overview_table'",
