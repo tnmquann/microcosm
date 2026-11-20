@@ -40,6 +40,9 @@ html_static_path = ["_static", "../images"]
 html_css_files = ["css/custom.css"]
 
 # -- HTML output
+# Site root (GitHub Pages serves the docs under /microcosm/); used for the logo and the top navigation links
+BASE = os.environ.get("DOCS_BASEURL", "https://tnmquann.github.io/microcosm/")
+html_baseurl = BASE
 html_title = "microcosm"
 html_theme = "shibuya"
 html_copy_source = False
@@ -47,17 +50,17 @@ html_show_sourcelink = False
 html_theme_options = {
     "accent_color": "grass",
     "color_mode": "auto",
-    "logo_target": "/",
+    "logo_target": BASE,
     "light_logo": "_static/microcosm_logo.png",
     "dark_logo": "_static/microcosm_logo_dark.png",
     "github_url": "https://github.com/tnmquann/microcosm",
     "globaltoc_expand_depth": 1,
     "toctree_collapse": False,
     "nav_links": [
-        {"title": "Quick start", "url": "getting-started/quickstart/"},
-        {"title": "Pipeline", "url": "pipeline/overview/"},
-        {"title": "Cookbook", "url": "usage/cookbook/"},
-        {"title": "Parameters", "url": "reference/parameters/"},
+        {"title": "Quick start", "url": BASE + "getting-started/quickstart/"},
+        {"title": "Pipeline", "url": BASE + "pipeline/overview/"},
+        {"title": "Cookbook", "url": BASE + "usage/cookbook/"},
+        {"title": "Parameters", "url": BASE + "reference/parameters/"},
         {"title": "Releases", "url": "https://github.com/tnmquann/microcosm/releases"},
     ],
 }
