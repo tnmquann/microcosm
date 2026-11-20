@@ -28,7 +28,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 # file name -> assembly name: MEGAHIT-s1.tiara.txt, MEGAHIT-s1.contigs_plasmid_summary.tsv, MEGAHIT-s1.pyrodigal.faa ...
 SUFFIX = re.compile(r"(_plasmid_summary|_virus_summary)?\.(txt|tsv|faa|csv)(\.gz)?$")
 TOOL = re.compile(r"\.(tiara|seqkit|skani|coverage|pyrodigal|prokka|geNomad|contigs|gene_mapping_data|overall_mapping_stats|rgi|binclassification|assembly_stats)$")
@@ -368,6 +368,31 @@ def rgi_bwt(paths: list[Path], top: int) -> list:
     ]
 
 
+def sylph(paths: list[Path], top: int) -> list:
+    """sylph profile TSVs (one per sample): works without sylph-tax, which MultiQC's sylphtax module needs."""
+    rows, abundance = {}, {}
+    for path in pick(paths, r"\.tsv$"):
+        records = [r for r in read_table(path) if "Taxonomic_abundance" in r]
+        if not records:
+            continue
+        name = sample_name(path)
+        genomes = defaultdict(float)
+        for row in records:
+            genomes[reference_label({"Ref_name": row.get("Contig_name"), "Ref_file": row.get("Genome_file")})] += number(row["Taxonomic_abundance"])
+        abundance[name] = dict(genomes)
+        rows[name] = {"genomes": len(records), "mean_ani": sum(number(r.get("Adjusted_ANI")) for r in records) / len(records)}
+    headers = {
+        "genomes": fmt("Genomes", "Reference genomes detected by sylph profile", "Greens"),
+        "mean_ani": fmt("Mean ANI", "Mean adjusted ANI of the detected genomes", "RdYlGn", "%", "{:,.2f}", max=100, min=90),
+    }
+    return [
+        table("microcosm_sylph", "Reads: sylph profile", "sylph profile per sample (--readbased_taxotools sylph). "
+              "Files: Readbased_Analysis/sylph/profile/.", headers, rows, "Sample"),
+        family_plot("microcosm_sylph_abundance", "Reads: sylph taxonomic abundance", f"Taxonomic abundance (%) per reference "
+                    f"genome (top {top}).", abundance, top, "Taxonomic abundance (%)"),
+    ]
+
+
 def rgi_amr(paths: list[Path], top: int) -> list:
     rows, families = {}, {}
     for path in pick(paths, r"\.rgi\.txt$"):
@@ -396,7 +421,7 @@ def rgi_amr(paths: list[Path], top: int) -> list:
     ]
 
 
-TOOLS = {f.__name__: f for f in (contig_summary, pyrodigal, genomad, tiara_contigs, skani, tiara_bins, gunc, assembly_stats, rgi_bwt, rgi_amr)}
+TOOLS = {f.__name__: f for f in (contig_summary, pyrodigal, genomad, tiara_contigs, skani, tiara_bins, gunc, assembly_stats, rgi_bwt, rgi_amr, sylph)}
 
 
 def expand(paths: list[Path]) -> list[Path]:

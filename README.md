@@ -150,7 +150,8 @@ A MultiQC report is written to `${outdir}/MultiQC/<prefix>_multiqc_report.html`
 (turn off with `--skip_multiqc`), styled by `assets/multiqc_config.yml` with the
 microcosm logo. Sections: microcosm top taxa (one bar graph with a tab per rank,
 Strain to Domain, from `<prefix>.processed_metaflow.csv`, so it needs
-`--readbased_postprocess all`), sylph-tax (`--enable_sylphtax`), a bacterial
+`--readbased_postprocess all`), sylph profile (genomes, mean ANI, taxonomic abundance per
+reference genome; no sylph-tax needed), sylph-tax (`--enable_sylphtax`), a bacterial
 genome overview (species, MLST, SISTR serovar, AMR genes per tool), FastQC/fastp,
 hostile, RGI bwt on reads (table + AMR gene families), QUAST and Bowtie2 for the
 assemblies, contigs (SeqKit + samtools coverage table, Pyrodigal genes or Prokka,

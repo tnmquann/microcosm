@@ -380,6 +380,8 @@ workflow METAFLOW {
                 read_based_rgi_ch = read_based_rgi_ch.mix(READ_BASED_SYLPH.out.rgi_results)
                 // MultiQC's sylphtax module reads the sylph-tax *.sylphmpa profiles (--enable_sylphtax)
                 multiqc_files_ch = multiqc_files_ch.mix(READ_BASED_SYLPH.out.sylphtax.map { _meta, sylphmpa -> sylphmpa })
+                // sylph profile itself (works without sylph-tax)
+                tool_mqc_ch = tool_mqc_ch.mix(READ_BASED_SYLPH.out.profile.map { _meta, profile -> ['sylph', profile] })
             }
             // Check if single-sample processing mode is enabled
             if (!run_microcosm_readbased) {

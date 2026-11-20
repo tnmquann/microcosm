@@ -100,6 +100,14 @@ class ToolMultiqcTest(unittest.TestCase):
         row = self.run_tool("rgi_amr", self.tmp / "g1.rgi.txt")["rgi_amr_mqc.json"]["data"]["g1"]
         self.assertEqual((row["hits"], row["perfect"], row["strict"], row["drug_classes"]), (2, 1, 1, 2))
 
+    def test_sylph_profile(self):
+        header = "Sample_file\tGenome_file\tTaxonomic_abundance\tAdjusted_ANI\tContig_name\n"
+        prof = self.write("profile/s1.tsv", header + "r.fq\tg/GCF_1.fna.gz\t70\t98\tNZ_1 Acinetobacter baumannii ATCC 19606 chromosome, complete genome\n"
+                          "r.fq\tg/GCF_2.fna.gz\t30\t96\tNZ_2 Staphylococcus epidermidis NBRC 100911 chromosome\n")
+        written = self.run_tool("sylph", prof.parent)
+        self.assertEqual(written["sylph_mqc.json"]["data"]["s1"], {"genomes": 2, "mean_ani": 97.0})
+        self.assertEqual(written["sylph_abundance_mqc.json"]["data"][0]["s1"], {"Acinetobacter baumannii ATCC 19606": 70.0, tool.OTHER: 30.0})
+
     def test_no_rows_writes_nothing(self):
         self.run_tool("gunc")
         self.assertEqual(list(self.out.glob("*")), [])

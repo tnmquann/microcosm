@@ -108,6 +108,10 @@ report_section_order:
     order: 1000
   sylphtax:
     order: 970
+  microcosm_sylph:
+    order: 969
+  microcosm_sylph_abundance:
+    order: 968
   microcosm_bin_taxonomy:
     order: 960
   microcosm_bin_summary:
