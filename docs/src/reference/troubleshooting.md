@@ -49,7 +49,9 @@ If the pipeline fails due to database incompatibility, verify that your `sourmas
 
 In the read-based sub-workflow, relative abundance is computed in `${projectDir}/bin/py_scripts/read_based/process_sourmash_results.py` using the formula:
 
-$$ \boxed{\text{relative\\_abundance} = \left(\frac{\text{unique\\_intersect\\_bp}}{\text{scaled}} \times \text{median\\_abund}\right) \times \frac{1}{\text{total\\_weighted\\_hashes}}} $$
+$$
+\boxed{\text{relative\_abundance} = \left(\frac{\text{unique\_intersect\_bp}}{\text{scaled}} \times \text{median\_abund}\right) \times \frac{1}{\text{total\_weighted\_hashes}}}
+$$
 
 :::{dropdown} <strong>Why use <code>median_abund</code> instead of <code>mean_abund</code>?</strong>
 We use `median_abund` because it is robust against outliers. In complex metagenomes, coverage depth can vary wildly across a genome due to sequencing bias or conserved regions. The median provides a more stable representation of the "typical" abundance of a species than the mean.

@@ -27,3 +27,4 @@ docs/src/_build/
 *.py[cod]
 *.egg-info/
 docs/src/reference/parameters.md
+docs/src/_static/builder/schema.json

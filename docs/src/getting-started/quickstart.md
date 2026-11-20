@@ -56,6 +56,7 @@ nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
     --yacht_database /db/yacht_k31.json
 ```
 
+- Not sure which options you need? The [Command builder](../usage/builder.md) asks about your goal and writes the command, a `params.yaml` or a config for you.
 - Add `-resume` to continue a stopped run without redoing finished steps.
 - Limit the machine use with `--max_cpus 16 --max_memory 64.GB`.
 - More commands, one per goal: [Cookbook](../usage/cookbook.md).

@@ -16,6 +16,7 @@ myst:
   MultiQC report for the whole run. Built for molecular epidemiology, tuned for modest hardware.</p>
   <div class="mc-hero-buttons">
     <a class="mc-btn mc-btn-primary" href="getting-started/quickstart/">Quick start</a>
+    <a class="mc-btn" href="usage/builder/">Build my command</a>
     <a class="mc-btn" href="pipeline/overview/">How it works</a>
     <a class="mc-btn" href="https://github.com/tnmquann/microcosm">GitHub</a>
   </div>
@@ -166,6 +167,7 @@ getting-started/databases
 :caption: Using microcosm
 :hidden:
 
+usage/builder
 usage/inputs
 usage/running
 usage/cookbook

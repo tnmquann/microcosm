@@ -20,7 +20,7 @@ extensions = [
 ]
 source_suffix = {".rst": "restructuredtext", ".md": "markdown"}
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-myst_enable_extensions = ["colon_fence", "deflist", "attrs_inline", "attrs_block", "html_image"]
+myst_enable_extensions = ["colon_fence", "deflist", "attrs_inline", "attrs_block", "html_image", "dollarmath", "amsmath"]
 myst_heading_anchors = 3
 mermaid_version = "11.4.0"
 copybutton_prompt_text = r"\$ "
@@ -59,6 +59,7 @@ html_theme_options = {
     "nav_links": [
         {"title": "Quick start", "url": BASE + "getting-started/quickstart/"},
         {"title": "Pipeline", "url": BASE + "pipeline/overview/"},
+        {"title": "Command builder", "url": BASE + "usage/builder/"},
         {"title": "Cookbook", "url": BASE + "usage/cookbook/"},
         {"title": "Parameters", "url": BASE + "reference/parameters/"},
         {"title": "Releases", "url": "https://github.com/tnmquann/microcosm/releases"},
@@ -127,5 +128,31 @@ def write_parameters(app):
         handle.write("\n".join(lines) + "\n")
 
 
+BUILDER_PAGE = "usage/builder"
+
+
+def write_builder_schema(app):
+    """Parameter types, defaults and help for the command builder, from the same schema."""
+    with open(SCHEMA) as handle:
+        schema = json.load(handle)
+    keep = ("type", "default", "enum", "description", "format", "pattern")
+    groups = []
+    for key, group in schema.get("$defs", {}).items():
+        props = {name: {k: v for k, v in prop.items() if k in keep} for name, prop in group.get("properties", {}).items()}
+        groups.append({"id": key, "title": group.get("title", key), "params": props})
+    out = os.path.join(app.srcdir, "_static", "builder", "schema.json")
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w") as handle:
+        json.dump({"version": release, "groups": groups}, handle, separators=(",", ":"))
+
+
+def builder_assets(app, pagename, templatename, context, doctree):
+    if pagename == BUILDER_PAGE:
+        app.add_css_file("builder/builder.css")
+        app.add_js_file("builder/builder.js", defer="defer")
+
+
 def setup(app):
     app.connect("builder-inited", write_parameters)
+    app.connect("builder-inited", write_builder_schema)
+    app.connect("html-page-context", builder_assets)
