@@ -1,0 +1,236 @@
+#!/usr/bin/env nextflow
+nextflow.enable.dsl = 2
+
+// Import nf-core modules
+include { SOURMASH_TAXANNOTATE as SOURMASH_TAXANNOTATE_META } from '../../../modules/nf-core/sourmash/taxannotate/main'
+
+// Import local modules
+include { MERGE_PAIREDENDSEQS } from '../../../modules/local/merge/main'
+include { CREATE_BINS_CSV as CREATE_READS_CSV } from '../../../modules/local/sourmash/createbinscsv/main'
+include { SOURMASH_MANYSKETCH as SOURMASH_MANYSKETCH_META } from '../../../modules/local/sourmash/manysketch/main'
+include { EXTRACT_SOURMASH_SINGLESKETCHES as EXTRACT_SOURMASH_SINGLESKETCHES_META } from '../../../modules/local/finalize/extract_sourmash_singlesketches/main'
+include { SOURMASH_FASTMULTIGATHER as SOURMASH_FASTMULTIGATHER_META } from '../../../modules/local/sourmash/fastmultigather/main'
+include { SOURMASH_TAXMETAGENOME } from '../../../modules/local/sourmash/taxmetagenome/main'
+include { YACHT_RUN_SINGLESKETCH as YACHT_RUN } from '../../../modules/local/yacht/run_singlesketch/main'
+include { PROCESS_READBASED_RESULTS } from '../../../modules/local/finalize/process_readbased/main'
+include { POSTPROCESS_READBASED } from '../../../modules/local/finalize/postprocess_readbased/main'
+include { RGI_PREPARECARDDB } from '../../../modules/local/rgi/preparecarddb/main'
+include { RGI_BWT } from '../../../modules/local/rgi/bwt/main'
+include { pathList; yachtSkipped } from '../utils_microcosm/main'
+
+def deriveReadbasedBatchPrefix(outdir) {
+    def normalized = outdir?.toString()?.trim()?.replaceAll('/+$', '')
+    if (!normalized) {
+        throw new IllegalArgumentException('Cannot derive a read-based post-processing prefix from an empty --outdir value.')
+    }
+
+    def basename = normalized.tokenize('/').last()
+    def prefix = basename
+        .replaceAll('[^A-Za-z0-9._-]+', '_')
+        .replaceAll('^[._-]+', '')
+        .replaceAll('[._-]+$', '')
+
+    if (!prefix) {
+        throw new IllegalArgumentException("Cannot derive a filesystem-safe read-based post-processing prefix from --outdir '${outdir}'.")
+    }
+    return prefix
+}
+
+workflow READ_BASED {
+    take:
+    cleaned_reads_ch // Channel: [ val(meta), [ reads ] ]
+
+    main:
+    versions_ch = channel.empty()
+    ch_rgi_results = channel.empty() // Channel for RGI results if enabled
+    ch_postprocess_default = channel.empty()
+    ch_postprocess_phyloseq = channel.empty()
+    ch_postprocess_taxburst = channel.empty()
+    ch_postprocess_rgi_bwt = channel.empty()
+
+    // Validate required parameters for this subworkflow
+    if (!params.sourmash_database) {
+        error "Missing required parameter for read-based profiling: --sourmash_database"
+    }
+    if (!params.sourmash_taxonomy_csv) {
+        error "Missing required parameter for read-based profiling: --sourmash_taxonomy_csv (required by SOURMASH_TAXANNOTATE)"
+    }
+
+    // ============================================================
+    // RGI Branch - Keep existing logic unchanged
+    // ============================================================
+    if (params.enable_rgi_bwt) {
+        // Transform reads for RGI_BWT
+        def rgi_reads = cleaned_reads_ch
+            .map { meta, reads -> 
+                def read1 = reads[0]
+                def read2 = reads[1]
+                return [meta, read1, read2]
+            }
+
+        // Prepare RGI database if not provided
+        if (params.rgi_preparecarddb_dir) {
+            ch_rgi_db = channel.value(file(params.rgi_preparecarddb_dir))
+        } else {
+            RGI_PREPARECARDDB([])
+            ch_rgi_db = RGI_PREPARECARDDB.out.db
+            versions_ch = versions_ch.mix(RGI_PREPARECARDDB.out.versions)
+        }
+
+        // Run RGI BWT
+        RGI_BWT(
+            rgi_reads,
+            ch_rgi_db
+        )
+        versions_ch = versions_ch.mix(RGI_BWT.out.versions)
+        ch_rgi_results = RGI_BWT.out.outdir
+    }
+
+    // ============================================================
+    // SOURMASH/YACHT Branch - New logic
+    // ============================================================
+    
+    // Step 1: Merge paired-end reads
+    MERGE_PAIREDENDSEQS(cleaned_reads_ch)
+    versions_ch = versions_ch.mix(MERGE_PAIREDENDSEQS.out.versions)
+
+    // Step 2: Create CSV manifest for merged sequences
+    // Group all merged sequences together
+    ch_merged_grouped = MERGE_PAIREDENDSEQS.out.merged_seqs
+        .map { _meta, merged_file ->
+            def meta_batch = [id: 'batch']
+            [meta_batch, merged_file]
+        }
+        .groupTuple()
+
+    CREATE_READS_CSV(ch_merged_grouped)
+    versions_ch = versions_ch.mix(CREATE_READS_CSV.out.versions.first())
+
+    // Step 3: Run sourmash manysketch
+    SOURMASH_MANYSKETCH_META(CREATE_READS_CSV.out.bins_csv)
+    versions_ch = versions_ch.mix(SOURMASH_MANYSKETCH_META.out.versions.first())
+
+    // Use multiMap to split sketch outputs for parallel processing
+    ch_sketch_split = SOURMASH_MANYSKETCH_META.out.sketch_zip_file
+        .multiMap { meta, sketch_zip ->
+            for_fastmultigather: [meta, sketch_zip]
+            for_yacht: [meta, sketch_zip]
+            for_extract: [meta, sketch_zip]
+        }
+
+    // Step 4: Run sourmash fastmultigather
+    SOURMASH_FASTMULTIGATHER_META(
+        ch_sketch_split.for_fastmultigather,
+        pathList(params.sourmash_database, 'sourmash_database')
+    )
+    versions_ch = versions_ch.mix(SOURMASH_FASTMULTIGATHER_META.out.versions.first())
+
+    // Step 9: Extract single sketches (parallel branch - for publishing only)
+    sourmash_extract_zip_script = file("${projectDir}/bin/py_scripts/read_based/sourmash_extract_zip_with_ksize.py", checkIfExists: true)
+    EXTRACT_SOURMASH_SINGLESKETCHES_META(
+        ch_sketch_split.for_extract,
+        params.sourmash_ksize,
+        sourmash_extract_zip_script
+    )
+    versions_ch = versions_ch.mix(EXTRACT_SOURMASH_SINGLESKETCHES_META.out.versions.first())
+
+    // Step 6: Run sourmash tax annotate
+    SOURMASH_TAXANNOTATE_META(
+        SOURMASH_FASTMULTIGATHER_META.out.gather_csv,
+        pathList(params.sourmash_taxonomy_csv, 'sourmash_taxonomy_csv')
+    )
+    versions_ch = versions_ch.mix(SOURMASH_TAXANNOTATE_META.out.versions_sourmash.first())
+
+    ch_taxannotate_decompressed = SOURMASH_TAXANNOTATE_META.out.result
+        .map { meta, csv_gz -> [meta, csv_gz] }
+
+    // Step 7: Only run YACHT + PROCESS_READBASED_RESULTS when not skipping
+    if (!yachtSkipped()) {
+        // One YACHT task per sample (YACHT is mostly single-threaded), merged again below.
+        def yacht_ksize_suffix = "_${params.yacht_ksize}.sig.zip"
+        YACHT_RUN(
+            EXTRACT_SOURMASH_SINGLESKETCHES_META.out.sig_zip_files
+                .flatMap { _meta, sig_zips -> [sig_zips].flatten() }
+                .filter { sig_zip -> sig_zip.name.endsWith(yacht_ksize_suffix) }
+                .map { sig_zip -> [[id: sig_zip.name - yacht_ksize_suffix], sig_zip] },
+            file(params.yacht_database, checkIfExists: true)
+        )
+        versions_ch = versions_ch.mix(YACHT_RUN.out.versions.first())
+        def ch_yacht_batch = YACHT_RUN.out.yacht_xlsx
+            .map { _meta, xlsx -> xlsx }
+            .collect()
+            .map { xlsx_files -> [[id: 'batch'], xlsx_files] }
+
+        process_sourmash_results_script = file("${projectDir}/bin/py_scripts/read_based/process_sourmash_results.py", checkIfExists: true)
+        process_yacht_results_script = file("${projectDir}/bin/py_scripts/read_based/process_yacht_results.py", checkIfExists: true)
+        concat_yacht_xlsx_script = file("${projectDir}/bin/py_scripts/read_based/concat_yacht_xlsx.py", checkIfExists: true)
+        merged_yacht_sourmash_script = file("${projectDir}/bin/py_scripts/read_based/merged_yacht_sourmash.py", checkIfExists: true)
+
+        PROCESS_READBASED_RESULTS(
+            ch_taxannotate_decompressed,
+            ch_yacht_batch,
+            process_sourmash_results_script,
+            process_yacht_results_script,
+            concat_yacht_xlsx_script,
+            merged_yacht_sourmash_script
+        )
+        versions_ch = versions_ch.mix(PROCESS_READBASED_RESULTS.out.versions.first())
+
+        if (params.readbased_postprocess) {
+            def output_prefix = deriveReadbasedBatchPrefix(params.outdir)
+            def postprocess_script = file("${projectDir}/bin/py_scripts/read_based/post_processing.py", checkIfExists: true)
+            def rgi_bundle_ch = params.enable_rgi_bwt ?
+                RGI_BWT.out.outdir
+                    .map { _meta, rgi_dir -> rgi_dir }
+                    .collect()
+                    .map { rgi_dirs -> [rgi_dirs] } :
+                channel.value([[]])
+
+            def postprocess_input_ch = PROCESS_READBASED_RESULTS.out.final_results
+                .combine(rgi_bundle_ch)
+                .map { meta, final_results_dir, rgi_dirs ->
+                    def merged_sourmash_yacht = file("${final_results_dir}/merged_sourmash_yacht.csv", checkIfExists: true)
+                    [
+                        meta,
+                        output_prefix,
+                        params.readbased_postprocess,
+                        false,
+                        false,
+                        params.readbased_postprocess_options ?: ' ',
+                        merged_sourmash_yacht,
+                        rgi_dirs
+                    ]
+                }
+
+            POSTPROCESS_READBASED(postprocess_input_ch, postprocess_script)
+            versions_ch = versions_ch.mix(POSTPROCESS_READBASED.out.versions)
+            ch_postprocess_default = POSTPROCESS_READBASED.out.default_output
+            ch_postprocess_phyloseq = POSTPROCESS_READBASED.out.phyloseq
+            ch_postprocess_taxburst = POSTPROCESS_READBASED.out.taxburst
+            ch_postprocess_rgi_bwt = POSTPROCESS_READBASED.out.rgi_bwt
+        }
+    }
+
+    // Step 8
+    SOURMASH_TAXMETAGENOME(
+        SOURMASH_TAXANNOTATE_META.out.result,
+        pathList(params.sourmash_taxonomy_csv, 'sourmash_taxonomy_csv')
+    )
+    versions_ch = versions_ch.mix(SOURMASH_TAXMETAGENOME.out.versions.first())
+
+    emit:
+    versions = versions_ch.ifEmpty(null)
+    results  = yachtSkipped() ? channel.empty() : PROCESS_READBASED_RESULTS.out.final_results
+
+    rgi_results = ch_rgi_results
+    postprocess_default = ch_postprocess_default
+    postprocess_phyloseq = ch_postprocess_phyloseq
+    postprocess_taxburst = ch_postprocess_taxburst
+    postprocess_rgi_bwt = ch_postprocess_rgi_bwt
+    gather_csv  = SOURMASH_FASTMULTIGATHER_META.out.gather_csv
+    taxannotate = SOURMASH_TAXANNOTATE_META.out.result
+    metagenome_classification = SOURMASH_TAXMETAGENOME.out.genome_classification
+    single_sketches = EXTRACT_SOURMASH_SINGLESKETCHES_META.out.sig_zip_files
+
+    yacht_results = yachtSkipped() ? channel.empty() : YACHT_RUN.out.yacht_xlsx
+}

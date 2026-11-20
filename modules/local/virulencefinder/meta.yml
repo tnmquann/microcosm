@@ -1,0 +1,78 @@
+name: "virulencefinder_run"
+description: "Identify virulence-associated genes in bacterial assemblies with an explicit read-only database."
+keywords:
+  - bacteria
+  - virulence
+  - assembly
+tools:
+  - "virulencefinder":
+      description: "Identification of virulence genes in bacterial sequence data."
+      homepage: "https://bitbucket.org/genomicepidemiology/virulencefinder"
+      documentation: "https://pypi.org/project/Virulencefinder/"
+      licence:
+        - "Apache-2.0"
+input:
+  - assembly:
+      - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*.{fa,fasta,fna,fa.gz,fasta.gz,fna.gz}":
+          type: file
+          description: "Bacterial assembly FASTA."
+  - db:
+      type: directory
+      description: "Read-only VirulenceFinder database with config, notes.txt, and declared data files."
+output:
+  json:
+    - - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*.standard.json":
+          type: file
+          description: "Standardized VirulenceFinder JSON result."
+  legacy_json:
+    - - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*.legacy.json":
+          type: file
+          description: "Legacy VirulenceFinder JSON result preserving explicit no-hit records."
+  tsv:
+    - - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*.tsv":
+          type: file
+          description: "VirulenceFinder result table; header-only is a valid no-hit result."
+  txt:
+    - - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*.txt":
+          type: file
+          description: "Human-readable VirulenceFinder report and alignments."
+  genome_seq:
+    - - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*-hit_in_genome_seq.fsa":
+          type: file
+          description: "Assembly hit sequences; empty is valid for a no-hit result."
+  virulence_seq:
+    - - meta:
+          type: map
+          description: "Canonical bacterial-genome metadata."
+      - "*-virulence_genes.fsa":
+          type: file
+          description: "Matched reference sequences; empty is valid for a no-hit result."
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Software versions."
+        pattern: "versions.yml"
+authors:
+  - "@genomicepidemiology"
+  - "@duncanberger"
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

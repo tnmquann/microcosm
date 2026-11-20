@@ -1,0 +1,33 @@
+// nf-core amrfinderplus/update with a trigger input, so the download runs only
+// when a bacterial genome needs it (the nf-core process has no input).
+process AMRFINDERPLUS_UPDATE_LOCAL {
+    tag "update"
+    label 'process_single'
+
+    conda "${moduleDir}/environment.yml"
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'https://depot.galaxyproject.org/singularity/ncbi-amrfinderplus:4.2.7--hf69ffd2_0':
+        'quay.io/biocontainers/ncbi-amrfinderplus:4.2.7--hf69ffd2_0' }"
+
+    input:
+    val trigger
+
+    output:
+    path "amrfinderdb.tar.gz", emit: db
+    tuple val("${task.process}"), val('amrfinder'), eval('amrfinder --version'), emit: versions_amrfinder, topic: versions
+
+    when:
+    task.ext.when == null || task.ext.when
+
+    script:
+    """
+    amrfinder_update -d amrfinderdb
+    tar czvf amrfinderdb.tar.gz -C amrfinderdb/\$(readlink amrfinderdb/latest) ./
+    """
+
+    stub:
+    """
+    touch amrfinderdb.tar
+    gzip amrfinderdb.tar
+    """
+}

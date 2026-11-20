@@ -1,0 +1,50 @@
+name: hamronization_summarize_local
+description: Combine hAMRonization reports with a Python-compatible local environment.
+keywords:
+  - amr
+  - antimicrobial resistance
+  - reporting
+  - harmonization
+tools:
+  - hamronization:
+      description: Convert and summarize AMR gene detection outputs using the hAMRonization specification.
+      homepage: https://github.com/pha4ge/hAMRonization/
+      documentation: https://github.com/pha4ge/hAMRonization/
+      tool_dev_url: https://github.com/pha4ge/hAMRonization
+      licence:
+        - "GNU Lesser General Public v3 (LGPL v3)"
+input:
+  - reports:
+      type: file
+      description: hAMRonization reports in TSV or JSON format.
+      pattern: "*.{tsv,json}"
+  - format:
+      type: string
+      description: Combined output format.
+      pattern: "tsv|json|interactive"
+output:
+  json:
+    - "hamronization_combined_report.json":
+        type: file
+        description: Combined JSON report.
+        pattern: "*.json"
+  tsv:
+    - "hamronization_combined_report.tsv":
+        type: file
+        description: Combined TSV report.
+        pattern: "*.tsv"
+  html:
+    - "hamronization_combined_report.html":
+        type: file
+        description: Combined interactive HTML report.
+        pattern: "*.html"
+  versions:
+    - "versions.yml":
+        type: file
+        description: Software versions.
+        pattern: "versions.yml"
+authors:
+  - "@jfy133"
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

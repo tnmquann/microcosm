@@ -17,10 +17,25 @@ process SOURMASH_FASTMULTIGATHER {
     def prefix = task.ext.prefix ?: "${manysketch_zip.baseName}"
     def args = task.ext.args ?: ''
     def threshold = params.sourmash_thresholdbp ? "--threshold-bp=${params.sourmash_thresholdbp}" : '--threshold-bp=50000'
+    def databases = [sourmash_database].flatten()
     """
+    # Several databases: branchwater reads them from a pathlist, which silently skips
+    # RocksDB indexes, so only zip/sig collections may be combined.
+    against="${databases[0]}"
+    if [ ${databases.size()} -gt 1 ]; then
+        for db in ${databases.join(' ')}; do
+            if [ -d "\$db" ]; then
+                echo "ERROR: --sourmash_database lists several databases but \$db is a RocksDB index; combine zip/sig databases instead, or pass one RocksDB index." >&2
+                exit 1
+            fi
+            readlink -f "\$db"
+        done > against_databases.txt
+        against=against_databases.txt
+    fi
+
     sourmash scripts fastmultigather \\
         ${manysketch_zip} \\
-        ${sourmash_database} \\
+        \$against \\
         -c ${task.cpus} \\
         -k ${params.sourmash_ksize} \\
         -o ${prefix}_sourmash_gather_withrocksdb.csv \\
@@ -48,7 +63,7 @@ process SOURMASH_FASTMULTIGATHER {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         sourmash: \$(sourmash --version 2>&1 | sed 's/sourmash //g; s/ version//g' | head -n 1)
-        sed: \$(sed --version 2>&1 | head -n 1)
+        sed: \$(sed --version 2>&1 | head -n 1 | sed 's/^.* //')
     END_VERSIONS
     """
 

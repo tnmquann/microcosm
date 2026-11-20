@@ -1,0 +1,68 @@
+name: hamronization_report_local
+description: Convert supported AMR reports to hAMRonization format with a Python-compatible local environment.
+keywords:
+  - amr
+  - antimicrobial resistance
+  - reporting
+  - harmonization
+tools:
+  - hamronization:
+      description: Convert and summarize AMR gene detection outputs using the hAMRonization specification.
+      homepage: https://github.com/pha4ge/hAMRonization/
+      documentation: https://github.com/pha4ge/hAMRonization/
+      tool_dev_url: https://github.com/pha4ge/hAMRonization
+      licence:
+        - "GNU Lesser General Public v3 (LGPL v3)"
+input:
+  - - meta:
+        type: map
+        description: Canonical sample metadata.
+    - report:
+        type: file
+        description: AMRFinderPlus, ABRicate, RGI, or DeepARG report.
+  - tool:
+      type: string
+      description: Supported hAMRonization parser name.
+      pattern: "amrfinderplus|abricate|rgi|deeparg"
+  - format:
+      type: string
+      description: Output format.
+      pattern: "tsv|json"
+  - software_version:
+      type: string
+      description: Source analysis software version.
+  - reference_db_version:
+      type: string
+      description: Source reference database version.
+  - include_input_file_name:
+      type: boolean
+      description: Whether to pass the deterministic output prefix as hAMRonization input-file metadata.
+output:
+  json:
+    - - meta:
+        type: map
+        description: Canonical sample metadata.
+      - "*.json":
+        type: file
+        description: hAMRonization JSON report.
+        pattern: "*.json"
+  tsv:
+    - - meta:
+        type: map
+        description: Canonical sample metadata.
+      - "*.tsv":
+        type: file
+        description: hAMRonization TSV report.
+        pattern: "*.tsv"
+  versions:
+    - "versions.yml":
+        type: file
+        description: Software versions.
+        pattern: "versions.yml"
+authors:
+  - "@louperelo"
+  - "@jasmezz"
+  - "@jfy133"
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

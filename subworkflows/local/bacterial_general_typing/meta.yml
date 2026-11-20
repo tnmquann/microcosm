@@ -1,0 +1,6 @@
+name: "bacterial_general_typing"
+description: "MLST, VirulenceFinder and PlasmidFinder for every bacterial genome (playground/modular/2_general_bac.sh); VirulenceFinder DB is downloaded when not supplied."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

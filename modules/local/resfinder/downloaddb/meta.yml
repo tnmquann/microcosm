@@ -1,0 +1,15 @@
+name: resfinder_downloaddb_local
+description: Download resfinder_db, pointfinder_db and disinfinder_db at one CGE tag into the task directory when they are not supplied.
+keywords: [amr, database, download]
+tools:
+  - resfinder:
+      description: CGE ResFinder databases.
+      homepage: https://bitbucket.org/genomicepidemiology
+input:
+  - revision: {type: string, description: "Tag present in all three repositories (e.g. resfinder-4.7.2)"}
+output:
+  - resfinder_db: {type: directory}
+  - pointfinder_db: {type: directory}
+  - disinfinder_db: {type: directory}
+  - versions: {type: file, description: versions.yml with each database VERSION}
+authors: ["@tnmquann"]

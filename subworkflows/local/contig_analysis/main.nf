@@ -1,0 +1,181 @@
+#!/usr/bin/env nextflow
+nextflow.enable.dsl = 2
+
+// Import modules
+include { SKANI_SEARCH } from '../../../modules/nf-core/skani/search/main'
+include { TIARA_TIARA } from '../../../modules/nf-core/tiara/tiara/main'
+include { SEQKIT_FX2TAB } from '../../../modules/nf-core/seqkit/fx2tab/main'
+include { GENOMAD_ENDTOEND } from '../../../modules/nf-core/genomad/endtoend/main'
+include { GENOMAD_DOWNLOAD } from '../../../modules/nf-core/genomad/download/main'
+include { SAMTOOLS_COVERAGE } from '../../../modules/local/samtools/coverage/main'
+
+// Annotation modules
+include { PROKKA } from '../../../modules/nf-core/prokka/main'
+include { TOOL_MULTIQC } from '../../../modules/local/finalize/tool_multiqc/main'
+
+// [meta, file(s)] channel -> [tool, file] pairs for TOOL_MULTIQC (a single Path is not split into its name parts)
+def toolFiles(tool, ch) {
+    return ch.flatMap { _meta, output -> (output instanceof List ? output : [output]).collect { item -> [tool, item] } }
+}
+include { PYRODIGAL } from '../../../modules/nf-core/pyrodigal/main'
+include { GUNZIP as GUNZIP_PYRODIGAL_FNA } from '../../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_PYRODIGAL_FAA } from '../../../modules/nf-core/gunzip/main'
+include { GUNZIP as GUNZIP_PYRODIGAL_GBK } from '../../../modules/nf-core/gunzip/main'
+
+workflow CONTIG_ANALYSIS {
+    take:
+    ch_assemblies      // Channel: [ val(meta), path(contigs) ] - from MEGAHIT/METASPADES
+    ch_sorted_bam      // Channel: [ val(meta), path(bam) ] - sorted reads-to-assembly BAM, mapped once in ASSEMBLY_BASED
+
+    main:
+    ch_versions = channel.empty()
+
+    // Coverage statistics from the shared BAM (no second mapping)
+    SAMTOOLS_COVERAGE(ch_sorted_bam)
+    ch_versions = ch_versions.mix(SAMTOOLS_COVERAGE.out.versions)
+
+    // Step 5: Extract contig sequence metadata
+    SEQKIT_FX2TAB(ch_assemblies)
+    ch_versions = ch_versions.mix(SEQKIT_FX2TAB.out.versions_seqkit)
+
+    // Step 6 (optional): TIARA domain classification
+    ch_tiara_results = channel.empty()
+    if (!params.skip_tiara_contigqc) {
+        TIARA_TIARA(ch_assemblies)
+        ch_tiara_results = TIARA_TIARA.out.classifications
+        ch_versions = ch_versions.mix(TIARA_TIARA.out.versions_tiara)
+    }
+
+    // Step 7 (optional): SKANI search for ANI-based classification
+    ch_skani_results = channel.empty()
+    if (!params.skip_skani_search) {
+        if (params.skani_db) {
+            ch_skani_db = channel.value([
+                [id: 'skani_db'], 
+                file(params.skani_db, checkIfExists: true)
+            ])
+            SKANI_SEARCH(ch_assemblies, ch_skani_db)
+            ch_skani_results = SKANI_SEARCH.out.search
+            ch_versions = ch_versions.mix(SKANI_SEARCH.out.versions_skani)
+        } else {
+            log.warn "SKANI_SEARCH: No database provided (--skani_db). Skipping SKANI analysis."
+        }
+    }
+
+    // Step 8 (optional): geNomad for plasmid/virus identification
+    ch_genomad_plasmid_summary = channel.empty()
+    ch_genomad_virus_summary = channel.empty()
+    if (!params.skip_genomad_e2e) {
+        // Prepare or download geNomad database
+        if (params.genomad_db) {
+            ch_genomad_db = file(params.genomad_db, checkIfExists: true)
+        } else {
+            GENOMAD_DOWNLOAD()
+            ch_genomad_db = GENOMAD_DOWNLOAD.out.genomad_db
+            ch_versions = ch_versions.mix(GENOMAD_DOWNLOAD.out.versions_genomad)
+            
+            if (params.save_genomad_db) {
+                log.info "geNomad database downloaded and will be saved to output directory."
+            }
+        }
+
+        GENOMAD_ENDTOEND(ch_assemblies, ch_genomad_db)
+        ch_genomad_plasmid_summary = GENOMAD_ENDTOEND.out.plasmid_summary
+        ch_genomad_virus_summary = GENOMAD_ENDTOEND.out.virus_summary
+        ch_versions = ch_versions.mix(GENOMAD_ENDTOEND.out.versions_genomad)
+    }
+
+    // Step 9 (optional): Contig Annotation
+    ch_annotation_faa = channel.empty()
+    ch_annotation_fna = channel.empty()
+    ch_annotation_gbk = channel.empty()
+    
+    if (!params.skip_contig_annotation) {
+        if (params.annotation_tool == 'pyrodigal') {
+            PYRODIGAL(ch_assemblies, "gbk")
+            
+            GUNZIP_PYRODIGAL_FAA(PYRODIGAL.out.faa)
+            GUNZIP_PYRODIGAL_FNA(PYRODIGAL.out.fna)
+            GUNZIP_PYRODIGAL_GBK(PYRODIGAL.out.annotations)
+            
+            ch_annotation_faa = GUNZIP_PYRODIGAL_FAA.out.gunzip
+            ch_annotation_fna = GUNZIP_PYRODIGAL_FNA.out.gunzip
+            ch_annotation_gbk = GUNZIP_PYRODIGAL_GBK.out.gunzip
+            
+            ch_versions = ch_versions.mix(PYRODIGAL.out.versions_pyrodigal)
+            ch_versions = ch_versions.mix(GUNZIP_PYRODIGAL_FAA.out.versions_gunzip)
+            ch_versions = ch_versions.mix(GUNZIP_PYRODIGAL_FNA.out.versions_gunzip)
+            ch_versions = ch_versions.mix(GUNZIP_PYRODIGAL_GBK.out.versions_gunzip)
+            
+        } else if (params.annotation_tool == 'prokka') {
+            PROKKA(ch_assemblies, [], [])
+            
+            ch_annotation_faa = PROKKA.out.faa
+            ch_annotation_fna = PROKKA.out.fna
+            ch_annotation_gbk = PROKKA.out.gbk
+            
+            ch_versions = ch_versions.mix(PROKKA.out.versions_prokka)
+        } else {
+            log.warn "Invalid annotation_tool: ${params.annotation_tool}. Skipping annotation. Valid options: 'pyrodigal', 'prokka'"
+        }
+    }
+
+    // Step 10: Combine QC results for downstream analysis
+    ch_contig_qc_bundle = SAMTOOLS_COVERAGE.out.coverage
+        .join(SEQKIT_FX2TAB.out.text, by: 0, remainder: true)
+
+    // Add optional outputs if they exist
+    if (!params.skip_skani_search && params.skani_db) {
+        ch_contig_qc_bundle = ch_contig_qc_bundle
+            .join(ch_skani_results, by: 0, remainder: true)
+    }
+
+    if (!params.skip_genomad_e2e) {
+        ch_contig_qc_bundle = ch_contig_qc_bundle
+            .join(ch_genomad_plasmid_summary, by: 0, remainder: true)
+    }
+
+    if (!params.skip_tiara_contigqc) {
+        ch_contig_qc_bundle = ch_contig_qc_bundle
+            .join(ch_tiara_results, by: 0, remainder: true)
+    }
+
+    // MultiQC: one TOOL_MULTIQC task per tool that ran (custom sections); Prokka through the MultiQC prokka module
+    ch_multiqc_files = channel.empty()
+    if (!params.skip_multiqc) {
+        def ch_tool_files = toolFiles('contig_summary', SEQKIT_FX2TAB.out.text.mix(SAMTOOLS_COVERAGE.out.coverage))
+        if (!params.skip_contig_annotation && params.annotation_tool == 'pyrodigal') {
+            ch_tool_files = ch_tool_files.mix(toolFiles('pyrodigal', ch_annotation_faa))
+        }
+        if (!params.skip_contig_annotation && params.annotation_tool == 'prokka') {
+            ch_multiqc_files = ch_multiqc_files.mix(PROKKA.out.txt.map { _meta, txt -> txt })
+        }
+        if (!params.skip_genomad_e2e) {
+            ch_tool_files = ch_tool_files.mix(toolFiles('genomad', ch_genomad_plasmid_summary.mix(ch_genomad_virus_summary)))
+        }
+        // Tiara and skani plots also weigh contigs by length (SeqKit)
+        if (!params.skip_tiara_contigqc) {
+            ch_tool_files = ch_tool_files.mix(toolFiles('tiara_contigs', ch_tiara_results.mix(SEQKIT_FX2TAB.out.text)))
+        }
+        if (!params.skip_skani_search && params.skani_db) {
+            ch_tool_files = ch_tool_files.mix(toolFiles('skani', ch_skani_results.mix(SEQKIT_FX2TAB.out.text)))
+        }
+        TOOL_MULTIQC(ch_tool_files.groupTuple(), file("${projectDir}/bin/py_scripts/multiqc/tool_multiqc.py", checkIfExists: true))
+        ch_multiqc_files = ch_multiqc_files.mix(TOOL_MULTIQC.out.tables.flatten())
+    }
+
+    emit:
+    multiqc_files      = ch_multiqc_files
+    bam                = ch_sorted_bam
+    coverage           = SAMTOOLS_COVERAGE.out.coverage
+    seqkit_stats       = SEQKIT_FX2TAB.out.text
+    tiara_class        = ch_tiara_results
+    skani_results      = ch_skani_results
+    genomad_plasmids   = ch_genomad_plasmid_summary
+    genomad_viruses    = ch_genomad_virus_summary
+    annotation_faa     = ch_annotation_faa
+    annotation_fna     = ch_annotation_fna
+    annotation_gbk     = ch_annotation_gbk
+    contig_qc_bundle   = ch_contig_qc_bundle
+    versions           = ch_versions
+}

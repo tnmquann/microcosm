@@ -1,0 +1,206 @@
+# Default MultiQC configuration for microcosm (--multiqc_config / --multiqc_extra_config are applied after it).
+title: "microcosm"
+subtitle: "Metagenomic profiling and bacterial genome analysis report"
+intro_text: >
+  This report gathers the quality control and profiling results of one microcosm run:
+  read QC (FastQC, fastp, hostile), read-based taxonomic profiles (microcosm = sourmash + YACHT, and/or sylph) and
+  AMR genes (RGI bwt), assembly and contig QC (QUAST, Bowtie2, SeqKit, samtools coverage, Pyrodigal / Prokka, geNomad,
+  Tiara, skani), bins (Tiara domains, QUAST, assembly_stats.py, CheckM2, CheckM, BUSCO, GUNC, Prokka / Bakta,
+  sourmash / GTDB-Tk taxonomy) and the bacterial genomes (overview, Kleborate, Salmonella typing, RGI).
+  Use the toolbox on the right to highlight, rename or hide samples and to export plots and data.
+report_comment: >
+  Full result tables are in the pipeline output folders; this report shows summaries only.
+  Software versions and the run parameters are listed at the end of the report.
+
+custom_logo_title: "microcosm"
+custom_logo_width: 260
+
+# Cleaner layout
+show_analysis_paths: false
+show_analysis_time: false
+collapse_tables: false
+plots_force_interactive: true
+max_table_rows: 1000
+data_format: "tsv"
+
+# Sample names: sylph-tax reports are named <sample>.sylphmpa
+extra_fn_clean_exts:
+  - ".sylphmpa"
+  - ".bowtie2"
+  # Prokka: <assembler>-<sample>.contigs.prokka.txt (contigs), <bin>[.fa].prokka.txt (bins); BUSCO: short_summary.specific.<lineage>_odbNN.<bin>.txt
+  - ".contigs.prokka"
+  - ".fa.prokka"
+  - ".prokka"
+  - type: regex
+    pattern: '^short_summary\.(specific|generic)\.[^.]+\.'
+  # hostile names a sample after its read 1 file (<sample>_R1.fastp.fastq.gz): keep the sample name, as fastp does
+  - type: regex
+    pattern: '_R?1([.].*)?$'
+    module: hostile
+
+# Prokka names samples after the --organism line ("Genus species strain" for every bin) unless told otherwise
+use_filename_as_sample_name:
+  - prokka
+
+# QUAST reports: report_rawassemblies.tsv (assemblies) and report_bins.tsv (bins)
+sp:
+  quast:
+    fn: "report*.tsv"
+
+# Modules that run twice get their own section (same idea as nf-core/mag)
+module_order:
+  - fastqc:
+      name: "FastQC: raw reads"
+      anchor: "fastqc_raw"
+      path_filters_exclude:
+        - "*_cleaned_*fastqc.zip"
+  - fastp
+  - hostile
+  - fastqc:
+      name: "FastQC: after host removal"
+      anchor: "fastqc_cleaned"
+      info: "Reads after trimming (fastp) and host removal (hostile), as used by the analysis."
+      path_filters:
+        - "*_cleaned_*fastqc.zip"
+  - sylphtax
+  - quast:
+      name: "QUAST: assembly"
+      anchor: "quast_assembly"
+      info: "Assembly statistics of the metagenome assemblies."
+      path_filters:
+        - "*report_rawassemblies.tsv"
+  - bowtie2:
+      name: "Bowtie2: reads mapped to assemblies"
+      anchor: "bowtie2_assembly"
+      info: "Share of reads that map back to their assembly (input of the binning depth profiles)."
+  - quast:
+      name: "QUAST: bins"
+      anchor: "quast_bins"
+      info: "Assembly statistics of the bins."
+      path_filters:
+        - "*report_bins.tsv"
+  - checkm2
+  - checkm
+  - busco
+  - prokka:
+      name: "Prokka: contigs"
+      anchor: "prokka_contigs"
+      info: "Prokka annotation of the assembly contigs (--annotation_tool prokka)."
+      path_filters:
+        - "*.contigs.prokka.txt"
+  - prokka:
+      name: "Prokka: bins"
+      anchor: "prokka_bins"
+      info: "Prokka annotation of the bins (--bin_annotation_tool prokka)."
+      path_filters_exclude:
+        - "*.contigs.prokka.txt"
+  - bakta
+  - gtdbtk
+  - sourmash
+  - custom_content
+
+# Section order (higher first)
+report_section_order:
+  microcosm:
+    order: 1000
+  sylphtax:
+    order: 970
+  microcosm_sylph:
+    order: 969
+  microcosm_sylph_abundance:
+    order: 968
+  microcosm_bin_taxonomy:
+    order: 960
+  microcosm_bin_summary:
+    order: 955
+  microcosm_rgi_bwt:
+    order: 965
+  microcosm_rgi_bwt_families:
+    order: 964
+  microcosm_bacterial_overview:
+    order: 950
+  microcosm_kleborate:
+    order: 948
+  microcosm_salmonella:
+    order: 947
+  microcosm_rgi_amr:
+    order: 945
+  microcosm_rgi_amr_families:
+    order: 944
+  fastqc_raw:
+    order: 900
+  fastp:
+    order: 890
+  hostile:
+    order: 880
+  fastqc_cleaned:
+    order: 870
+  quast_assembly:
+    order: 800
+  microcosm_contig_summary:
+    order: 798
+  microcosm_pyrodigal:
+    order: 797
+  prokka_contigs:
+    order: 796
+  microcosm_genomad:
+    order: 795
+  microcosm_contig_tiara:
+    order: 794
+  microcosm_contig_skani:
+    order: 793
+  bowtie2_assembly:
+    order: 790
+  microcosm_bin_tiara:
+    order: 785
+  quast_bins:
+    order: 780
+  microcosm_assembly_stats:
+    order: 778
+  checkm2:
+    order: 770
+  checkm:
+    order: 760
+  busco:
+    order: 750
+  microcosm_gunc:
+    order: 745
+  prokka_bins:
+    order: 740
+  bakta:
+    order: 730
+  gtdbtk:
+    order: 725
+  sourmash:
+    order: 720
+  microcosm-summary:
+    order: -1000
+  multiqc_software_versions:
+    order: -1100
+
+# Keep the General Statistics table short: per-sample read / assembly metrics only. Per-bin tools are
+# hidden there (one row per bin would make the table and the report heavy for large batches); their
+# numbers are in the "Bin summary" table and the tools' own sections.
+table_columns_visible:
+  "QUAST: bins": false
+  "Bowtie2: reads mapped to assemblies": false
+  CheckM2: false
+  CheckM: false
+  BUSCO: false
+  "Prokka: contigs": false
+  "Prokka: bins": false
+  Bakta: false
+  "QUAST: assembly":
+    N50: true
+    "Total length": true
+    L50: false
+  "FastQC: raw reads":
+    percent_duplicates: false
+    percent_fails: false
+  "FastQC: after host removal":
+    percent_duplicates: false
+    percent_fails: false
+  fastp:
+    pct_adapter: false
+    pct_duplication: false
+    after_filtering_q30_bases: false

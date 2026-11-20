@@ -1,0 +1,76 @@
+name: rgi_main_local
+description: Predict antimicrobial resistance using RGI with a locally controlled, compatible Conda environment.
+keywords:
+  - bacteria
+  - fasta
+  - antimicrobial resistance
+tools:
+  - rgi:
+      description: Predict antimicrobial resistance from nucleotide or protein sequences using CARD.
+      homepage: https://card.mcmaster.ca
+      documentation: https://github.com/arpcard/rgi
+      tool_dev_url: https://github.com/arpcard/rgi
+      doi: "10.1093/nar/gkz935"
+      licence:
+        - "https://card.mcmaster.ca/about"
+input:
+  - - meta:
+        type: map
+        description: Canonical sample metadata.
+    - fasta:
+        type: file
+        description: Nucleotide or protein sequences in FASTA format.
+        pattern: "*.{fasta,fasta.gz,fa,fa.gz,fna,fna.gz,faa,faa.gz}"
+  - card:
+      type: directory
+      description: Prepared CARD database directory.
+      pattern: "*/"
+  - wildcard:
+      type: directory
+      description: Optional prepared WildCARD database directory.
+      pattern: "*/"
+output:
+  json:
+    - - meta:
+        type: map
+        description: Canonical sample metadata.
+      - "*.json":
+        type: file
+        description: RGI JSON results.
+        pattern: "*.json"
+  tsv:
+    - - meta:
+        type: map
+        description: Canonical sample metadata.
+      - "*.txt":
+        type: file
+        description: RGI tab-delimited results.
+        pattern: "*.txt"
+  tmp:
+    - - meta:
+        type: map
+        description: Canonical sample metadata.
+      - "temp/":
+        type: directory
+        description: RGI intermediate files.
+        pattern: "temp/"
+  tool_version:
+    - RGI_VERSION:
+        type: string
+        description: RGI software version.
+  db_version:
+    - DB_VERSION:
+        type: string
+        description: CARD database version.
+  versions:
+    - "versions.yml":
+        type: file
+        description: Software and database versions.
+        pattern: "versions.yml"
+authors:
+  - "@rpetit3"
+  - "@jfy133"
+  - "@jasmezz"
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

@@ -1,0 +1,13 @@
+name: paratype_download_local
+description: Clone Paratype (github.com/CHRF-Genomics/Paratype) at a fixed revision into the task directory when --paratype_bundle is not supplied.
+keywords: [salmonella, paratyphi, genotyping, database]
+tools:
+  - paratype:
+      description: Genotyping of Salmonella Paratyphi A against the AKU_12601 reference.
+      homepage: https://github.com/CHRF-Genomics/Paratype
+input:
+  - revision: {type: string, description: Git commit to check out}
+output:
+  - bundle: {type: directory, description: Paratype checkout with paratype.py and its reference files}
+  - versions: {type: file, description: versions.yml with the checked-out commit}
+authors: ["@tnmquann"]

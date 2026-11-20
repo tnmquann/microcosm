@@ -1,0 +1,18 @@
+name: resfinder_run_local
+description: Run ResFinder 4.7 (`python -m resfinder`) with ResFinder, PointFinder and DisinFinder databases on one assembly, as in playground/modular/5_amr.sh. Tool flags such as --acquired/--disinfectant come from task.ext.args.
+keywords: [amr, resfinder, pointfinder, disinfinder]
+tools:
+  - resfinder:
+      description: Identifies acquired antimicrobial resistance genes and chromosomal point mutations.
+      homepage: https://bitbucket.org/genomicepidemiology/resfinder
+input:
+  - - meta: {type: map, description: "Genome metadata; species/genus (GTDB) select the PointFinder species"}
+    - fasta: {type: file, description: Uncompressed genome FASTA}
+  - db_res: {type: directory, description: resfinder_db}
+  - db_point: {type: directory, description: pointfinder_db}
+  - db_disinf: {type: directory, description: disinfinder_db}
+output:
+  - json: {type: file, description: "<prefix>.json (input to hAMRonization)"}
+  - results: {type: directory, description: "<prefix>/ result tables"}
+  - versions_resfinder: {type: tuple, description: Process, tool and version}
+authors: ["@tnmquann"]
