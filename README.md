@@ -242,7 +242,7 @@ uses the same layer when `--enable_bacterial_downstream` is set.
 
 Bins and blank-lineage genomes are classified with sourmash by default
 (`--sourmash_database`, `--sourmash_taxonomy_csv`). `--bin_classifier gtdbtk
---gtdbtk_db /path/to/gtdb/release226` uses GTDB-Tk `classify_wf` (2.5.2, GTDB
+--gtdbtk_db /path/to/gtdb/release226` uses GTDB-Tk `classify_wf` (2.7.2, GTDB
 R226) instead: one call per sample, results in `Taxonomy/GTDB-Tk/`. Its
 summaries are converted to the same table as sourmash, so the routing, lineage
 rules, `--bacterial_decision_table` and MultiQC work unchanged. GTDB-Tk
@@ -384,7 +384,11 @@ outdir/
 │   └── mapped_reads/
 ├── Taxonomy/
 │   ├── sourmash/
+│   ├── GTDB-Tk/         (--bin_classifier gtdbtk)
 │   └── Tiara/
+├── Bacterial_Analysis/  (--genome_input or --enable_bacterial_downstream; see above)
+├── MultiQC/
+└── pipeline_info/
 ```
 
 ## Error Handling
