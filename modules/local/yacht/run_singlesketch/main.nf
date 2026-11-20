@@ -5,11 +5,6 @@ process YACHT_RUN_SINGLESKETCH {
     conda "${moduleDir}/environment.yml"
     container "community.wave.seqera.io/library/sourmash_yacht_pandas_sourmash_plugin_branchwater:f5cacb08e855b10c"
 
-    publishDir "${params.yacht_results_dir}",
-        mode: params.publish_dir_mode,
-        enabled: params.enable_copyintermediate,
-        saveAs: { filename -> filename.equals('versions.yml') ? null : filename }
-
     input:
     tuple val(meta), path(sig_file)  // Single signature file
     path yacht_database_json

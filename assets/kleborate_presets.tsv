@@ -1,0 +1,15 @@
+lineage_pattern	preset	modules
+s__Klebsiella pneumoniae	kpsc	general__contig_stats
+s__Klebsiella quasipneumoniae	kpsc	general__contig_stats
+s__Klebsiella variicola	kpsc	general__contig_stats
+s__Klebsiella quasivariicola	kpsc	general__contig_stats
+s__Klebsiella africana	kpsc	general__contig_stats
+s__Klebsiella oxytoca	kosc	general__contig_stats
+s__Klebsiella grimontii	kosc	general__contig_stats
+s__Klebsiella michiganensis	kosc	general__contig_stats
+s__Klebsiella pasteurii	kosc	general__contig_stats
+s__Klebsiella huaxiensis	kosc	general__contig_stats
+s__Klebsiella spallanzanii	kosc	general__contig_stats
+g__Escherichia	escherichia	general__contig_stats
+g__Klebsiella		enterobacterales__species,general__contig_stats
+g__Raoultella		enterobacterales__species,general__contig_stats

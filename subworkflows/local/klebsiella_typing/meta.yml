@@ -1,0 +1,6 @@
+name: "klebsiella_typing"
+description: "Route Klebsiella, Raoultella and Escherichia genomes to Kleborate v3 with the preset chosen from the GTDB lineage (playground/modular/3_kleb.sh)."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

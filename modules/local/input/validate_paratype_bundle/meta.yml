@@ -1,0 +1,37 @@
+name: "validate_paratype_bundle"
+description: "Validate a staged, user-supplied Paratype bundle without modifying it."
+keywords:
+  - salmonella
+  - paratyphi
+  - validation
+tools:
+  - "python":
+      description: "Python standard-library validator runtime."
+      homepage: "https://www.python.org/"
+      licence:
+        - "PSF-2.0"
+input:
+  - paratype_bundle:
+      type: directory
+      description: "Read-only Paratype bundle containing paratype.py and its required reference/definition files."
+  - validator_script:
+      type: file
+      description: "Repository-local validator."
+      pattern: "*.py"
+output:
+  bundle:
+    - "paratype_bundle":
+        type: directory
+        description: "Validated staged bundle directory."
+  ready:
+    - "paratype_bundle.ready":
+        type: file
+        description: "Token emitted after successful validation."
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Software versions."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

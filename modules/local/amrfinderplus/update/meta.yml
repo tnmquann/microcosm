@@ -1,0 +1,8 @@
+name: amrfinderplus_update_local
+description: Download the current AMRFinderPlus database (amrfinder_update) as a tar.gz; nf-core amrfinderplus/update plus a trigger input.
+keywords: [amr, database, download]
+input:
+  - trigger: {type: value, description: Any value; one emission starts the download}
+output:
+  - db: {type: file, description: Database for the matching run/predict module}
+authors: ["@tnmquann"]

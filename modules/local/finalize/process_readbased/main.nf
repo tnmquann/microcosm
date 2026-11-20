@@ -3,15 +3,10 @@ process PROCESS_READBASED_RESULTS {
     label 'process_medium'
 
     conda "conda-forge::pandas=2.2.3 openpyxl=3.1.5"
-
-    publishDir "${params.processed_results_dir}",
-        mode: params.publish_dir_mode,
-        pattern: "final_results"
-
-    publishDir "${params.yacht_results_dir}",
-        mode: params.publish_dir_mode,
-        pattern: "temp_yacht_results",
-        saveAs: { 'yacht_results' }
+    // python + pandas/openpyxl/biopython + gzip/zip/unzip for container profiles (Seqera Wave, frozen)
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'oras://community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:f9da7bb46b36d191' :
+        'community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:e8608291079924c4' }"
 
     input:
     tuple val(meta), path(gather_csv)
@@ -67,8 +62,9 @@ process PROCESS_READBASED_RESULTS {
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         python: \$(python --version 2>&1 | sed 's/Python //g')
-        conda-forge: pandas=2.2.3 openpyxl=3.1.5
-        gunzip: \$(gunzip --version 2>&1 | head -n 1 | cut -d ' ' -f 2)
+        pandas: \$(python -c 'import pandas; print(pandas.__version__)')
+        openpyxl: \$(python -c 'import openpyxl; print(openpyxl.__version__)')
+        gzip: \$(gzip --version 2>&1 | head -n 1 | awk '{print \$NF}')
     END_VERSIONS
     """
 
@@ -76,6 +72,7 @@ process PROCESS_READBASED_RESULTS {
     def prefix = task.ext.prefix ?: meta.id ?: 'results'
     """
     mkdir -p final_results
+    touch final_results/merged_sourmash_yacht.csv
     touch final_results/summary_${prefix}.txt
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

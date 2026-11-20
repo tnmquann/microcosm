@@ -22,6 +22,7 @@ include { GUNZIP                           } from '../../../modules/nf-core/gunz
 include { QUAST_BINS                       } from '../../../modules/local/quast/bins/main'
 include { QUAST_BINS_SUMMARY               } from '../../../modules/local/quast/binssummary/main'
 include { ASSEMBLY_STATS } from '../../../modules/local/finalize/assembly_stats/main'
+include { binqcTools } from '../utils_microcosm/main'
 
 workflow BIN_QC {
     take:
@@ -29,10 +30,12 @@ workflow BIN_QC {
     ch_checkm2_db   // channel: CheckM2 database (passed from main workflow)
 
     main:
+    def binqc_tools = binqcTools()
     ch_qc_summary = []
     ch_versions = channel.empty()
     ch_multiqc_files = channel.empty()
     ch_qc_summaries = channel.empty()
+    ch_gunc = channel.empty()
 
     /*
     ================================
@@ -57,7 +60,7 @@ workflow BIN_QC {
     // CheckM database setup
     if (params.checkm_db) {
         ch_checkm_db = channel.value(file(params.checkm_db, checkIfExists: true))
-    } else if (params.binqc_tool == 'checkm') {
+    } else if ('checkm' in binqc_tools) {
         ch_checkm_db_archive = [[id: 'checkm_db'], file(params.checkm_download_url, checkIfExists: true)]
         CHECKM_UNTAR(ch_checkm_db_archive)
         ch_versions = ch_versions.mix(CHECKM_UNTAR.out.versions_untar)
@@ -68,7 +71,7 @@ workflow BIN_QC {
 
     // CheckM2 database setup
     // Database is passed from main workflow to avoid duplicate downloads
-    // NOTE: This is only used if params.binqc_tool == 'checkm2'
+    // NOTE: This is only used if --binqc_tool includes checkm2
     // Other tools (CheckM v1, BUSCO) do NOT require this database
     // ch_checkm2_db will be an empty channel if not needed
     
@@ -114,11 +117,11 @@ workflow BIN_QC {
     ch_versions = ch_versions.mix(ASSEMBLY_STATS.out.versions)
     /*
     ================================
-     * Run QC tools based on binqc_tool parameter
+     * Run every QC tool listed in --binqc_tool (busco, checkm, checkm2)
     ================================
      */
 
-    if (params.binqc_tool == "busco") {
+    if ('busco' in binqc_tools) {
         // Transpose bins for individual processing
         ch_input_bins_for_qc = ch_bins
             .map { meta, bins ->
@@ -139,13 +142,17 @@ workflow BIN_QC {
         BUSCO_BUSCO(ch_input_bins_for_qc, 'genome', params.busco_db_lineage, ch_busco_db_for_process, [], params.busco_clean)
         ch_versions = ch_versions.mix(BUSCO_BUSCO.out.versions_busco)
 
-        ch_qc_summaries = BUSCO_BUSCO.out.batch_summary
-            .map { _meta, summary -> [[id: 'busco'], summary] }
-            .groupTuple()
+        ch_qc_summaries = ch_qc_summaries.mix(
+            BUSCO_BUSCO.out.batch_summary
+                .map { _meta, summary -> [[id: 'busco'], summary] }
+                .groupTuple()
+        )
         ch_multiqc_files = ch_multiqc_files.mix(
             BUSCO_BUSCO.out.short_summaries_txt.map { summary_output -> summary_output[1] }.flatten()
         )
-    } else if (params.binqc_tool == "checkm") {
+    }
+
+    if ('checkm' in binqc_tools) {
         // Prepare bins and decompress if needed
         ch_bins_for_checkm = ch_bins
             .map { meta, bins ->
@@ -182,14 +189,18 @@ workflow BIN_QC {
         ch_versions = ch_versions.mix(CHECKM_QA.out.versions_checkm)
 
         // Prepare for concatenation - use a common ID for grouping all samples
-        ch_qc_summaries = CHECKM_QA.out.output
-            .map { _meta, summary -> [[id: 'checkm'], summary] }
-            .groupTuple()
+        ch_qc_summaries = ch_qc_summaries.mix(
+            CHECKM_QA.out.output
+                .map { _meta, summary -> [[id: 'checkm'], summary] }
+                .groupTuple()
+        )
         
         ch_multiqc_files = ch_multiqc_files.mix(
             CHECKM_QA.out.output.map { checkm_output -> checkm_output[1] }.flatten()
         )
-    } else if (params.binqc_tool == "checkm2") {
+    }
+
+    if ('checkm2' in binqc_tools) {
         ch_bins_for_checkm2 = ch_bins
             .map { meta, bins ->
                 def bin_list = bins instanceof Collection ? bins.flatten() : [bins]
@@ -210,9 +221,11 @@ workflow BIN_QC {
         CHECKM2_PREDICT(ch_bins_for_checkm2, ch_checkm2_db_for_predict)
         ch_versions = ch_versions.mix(CHECKM2_PREDICT.out.versions_checkm2_predict)
 
-        ch_qc_summaries = CHECKM2_PREDICT.out.checkm2_tsv
-            .map { _meta, summary -> [[id: 'checkm2'], summary] }
-            .groupTuple()
+        ch_qc_summaries = ch_qc_summaries.mix(
+            CHECKM2_PREDICT.out.checkm2_tsv
+                .map { _meta, summary -> [[id: 'checkm2'], summary] }
+                .groupTuple()
+        )
         ch_multiqc_files = ch_multiqc_files.mix(
             CHECKM2_PREDICT.out.checkm2_tsv.map { _meta, tsv -> tsv }
         )
@@ -233,6 +246,7 @@ workflow BIN_QC {
 
         GUNC_RUN(ch_input_bins_for_gunc, ch_gunc_db)
         ch_versions = ch_versions.mix(GUNC_RUN.out.versions_gunc)
+        ch_gunc = GUNC_RUN.out.maxcss_level_tsv
 
         // Make sure to keep directory in sync with modules.conf
         GUNC_RUN.out.maxcss_level_tsv
@@ -243,7 +257,7 @@ workflow BIN_QC {
                 storeDir: "${params.outdir}/Binning/QC",
             )
 
-        if (params.binqc_tool == 'checkm') {
+        if ('checkm' in binqc_tools) {
             ch_input_to_mergecheckm = GUNC_RUN.out.maxcss_level_tsv.combine(CHECKM_QA.out.output, by: 0)
 
             GUNC_MERGECHECKM(ch_input_to_mergecheckm)
@@ -266,17 +280,16 @@ workflow BIN_QC {
     ================================
      */
 
-    if (ch_qc_summaries) {
-        CONCAT_BINQC_TSV(ch_qc_summaries, 'tsv', 'tsv')
-        ch_versions = ch_versions.mix(CONCAT_BINQC_TSV.out.versions_csvtk)
-        ch_qc_summary = CONCAT_BINQC_TSV.out.csv.map { _meta, summary -> summary }
-    } else {
-        ch_qc_summary = channel.empty()
-    }
+    // One <tool>_summary.tsv per QC tool
+    CONCAT_BINQC_TSV(ch_qc_summaries, 'tsv', 'tsv')
+    ch_versions = ch_versions.mix(CONCAT_BINQC_TSV.out.versions_csvtk)
+    ch_qc_summary = CONCAT_BINQC_TSV.out.csv.map { _meta, summary -> summary }
 
     emit:
     qc_summary    = ch_qc_summary
     quast_summary = QUAST_BINS_SUMMARY.out.summary
     multiqc_files = ch_multiqc_files
+    gunc          = ch_gunc                    // [meta, *maxCSS_level.tsv] (MultiQC)
+    assembly_stats = ASSEMBLY_STATS.out.asm_stats // [meta, *.assembly_stats.csv] (MultiQC)
     versions      = ch_versions
 }

@@ -142,6 +142,7 @@ workflow DOMAIN_CLASSIFICATION {
     ch_versions = ch_versions.mix(TIARA_SUMMARY.out.versions_csvtk)
 
     emit:
-    classified_bins = ch_classified_bins
-    versions        = ch_versions
+    classified_bins     = ch_classified_bins
+    bin_classifications = TIARA_CLASSIFY.out.bin_classifications  // [meta, <prefix>.binclassification.tsv] (MultiQC)
+    versions            = ch_versions
 }

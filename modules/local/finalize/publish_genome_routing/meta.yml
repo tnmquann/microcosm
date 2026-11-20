@@ -1,0 +1,50 @@
+name: "publish_genome_routing"
+description: "Materialize deterministic bacterial, excluded, and unresolved routing reports."
+keywords:
+  - reporting
+  - taxonomy
+  - routing
+tools:
+  - "coreutils":
+      description: "GNU core utilities."
+      homepage: "https://www.gnu.org/software/coreutils/"
+      licence:
+        - "GPL-3.0-or-later"
+input:
+  - bacterial_report:
+      type: file
+      description: "Collected bacterial routing report."
+      pattern: "*.tsv"
+  - excluded_report:
+      type: file
+      description: "Collected non-bacterial exclusion report."
+      pattern: "*.tsv"
+  - unresolved_report:
+      type: file
+      description: "Collected unresolved-lineage report."
+      pattern: "*.tsv"
+output:
+  bacterial:
+    - "bacterial_routing_manifest.tsv":
+        type: file
+        description: "Bacterial genomes eligible for downstream analysis."
+        pattern: "*.tsv"
+  excluded:
+    - "excluded_genomes.tsv":
+        type: file
+        description: "Resolved non-bacterial genomes."
+        pattern: "*.tsv"
+  unresolved:
+    - "unresolved_genomes.tsv":
+        type: file
+        description: "Genomes lacking resolved lineage."
+        pattern: "*.tsv"
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Software versions."
+        pattern: "versions.yml"
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

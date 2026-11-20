@@ -2,9 +2,7 @@ process RGI_PREPARECARDDB {
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'community.wave.seqera.io/library/rgi_aria2:a94e11e18f7348f4':
-        'biocontainers/rgi:6.0.5--pyh05cac1d_0' }"
+    container 'community.wave.seqera.io/library/rgi_aria2:a94e11e18f7348f4'
 
     input:
     path card, stageAs: 'input_card/*'  // Optional input

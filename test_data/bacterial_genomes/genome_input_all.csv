@@ -1,0 +1,9 @@
+sample_id,fasta,lineage
+ecoli_K12,ecoli_K12.fasta.gz,
+kaerogenes_KCTC2190,kaerogenes_KCTC2190.fasta.gz,
+koxytoca_KCTC1686,koxytoca_KCTC1686.fasta.gz,
+kpneumoniae_HS11286,kpneumoniae_HS11286.fasta.gz,
+msmithii_PS,msmithii_PS.fasta.gz,
+sparatyphiA_ATCC9150,sparatyphiA_ATCC9150.fasta.gz,
+styphi_CT18,styphi_CT18.fasta.gz,
+styphimurium_LT2,styphimurium_LT2.fasta.gz,

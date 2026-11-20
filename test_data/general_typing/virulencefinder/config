@@ -1,0 +1,3 @@
+# Database configuration file used by focused workflow tests
+# extensions: fsa
+virulence_test	Test bacterium	Minimal VirulenceFinder database fixture

@@ -3,9 +3,7 @@ process RGI_BWT {
     label 'process_medium'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'community.wave.seqera.io/library/rgi_aria2:a94e11e18f7348f4':
-        'biocontainers/rgi:6.0.5--pyh05cac1d_0' }"
+    container 'community.wave.seqera.io/library/rgi_aria2:a94e11e18f7348f4'
 
     input:
     tuple val(meta), path(reads1), path(reads2)  // meta, forward_reads, reverse_reads

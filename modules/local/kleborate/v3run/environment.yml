@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  # ezclermont: needed by the escherichia preset; python 3.9 + biopython 1.85:
+  # ECTyper 2.0.0 fails with biopython 1.88 (FastaIterator.records).
+  - bioconda::ezclermont=1.0.0
+  - bioconda::kleborate=3.2.4
+  - conda-forge::biopython=1.85
+  - conda-forge::python=3.9

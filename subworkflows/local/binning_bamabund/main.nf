@@ -16,6 +16,7 @@ workflow BINNING_BAMABUND {
 
     main:
     versions_ch = channel.empty()
+    def ch_multiqc_files = channel.empty() // bowtie2 mapping logs (BWA-MEM2 writes none)
     
     // Prepare assemblies channel
     ch_assemblies_for_mapping = assemblies.map { meta, assembly ->
@@ -98,6 +99,7 @@ workflow BINNING_BAMABUND {
             .mix(BOWTIE2_ASSEMBLY_ALIGN.out.versions_pigz)
 
         ch_mapped_bam = BOWTIE2_ASSEMBLY_ALIGN.out.bam
+        ch_multiqc_files = BOWTIE2_ASSEMBLY_ALIGN.out.log.map { _meta, log_file -> log_file }
     }
 
     // Sort BAM files
@@ -134,4 +136,5 @@ workflow BINNING_BAMABUND {
     bai         = SAMTOOLS_INDEX.out.index
     bam_bai     = ch_sorted_bam_bai
     versions    = versions_ch
+    multiqc_files = ch_multiqc_files
 }

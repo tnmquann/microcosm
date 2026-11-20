@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/tnmquann/profiler_sourmash/main/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/tnmquann/microcosm/main/nextflow_schema.json",
     "title": "Taxonomic Profiling Pipeline with Hostile and Sourmash",
     "description": "Pipeline for taxonomic profiling using Sourmash after cleaning reads with Hostile",
     "type": "object",
@@ -10,12 +10,12 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": ["outdir"],
             "properties": {
                 "input": {
                     "type": "string",
                     "exists": true,
-                    "description": "Path to input CSV file containing sample information or directory containing FASTQ files"
+                    "description": "Path to an input CSV file with a required non-empty sample_id column, or a directory containing paired FASTQ files. Optional only when --genome_input is supplied."
                 },
                 "outdir": {
                     "type": "string",
@@ -40,6 +40,19 @@
                     "exists": true,
                     "description": "Path to CSV file containing pre-computed assemblies (optional). Skips preprocessing and assembly steps. Required columns: sample_id, run_id, group, assembler, fasta",
                     "help_text": "When supplied, only binning and downstream workflows are run. Must be used with --input_format csv. Reads must also be provided via --input parameter"
+                },
+                "genome_input": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "Standalone genome CSV for bacterial downstream analysis. Required headers: sample_id,fasta. Optional headers: run_id,group,assembler,lineage.",
+                    "help_text": "Rows with a valid GTDB-style lineage bypass classification. Rows with blank lineage are classified through BIN_CLASSIFICATION and need its database inputs (--sourmash_database and --sourmash_taxonomy_csv, or --bin_classifier gtdbtk with --gtdbtk_db). This input is mutually exclusive with --input and --assembly_input."
+                },
+                "pipeline_root": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "description": "Internal repository-root override for focused workflow tests.",
+                    "hidden": true
                 }
             }
         },
@@ -51,22 +64,247 @@
                 "sourmash_database": {
                     "type": "string",
                     "pattern": "^.+$",
-                    "exists": true,
-                    "description": "Path to Sourmash database (.rocksdb, .zip, or directory)",
-                    "help_text": "Required for bin classification and read-based profiling"
+                    "description": "Sourmash database(s): one .rocksdb/.zip, or several zip/sig databases separated by commas",
+                    "help_text": "Required for bin classification, read-based profiling, and --genome_input rows whose lineage field is blank. Example: --sourmash_database \"path/to/db1.zip,path/to/db2.zip\". Several RocksDB indexes cannot be combined (fastmultigather skips them in a pathlist). With several databases YACHT is skipped, because YACHT takes one database."
                 },
                 "sourmash_taxonomy_csv": {
                     "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "description": "Path to taxonomy lineages CSV file for Sourmash",
-                    "help_text": "Required when running workflows that use SOURMASH_TAXANNOTATE (READ_BASED, READ_BASED_SINGLERUN, BIN_CLASSIFICATION). The pipeline will error if missing."
+                    "pattern": "^.+$",
+                    "description": "Sourmash taxonomy lineages CSV/sqldb; several files separated by commas",
+                    "help_text": "Required when running workflows that use SOURMASH_TAXANNOTATE (READ_BASED, READ_BASED_SINGLERUN, BIN_CLASSIFICATION), including --genome_input rows whose lineage field is blank. Give one taxonomy file per database when the databases come from different sources."
                 },
                 "yacht_database": {
                     "type": "string",
                     "format": "file-path",
                     "description": "Path to YACHT database configuration file",
                     "help_text": "Required only if using read-based profiling workflow"
+                },
+                "amrfinderplus_db": {
+                    "type": "string",
+                    "exists": true,
+                    "description": "AMRFinderPlus 4.x database directory (a dated version folder or its latest link).",
+                    "help_text": "Optional. When unset, amrfinder_update downloads the current database into the run work directory. A database made for AMRFinderPlus 3.x is not compatible."
+                },
+                "save_amrfinderplus_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded AMRFinderPlus database to <outdir>/Databases/AMRFinderPlus.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
+                "amrfinderplus_args": {
+                    "type": "string",
+                    "default": "--plus",
+                    "description": "AMRFinderPlus run arguments.",
+                    "help_text": "Default --plus as in 5_amr.sh. Replaces the default when set, so keep --plus if you want it. --organism is added per genome from --amrfinderplus_organism_map."
+                },
+                "amrfinderplus_organism_map": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "TSV mapping GTDB lineage to AMRFinderPlus --organism.",
+                    "help_text": "Columns lineage_pattern, organism. The first row whose lineage_pattern occurs in the genome lineage wins; no match = no --organism. GTDB suffixes such as _B are ignored when matching (s__Enterococcus_B faecium matches s__Enterococcus faecium). Default: assets/amrfinderplus_organisms.tsv (the 5_amr.sh list)."
+                },
+                "abricate_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Optional read-only custom ABRicate data directory.",
+                    "help_text": "Leave unset to use the database bundled with the installed ABRicate container. When set, the directory must contain --abricate_db_id."
+                },
+                "abricate_db_id": {
+                    "type": "string",
+                    "default": "ncbi",
+                    "pattern": "^[A-Za-z0-9._-]+$",
+                    "description": "ABRicate database identifier passed with --db."
+                },
+                "abricate_db_version": {
+                    "type": "string",
+                    "default": "2021-Mar-27",
+                    "pattern": "^.+$",
+                    "description": "Explicit ABRicate database version label recorded by hAMRonization."
+                },
+                "abricate_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to ABRicate after the configured --db value."
+                },
+                "rgi_load_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to rgi load."
+                },
+                "rgi_main_args": {
+                    "type": "string",
+                    "default": "--clean -g PYRODIGAL",
+                    "description": "rgi main arguments.",
+                    "help_text": "Default as in 5_amr.sh. --input_type contig and --local are always added."
+                },
+                "resfinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "resfinder_db directory for ResFinder 4.7.2.",
+                    "help_text": "Optional. When resfinder_db, pointfinder_db or disinfinder_db is unset, the missing ones are downloaded at tag resfinder-4.7.2 into the run work directory."
+                },
+                "save_resfinder_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded ResFinder, PointFinder and DisinFinder databases to <outdir>/Databases/ResFinder.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
+                "resfinder_args": {
+                    "type": "string",
+                    "default": "--acquired --disinfectant",
+                    "description": "ResFinder arguments.",
+                    "help_text": "Default as in 5_amr.sh. --point --species is added when the genome species or genus has a PointFinder folder."
+                },
+                "resfinder_db_revision": {
+                    "type": "string",
+                    "default": "resfinder-4.7.2",
+                    "description": "CGE git tag/commit downloaded for resfinder_db, pointfinder_db and disinfinder_db when they are not supplied."
+                },
+                "pointfinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "pointfinder_db directory for ResFinder 4.7.2.",
+                    "help_text": "Optional; downloaded when unset. PointFinder runs when the genome species (else genus) has a folder in this database, as in 5_amr.sh."
+                },
+                "disinfinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "disinfinder_db directory for ResFinder 4.7.2.",
+                    "help_text": "Optional; downloaded at tag resfinder-4.7.2 when unset."
+                },
+                "deeparg_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "DeepARG data folder (contains database/ and model/).",
+                    "help_text": "Optional. When unset, deeparg download_data fetches it into the run work directory (about 1 GB, slow)."
+                },
+                "save_deeparg_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded DeepARG data folder to <outdir>/Databases/DeepARG.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
+                "deeparg_db_version": {
+                    "type": "string",
+                    "default": "2",
+                    "pattern": "^.+$",
+                    "description": "DeepARG database version recorded by hAMRonization."
+                },
+                "deeparg_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to DeepARG predict."
+                },
+                "deeparg_model": {
+                    "type": "string",
+                    "default": "SS",
+                    "enum": [
+                        "SS",
+                        "LS"
+                    ],
+                    "description": "DeepARG model: SS (short sequences, 5_amr.sh) or LS (long sequences, e.g. predicted genes)."
+                },
+                "virulencefinder_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "VirulenceFinder database directory (must contain config and notes.txt).",
+                    "help_text": "Optional. When unset, virulencefinder_db is downloaded at a fixed revision into the run work directory."
+                },
+                "save_virulencefinder_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded VirulenceFinder database to <outdir>/Databases/VirulenceFinder.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
+                "virulencefinder_db_revision": {
+                    "type": "string",
+                    "default": "065b8d1",
+                    "description": "virulencefinder_db commit/tag downloaded when --virulencefinder_db is not set (065b8d1 = virulencefinder-3.2.1)."
+                },
+                "virulencefinder_min_coverage": {
+                    "type": "number",
+                    "default": 0.6,
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "description": "Minimum breadth-of-coverage threshold for VirulenceFinder."
+                },
+                "virulencefinder_min_identity": {
+                    "type": "number",
+                    "default": 0.9,
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "description": "Minimum identity threshold for VirulenceFinder."
+                },
+                "virulencefinder_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to VirulenceFinder."
+                },
+                "plasmidfinder_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to PlasmidFinder."
+                },
+                "mlst_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to MLST (e.g. --scheme klebsiella)."
+                },
+                "kleborate_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to Kleborate."
+                },
+                "kleborate_preset_map": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "description": "TSV mapping GTDB lineage to a Kleborate v3 preset and module list.",
+                    "help_text": "Columns lineage_pattern, preset (may be empty), modules. The first row whose lineage_pattern occurs in the genome lineage wins; genomes with no match skip Kleborate. GTDB suffixes such as _B are ignored when matching (s__Enterococcus_B faecium matches s__Enterococcus faecium). Default: assets/kleborate_presets.tsv (the 3_kleb.sh rules)."
+                },
+                "bacterial_decision_table": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "pattern": "^\\S+\\.tsv$",
+                    "description": "TSV of per-lineage y/n decisions for the bacterial downstream steps.",
+                    "help_text": "Optional: without it every d__Bacteria genome follows the default route. Columns: lineage_pattern, optional label, then any of amrfinderplus, abricate, rgi, resfinder, deeparg, mlst, virulencefinder, plasmidfinder, kleborate, sistr, seqsero2, genotyphi, paratype with y or n. lineage_pattern is one or more whole GTDB taxa at any rank (p__Bacillota, g__Salmonella, s__Escherichia coli; GTDB suffixes such as _B are ignored). The most specific matching row decides its y/n steps (species over genus over phylum, whatever the row order); blank cells, missing columns and lineages with no row follow the default route. --skip_<tool> still turns a tool off for every genome. kleborate=y also needs a --kleborate_preset_map row; genotyphi/paratype=y still need the SISTR serovar route. Optional parameter columns, per genome of the matched row: amrfinderplus_args, abricate_args, rgi_main_args, resfinder_args, deeparg_args, mlst_args, virulencefinder_args, plasmidfinder_args, kleborate_args, sistr_args, seqsero2_args, mykrobe_args, paratype_args (a non-blank cell replaces the --<column> parameter, e.g. mlst_args '--scheme ecoli_achtman_4'), amrfinderplus_organism (replaces the --amrfinderplus_organism_map value) and resfinder_species (PointFinder species folder, e.g. escherichia_coli). Example: assets/bacterial_decision_table_example.tsv."
+                },
+                "seqsero2_args": {
+                    "type": "string",
+                    "default": "-m k -t 4",
+                    "description": "SeqSero2 arguments.",
+                    "help_text": "Default as in 4_sal.sh (k-mer mode, assembly input)."
+                },
+                "sistr_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to SISTR."
+                },
+                "mykrobe_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to Mykrobe predict."
+                },
+                "paratype_args": {
+                    "type": "string",
+                    "description": "Additional arguments appended to Paratype."
+                },
+                "paratype_bundle": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "Optional local Paratype checkout (github.com/CHRF-Genomics/Paratype).",
+                    "help_text": "Used only for genomes whose SISTR serovar is Paratyphi A. If not set, Paratype is cloned at a fixed commit when such a genome is found. The directory must contain paratype.py, SParatyphiAKU12601.fasta, SParatyphiA_genotype_specific_alleles.txt and SParatyphiA_gene_mutation_codons.txt; it is copied into each task and never modified."
+                },
+                "save_paratype_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded Paratype checkout to <outdir>/Databases/ParaType.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
+                },
+                "paratype_revision": {
+                    "type": "string",
+                    "default": "099db9b4de828e9c993fe76164f85731f6368e86",
+                    "description": "Paratype (github.com/CHRF-Genomics/Paratype) commit cloned when --paratype_bundle is not set."
                 }
             }
         },
@@ -136,6 +374,31 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Enable per-sample processing mode using SOURMASH_SKETCH and SOURMASH_GATHER instead of batch processing with SOURMASH_MANYSKETCH and SOURMASH_FASTMULTIGATHER. Useful for HPC environments where per-sample job control is needed."
+                },
+                "enable_bacterial_downstream": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Route assembly-produced bins with resolved d__Bacteria lineage into bacterial downstream analysis.",
+                    "help_text": "This switch is for the ordinary assembly/binning route. Supplying --genome_input activates the same downstream routing contract automatically."
+                },
+                "readbased_taxotools": {
+                    "type": "string",
+                    "default": "microcosm",
+                    "pattern": "^(microcosm|sylph)(,(microcosm|sylph))?$",
+                    "description": "Read-based profiler(s): microcosm (sourmash + YACHT), sylph, or microcosm,sylph",
+                    "help_text": "sylph profiles the paired reads directly (no read merging) and writes to Readbased_Analysis/sylph/. With both, each tool keeps its own output folder. --enable_singlesketch only changes the microcosm branch."
+                },
+                "readbased_postprocess": {
+                    "type": "string",
+                    "enum": ["all", "phyloseq", "taxburst", "rgi_bwt"],
+                    "description": "Optional post-processing mode for merged read-based Sourmash-YACHT results. Requires enable_readbase. The all mode creates default, phyloseq, and taxburst outputs and also collects RGI-BWT outputs when enable_rgi_bwt is enabled.",
+                    "help_text": "Valid values: all, phyloseq, taxburst, rgi_bwt. The rgi_bwt mode requires --enable_rgi_bwt. With all and RGI-BWT disabled, only the RGI-BWT output is skipped and the pipeline continues with a warning."
+                },
+                "readbased_postprocess_options": {
+                    "type": "string",
+                    "default": "--min_coverage 0.05",
+                    "description": "Additional supported command-line options passed safely to bin/py_scripts/read_based/post_processing.py. Defaults to filtering YACHT results at min_coverage 0.05.",
+                    "help_text": "Default: --min_coverage 0.05. Override this string to use another supported threshold or option, such as --min_coverage 0.1 --use_average. Module-managed input, input_format, output, and output_format arguments cannot be overridden. Options must be compatible with every selected output mode (--remove_unclassified is not passed to taxburst, which already leaves unclassified out). The microcosm MultiQC section follows the same --min_coverage and --remove_unclassified (Unclassified left out, taxa rescaled to 100 %)."
                 },
                 "enable_rgi_bwt": {
                     "type": "boolean",
@@ -240,8 +503,12 @@
                 },
                 "skip_skani_search": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Skip SKANI ANI-based classification"
+                },
+                "skani_search_options": {
+                    "type": "string",
+                    "description": "Additional skani search arguments"
                 },
                 "skani_db": {
                     "type": "string",
@@ -440,8 +707,8 @@
                 "binqc_tool": {
                     "type": "string",
                     "default": "checkm2",
-                    "description": "Tool for bin quality assessment",
-                    "enum": ["busco", "checkm", "checkm2"]
+                    "description": "Tool(s) for bin quality assessment: busco, checkm, checkm2, or several comma-separated (e.g. checkm2,checkm)",
+                    "pattern": "^(busco|checkm|checkm2)(,(busco|checkm|checkm2))*$"
                 },
                 "busco_db": {
                     "type": "string",
@@ -530,6 +797,15 @@
                     "default": "prokka",
                     "description": "Tool for bin annotation",
                     "enum": ["prokka", "bakta"]
+                },
+                "prokka_bins_compliance_centre": {
+                    "type": "string",
+                    "description": "Sequencing centre ID for Prokka compliance mode"
+                },
+                "annotation_bakta_hmms": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Custom HMM models for Bakta"
                 },
                 "save_bin_annotations": {
                     "type": "boolean",
@@ -671,6 +947,36 @@
                     "default": false,
                     "description": "Skip bin taxonomic classification"
                 },
+                "bin_classifier": {
+                    "type": "string",
+                    "default": "sourmash",
+                    "enum": ["sourmash", "gtdbtk"],
+                    "description": "Bin classifier: sourmash (default) or gtdbtk",
+                    "help_text": "sourmash sketches the bins and runs gather + tax genome against --sourmash_database / --sourmash_taxonomy_csv. gtdbtk runs GTDB-Tk classify_wf against --gtdbtk_db instead (one call per sample; --genome_input rows without lineage in one call). Both give GTDB lineages to the bacterial downstream routing, --bacterial_decision_table and MultiQC; GTDB-Tk 'Unclassified Bacteria' bins (too few markers) are routed as d__Bacteria, plain 'Unclassified' and failed bins as unresolved. Results: Taxonomy/sourmash/ or Taxonomy/GTDB-Tk/."
+                },
+                "gtdbtk_db": {
+                    "type": "string",
+                    "format": "directory-path",
+                    "exists": true,
+                    "description": "GTDB-Tk reference data directory (needed with --bin_classifier gtdbtk)",
+                    "help_text": "Unpacked GTDB-Tk reference data for GTDB-Tk 2.5.2 (GTDB release226; read only), e.g. --gtdbtk_db /path/to/gtdb/release226 (the folder that contains metadata/, markers/, skani/ ...)."
+                },
+                "gtdbtk_args": {
+                    "type": "string",
+                    "description": "Extra GTDB-Tk classify_wf options",
+                    "help_text": "Added after --extension and --pplacer_cpus, e.g. '--min_perc_aa 10 --min_af 0.65' (GTDB-Tk defaults) or '--skip_ani_screen'."
+                },
+                "gtdbtk_pplacer_cpus": {
+                    "type": "integer",
+                    "default": 1,
+                    "minimum": 1,
+                    "description": "CPUs for pplacer inside GTDB-Tk (its memory grows with each CPU)"
+                },
+                "gtdbtk_pplacer_scratch": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Let pplacer use a scratch folder (lower memory, more disk I/O)"
+                },
                 "sourmash_output_format": {
                     "type": "string",
                     "default": "csv_summary",
@@ -707,11 +1013,118 @@
                     "description": "Skip YACHT-based filtering and read-based results processing",
                     "help_text": "When enabled, the pipeline will skip YACHT analysis"
                 },
+                "sylph_database": {
+                    "type": "string",
+                    "pattern": "^.+$",
+                    "description": "sylph database(s) (*.syldb/*.syl2db), comma-separated for several",
+                    "help_text": "Required when --readbased_taxotools includes sylph. Example: --sylph_database \"gtdb-r226-c200-dbv2.syl2db,fungi-refseq-2025-10-11-c200-dbv1.syldb\"."
+                },
+                "sylph_args": {
+                    "type": "string",
+                    "description": "Additional sylph profile arguments"
+                },
+                "sylph_datatype": {
+                    "type": "string",
+                    "default": "taxonomic_abundance",
+                    "enum": ["taxonomic_abundance", "sequence_abundance"],
+                    "description": "sylph value used for the merged sylph-tax table and the phyloseq otu_table",
+                    "help_text": "taxonomic_abundance uses sylph-tax relative_abundance; sequence_abundance runs sylph profile with --estimate-read-counts and uses the estimated read counts."
+                },
+                "enable_sylphtax": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Run sylph-tax taxprof on the sylph profiles (needs --sylph_taxonomy)",
+                    "help_text": "Writes per-sample *.sylphmpa, a merged clade x sample table, and with --readbased_postprocess phyloseq/all the phyloseq tables (tax_table.csv, otu_table.csv, sample_data.csv)."
+                },
+                "sylph_taxonomy": {
+                    "type": "string",
+                    "pattern": "^.+$",
+                    "description": "sylph-tax metadata file(s) matching the sylph database(s), comma-separated",
+                    "help_text": "One metadata file per sylph database (the pipeline stops when the counts differ), all passed to one sylph-tax taxprof call (-t). Example for --sylph_database gtdb-r226-c200-dbv2.syl2db,fungi-refseq-2025-10-11-c200-dbv1.syldb: --sylph_taxonomy gtdb_r226_metadata.tsv.gz,fungi_refseq_2025-10-11_metadata.tsv.gz."
+                },
                 "yacht_ksize": {
                     "type": "integer",
                     "default": 31,
                     "description": "k-mer size for YACHT analysis (must match sourmash_ksize when using both)",
                     "help_text": "This value should be consistent with sourmash_ksize to ensure compatibility between Sourmash and YACHT workflows"
+                }
+            }
+        },
+        "bacterial_downstream_skip_options": {
+            "title": "Bacterial downstream tool switches",
+            "type": "object",
+            "fa_icon": "fas fa-toggle-on",
+            "description": "Turn off single tools of the bacterial downstream analysis (--genome_input or --enable_bacterial_downstream).",
+            "properties": {
+                "skip_mlst": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip MLST in the bacterial downstream analysis."
+                },
+                "skip_virulencefinder": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip VirulenceFinder in the bacterial downstream analysis."
+                },
+                "skip_plasmidfinder": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip PlasmidFinder in the bacterial downstream analysis."
+                },
+                "skip_kleborate": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip Kleborate in the bacterial downstream analysis."
+                },
+                "skip_sistr": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip SISTR (also stops GenoTyphi and Paratype, which are routed by the SISTR serovar) in the bacterial downstream analysis."
+                },
+                "skip_seqsero2": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip SeqSero2 in the bacterial downstream analysis."
+                },
+                "skip_genotyphi": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip Mykrobe + GenoTyphi for SISTR Typhi genomes in the bacterial downstream analysis."
+                },
+                "skip_paratype": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip Paratype for SISTR Paratyphi A genomes in the bacterial downstream analysis."
+                },
+                "skip_amrfinderplus": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip AMRFinderPlus in the bacterial downstream analysis."
+                },
+                "skip_abricate": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip ABRicate in the bacterial downstream analysis."
+                },
+                "skip_rgi": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip RGI in the bacterial downstream analysis."
+                },
+                "skip_resfinder": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip ResFinder/PointFinder/DisinFinder in the bacterial downstream analysis."
+                },
+                "skip_deeparg": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip DeepARG in the bacterial downstream analysis."
+                },
+                "skip_argnorm": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip ARGnorm in the bacterial downstream analysis."
                 }
             }
         },
@@ -729,22 +1142,38 @@
                 "rgi_include_wildcard": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Include wildcard variants in RGI"
+                    "description": "Include wildcard variants in RGI",
+                    "help_text": "When a bacterial-genome RGI database is supplied, WildCARD files are required only when this option is enabled."
                 },
                 "rgi_include_other_models": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Include other model types in RGI"
                 },
                 "rgi_bwt_args": {
                     "type": "string",
-                    "default": "--clean",
+                    "default": "--local --clean",
                     "description": "Additional RGI BWT arguments"
+                },
+                "rgi_preparecarddb_args": {
+                    "type": "string",
+                    "description": "Additional RGI preparecarddb arguments"
+                },
+                "rgi_bwt_prefix": {
+                    "type": "string",
+                    "description": "Custom prefix for RGI bwt outputs"
                 },
                 "rgi_preparecarddb_dir": {
                     "type": "string",
                     "format": "directory-path",
-                    "description": "Directory for RGI database"
+                    "description": "Read-only processed CARD database directory.",
+                    "help_text": "Optional. When unset, CARD (and WildCARD) is downloaded and prepared once per run (see --save_rgi_db). When supplied, validation requires card.json and processed card_database files; WildCARD files are also required when --rgi_include_wildcard is enabled."
+                },
+                "save_rgi_db": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Save the downloaded CARD database prepared by RGI to <outdir>/Databases/RGI.",
+                    "help_text": "Used only when the pipeline downloads it (no local path given). Pass the saved folder on later runs to skip the download; set false to keep it only in the work directory."
                 }
             }
         },
@@ -857,6 +1286,37 @@
             "type": "object",
             "description": "Other pipeline options",
             "properties": {
+                "skip_multiqc": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip the final MultiQC report (${outdir}/MultiQC)",
+                    "help_text": "Sections: microcosm top taxa (tab per rank; needs --readbased_postprocess all), sylph profile, sylph-tax (--enable_sylphtax), bacterial genome overview, Kleborate, Salmonella typing, FastQC/fastp, bin QC (CheckM2, CheckM, BUSCO, QUAST), Prokka, run summary and software versions. Styled by assets/multiqc_config.yml and assets/microcosm_logo.png."
+                },
+                "multiqc_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Custom MultiQC config file"
+                },
+                "multiqc_extra_config": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Additional MultiQC config file"
+                },
+                "multiqc_logo": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "Logo for the MultiQC report"
+                },
+                "multiqc_replace_names": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "TSV for MultiQC --replace-names"
+                },
+                "multiqc_sample_names": {
+                    "type": "string",
+                    "format": "file-path",
+                    "description": "TSV for MultiQC --sample-names"
+                },
                 "cleanup": {
                     "type": "boolean",
                     "default": false,
@@ -916,26 +1376,6 @@
                     "fa_icon": "far calendar",
                     "description": "Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.",
                     "hidden": true
-                },
-                "processed_results_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for processed read-based results.",
-                    "hidden": true
-                },
-                "yacht_results_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for YACHT read-based results.",
-                    "hidden": true
-                },
-                "bins_csv_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for Sourmash bin CSV files.",
-                    "hidden": true
-                },
-                "sketches_dir": {
-                    "type": "string",
-                    "description": "Internal publish directory for Sourmash sketch files.",
-                    "hidden": true
                 }
             }
         },
@@ -978,6 +1418,7 @@
         { "$ref": "#/$defs/bin_qc_options" },
         { "$ref": "#/$defs/bin_annotation_options" },
         { "$ref": "#/$defs/bin_classification_options" },
+        { "$ref": "#/$defs/bacterial_downstream_skip_options" },
         { "$ref": "#/$defs/rgi_options" },
         { "$ref": "#/$defs/pyrodigal_options" },
         { "$ref": "#/$defs/prokka_options" },

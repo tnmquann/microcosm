@@ -1,0 +1,2 @@
+gene	codon	mutation
+fixture_gene	1	ATG

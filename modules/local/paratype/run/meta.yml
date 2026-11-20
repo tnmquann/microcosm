@@ -1,0 +1,34 @@
+name: "paratype_run"
+description: "Run a staged user-supplied Paratype bundle on one Paratyphi A genome assembly."
+keywords:
+  - salmonella
+  - paratyphi
+  - genotype
+tools:
+  - "paratype":
+      description: "User-supplied Paratype v1.1-compatible bundle; upstream source is not vendored."
+      homepage: "https://github.com/CHRF-Genomics/Paratype"
+input:
+  - meta:
+      type: map
+      description: "Canonical bacterial-genome metadata."
+  - fasta:
+      type: file
+      description: "Uncompressed Paratyphi A assembly FASTA."
+  - paratype_bundle:
+      type: directory
+      description: "Validated Paratype checkout; copied into the task before running."
+output:
+  report:
+    - "*.tsv":
+        type: file
+        description: "Paratype genotype and mutation report (<genome_id>.tsv, as in 4_sal.sh)."
+        pattern: "*.tsv"
+  versions:
+    - "versions.yml":
+        type: file
+        description: "Tool environment versions."
+authors:
+  - "@tnmquann"
+maintainers:
+  - "@tnmquann"

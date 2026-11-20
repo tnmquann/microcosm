@@ -3,6 +3,10 @@ process PROCESS_READBASED_RESULTS_SINGLESKETCH {
     label 'process_medium'
 
     conda "conda-forge::pandas=2.2.3 openpyxl=3.1.5"
+    // python + pandas/openpyxl/biopython + gzip/zip/unzip for container profiles (Seqera Wave, frozen)
+    container "${ workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container ?
+        'oras://community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:f9da7bb46b36d191' :
+        'community.wave.seqera.io/library/python_pandas_openpyxl_biopython_pruned:e8608291079924c4' }"
 
     input:
     tuple val(meta), path(gather_csv)
@@ -54,9 +58,9 @@ process PROCESS_READBASED_RESULTS_SINGLESKETCH {
     stub:
     def prefix = task.ext.prefix ?: meta.id ?: 'sample'
     """
-    mkdir -p ${prefix}
+    mkdir -p ${prefix}_processedresult
     mkdir -p yacht_processed
-    touch ${prefix}/${prefix}_merged_sourmash_yacht.csv
+    touch ${prefix}_processedresult/${prefix}_merged_sourmash_yacht.csv
     touch yacht_processed/${prefix}_yacht.xlsx
     
     cat <<-END_VERSIONS > versions.yml
