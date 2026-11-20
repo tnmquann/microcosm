@@ -647,13 +647,14 @@
       h('span', { class: 'mcb-route-meta' }, c.meta));
     }));
   }
+  var autoAdvance = null;
   function pickRoute(id) {
     var changed = S.route !== id;
     S.route = id;
     setP('enable_readbase', id === 'reads');
     if (changed) S.seen = { route: true };
     commit(true);
-    if (changed) setTimeout(function () { go(nextStep('route')); }, REDUCED ? 0 : 220);
+    if (changed) autoAdvance = setTimeout(function () { go(nextStep('route')); }, REDUCED ? 0 : 220);
   }
   // Small line drawings of each route, in the metro-map style of the pipeline diagram.
   function routeGlyph(id) {
@@ -1344,6 +1345,7 @@
   function nextStep(id) { var a = activeSteps(), i = stepIndex(id); return a[Math.min(i + 1, a.length - 1)].id; }
   function prevStep(id) { var a = activeSteps(), i = stepIndex(id); return a[Math.max(i - 1, 0)].id; }
   function go(id) {
+    clearTimeout(autoAdvance);
     if (!BYID[id] || !BYID[id].when()) return;
     S.seen[S.step] = true;
     S.step = id;
