@@ -19,9 +19,8 @@
   var P = {};          // name -> {type, default, enum, description, format, group}
   var GROUPS = {};     // group id -> [names]
   var VERSION = '2.0.0';
-  // gunc_database_type is not read by the pipeline 2.0.0 (bin_qc passes params.gunc_db_name), so it is not offered.
   var HIDDEN = ['pipeline_root', 'help', 'help_full', 'show_hidden', 'config_profile_name',
-    'config_profile_description', 'cleanup_patterns', 'gunc_database_type'];
+    'config_profile_description', 'cleanup_patterns'];
 
   function def(name) { return P[name] ? P[name].default : undefined; }
   function same(a, b) {
@@ -506,6 +505,7 @@
         cond('run_gunc', function () { return !on('skip_binqc'); }),
         cond('gunc_db', function () { return !on('skip_binqc') && on('run_gunc') && db('gunc') === 'local'; }),
         cond('gunc_save_db', function () { return !on('skip_binqc') && on('run_gunc') && db('gunc') !== 'local'; }),
+        cond('gunc_database_type', function () { return !on('skip_binqc') && on('run_gunc') && db('gunc') !== 'local'; }),
         always('bin_domain_classification')],
       adv: ['bin_qc_options', 'bin_domain_classification_options'],
       render: renderBinqc
@@ -912,7 +912,12 @@
         'Completeness tools can miss contamination from distant organisms. Worth it before you publish or deposit MAGs. Uses GUNC (about 13 GB database).'));
       if (on('run_gunc')) {
         out.push(dbSource({ key: 'gunc', label: 'GUNC database', size: '~13 GB', save: 'gunc_save_db',
-          paths: [{ param: 'gunc_db', label: 'GUNC database file', placeholder: '/db/gunc/gunc_db_progenomes2.1.dmnd' }] }));
+          paths: [{ param: 'gunc_db', label: 'GUNC database file', placeholder: '/db/gunc/gunc_db_progenomes2.1.dmnd' }],
+          autoExtra: function () {
+            return paramSeg('gunc_database_type', 'Which reference should GUNC compare against?',
+              [{ value: 'progenomes', label: 'proGenomes (default)' }, { value: 'gtdb', label: 'GTDB' }],
+              'GTDB matches the taxonomy used everywhere else in the pipeline.');
+          } }));
       }
     }
     out.push(paramToggle('bin_domain_classification', 'Sort genomes into bacteria, archaea and eukaryotes?', 'Useful for environmental or food samples that hold fungi or protists: their bins are labelled before annotation. Uses Tiara.'));

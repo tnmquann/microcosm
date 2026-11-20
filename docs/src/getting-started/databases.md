@@ -174,7 +174,7 @@ Below are step-by-step guides for manual setup of each supported database. Follo
 
 ### GTDB-Tk
 
-- Not downloaded by the pipeline (the reference data is over 100 GB). Download and extract the GTDB-Tk reference data (release 226 for GTDB-Tk 2.7.2) following the [GTDB-Tk docs](https://ecogenomics.github.io/GTDBTk/installing/index.html#gtdb-tk-reference-data), then pass the extracted folder with `--gtdbtk_db`. Only needed with `--bin_classifier gtdbtk`.
+- Not downloaded by the pipeline (the reference data is over 100 GB). Download and extract the GTDB-Tk reference data (release 226 for GTDB-Tk 2.5.2, the version the pipeline runs) following the [GTDB-Tk docs](https://ecogenomics.github.io/GTDBTk/installing/index.html#gtdb-tk-reference-data), then pass the extracted folder with `--gtdbtk_db`. Only needed with `--bin_classifier gtdbtk`.
 
 ### Bacterial genome analysis databases
 
