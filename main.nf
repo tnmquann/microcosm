@@ -133,6 +133,7 @@ params {
     refine_bins_binette_contamination_weight: Integer = 5
     refine_bins_binette_min_completeness: Integer = 40
     sourmash_ksize: Integer = 31
+    sourmash_thresholdbp: Integer? = null
     spades_fix_cpus: Integer = -1
     tiara_min_length: Integer = 3000
     yacht_ksize: Integer = 31

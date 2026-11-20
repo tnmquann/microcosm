@@ -315,7 +315,7 @@ genome ─► lineage (given, or sourmash / GTDB-Tk) ─► d__Bacteria? ─► 
 <details>
 <summary><b>Classification with GTDB-Tk</b></summary>
 
-`--bin_classifier gtdbtk --gtdbtk_db /path/to/release226` runs GTDB-Tk 2.7.2 `classify_wf` (one call per sample,
+`--bin_classifier gtdbtk --gtdbtk_db /path/to/release226` runs GTDB-Tk 2.5.2 `classify_wf` (one call per sample,
 results in `Taxonomy/GTDB-Tk/`) instead of sourmash. Its summaries are converted to the sourmash table, so routing,
 decision table and MultiQC work unchanged. "Unclassified Bacteria" is routed as `d__Bacteria`; genomes GTDB-Tk cannot
 place are listed as unresolved with GTDB-Tk's reason. GTDB-Tk needs 64-128 GB of memory (`--gtdbtk_pplacer_cpus`,

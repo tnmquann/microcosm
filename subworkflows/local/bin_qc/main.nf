@@ -79,7 +79,7 @@ workflow BIN_QC {
     if (params.gunc_db) {
         ch_gunc_db = file(params.gunc_db, checkIfExists: true)
     } else if (params.run_gunc) {
-        GUNC_DOWNLOADDB(params.gunc_db_name)
+        GUNC_DOWNLOADDB(params.gunc_database_type)
         ch_versions = ch_versions.mix(GUNC_DOWNLOADDB.out.versions_gunc)
         ch_gunc_db = GUNC_DOWNLOADDB.out.db
     } else {
