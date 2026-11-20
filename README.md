@@ -6,102 +6,145 @@
 [![run with apptainer](https://img.shields.io/badge/run%20with-apptainer-1d355c.svg?labelColor=000000)](https://apptainer.org/)
 [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
 [![run with slurm](https://img.shields.io/badge/run%20with-slurm-1AAEE8.svg?labelColor=000000)](https://www.schedmd.com)
----
-
-**microcosm** is a robust, modular pipeline built on [Nextflow](https://www.nextflow.io/) for comprehensive analysis of Illumina **short-read** metagenomic data. Designed with practical experience in mind, this workflow streamlines both rapid, read-level classification and high-resolution genome assembly, making it accessible to users with minimal computational background. It delivers fast, actionable results for professionals in molecular epidemiology, enabling timely insights for outbreak investigation and surveillance.
-
-This pipeline was developed based on the concepts and design principles of [`nf-core/mag`](https://nf-co.re/mag/latest/) and [`SOMA`](https://github.com/ukhsa-collaboration/SOMA). Many modifications have been made to the original pipelines, reflecting both practical experience and methodological preferences. Most importantly, **microcosm** is optimized to run efficiently on resource-limited devices, ensuring broad accessibility in both laboratory and field settings.
-
 
 <p align="center">
-  <img src="https://github.com/tnmquann/microcosm/blob/main/docs/images/microcosm_currentbeta_cleaned_metromap_light.png" width="70%" alt="microcosm workflow diagram"/>
+  <img src="docs/images/microcosm_logo.png" width="45%" alt="microcosm logo"/>
 </p>
 
-## Overview
+**microcosm** (formerly **metaflow**) is a modular [Nextflow](https://www.nextflow.io/) pipeline for the analysis of
+Illumina **short-read** shotgun metagenomes, from raw reads to typed bacterial genomes. It combines fast read-based
+profiling with genome-resolved analysis (assembly, binning, MAG quality control and classification) and a bacterial
+genome layer for typing and antimicrobial resistance (AMR), and summarises every run in one MultiQC report. It is built
+for molecular epidemiology (outbreak investigation, surveillance) and is tuned to run on modest hardware.
 
-This pipeline performs taxonomic profiling of shotgun metagenomics data through the following stages:
-- **Read-based Analysis**  
-  - Taxonomic assignment for each sequencing read is performed using an optimized combination of [`sourmash`](https://github.com/sourmash-bio/sourmash) and [`YACHT`](https://github.com/KoslickiLab/YACHT). This approach ensures fast, scalable processing, even for large datasets. Reference databases can be customized to fit your specific research needs.
-  - Detection of antimicrobial resistance genes (ARGs) is integrated via [`rgi_bwt`](https://github.com/arpcard/rgi/blob/master/docs/rgi_bwt.rst), providing actionable insights into resistance profiles.
+The design follows the concepts of [`nf-core/mag`](https://nf-co.re/mag/latest/) and
+[`SOMA`](https://github.com/ukhsa-collaboration/SOMA), with many changes reflecting practical experience and
+methodological choices.
 
-- **Metagenome Assembly & Binning**  
-  - The pipeline assembles contigs and performs binning to recover Metagenome Assembled Genomes (MAGs), enabling *in silico* characterization of microbial communities.
+<p align="center">
+  <img src="docs/images/microcosm_currentbeta_cleaned_metromap_light.png" width="80%" alt="microcosm workflow diagram"/>
+</p>
 
-For step-by-step installation instructions, parameter explanations, and advanced usage tutorials, please refer to [wiki page](https://github.com/tnmquann/microcosm/wiki).
-
-## Pipeline requirements and Installation overview
-
-### Software environment
-- Nextflow version 26.04.0 or later is required as the workflow engine for microcosm v2.0.0 strict syntax compatibility.
-- Conda or Mamba is used for reproducible package and environment management, with Mamba preferred for faster dependency resolution.
-- Container runtimes such as Docker or Apptainer are optional but improve portability and reproducibility across heterogeneous systems.
-
-### Hardware and System requirements
-- A POSIX-compatible operating system is required, with Linux or macOS preferred; Windows is supported via WSL for compatibility.
-- Memory requirements scale with the assembler: a minimum of 32 GB RAM for MEGAHIT and up to 128 GB for metaSPAdes.
-- Disk usage is substantial, requiring at least 256 GB to accommodate databases, environments, intermediate files, and per-sample outputs; GPU acceleration is optional for select assembly-based steps.
-
-### Installation workflow
-- The pipeline can be obtained via Git cloning, downloading a release archive, or pulling directly with Nextflow for version-controlled deployment.
-- Nextflow installation involves validating Java, downloading the executable, optionally adding it to the system PATH, and verifying functionality.
-- Conda or Mamba installation finalizes the environment setup, with optional container runtime installation to enhance execution consistency.
-- Execution profiles include `conda`, `docker`, and `apptainer`; GPU-capable execution is opt-in with profile combinations such as `docker,gpu` or `apptainer,gpu` on hosts that provide compatible GPU runtime support.
 > [!NOTE]
-> microcosm relies on `sourmash` and `YACHT` for robust taxonomic classification. For detailed setup instructions, please refer to the [Manual Database Setup](https://github.com/tnmquann/microcosm/wiki/Installation#manual-database-setup-instructions) section.
+> **microcosm 2.0.0** is the first release under the new name and needs **Nextflow ≥ 26.04**. Coming from metaflow
+> 1.x? See [Upgrading from metaflow 1.x](#upgrading-from-metaflow-1x) and the
+> [release notes](https://github.com/tnmquann/microcosm/releases/tag/2.0.0).
+
+Full documentation (installation, databases, every parameter, every output file, recipes) is in the
+[wiki](https://github.com/tnmquann/microcosm/wiki).
+
+## Contents
+
+- [What microcosm does](#what-microcosm-does)
+- [Requirements and installation](#requirements-and-installation)
+- [Input specifications](#input-specifications)
+- [Quick start](#quick-start)
+- [Read-based analysis](#read-based-analysis)
+- [Bacterial genome analysis](#bacterial-genome-analysis)
+- [MultiQC report](#multiqc-report)
+- [Output structure](#output-structure)
+- [Upgrading from metaflow 1.x](#upgrading-from-metaflow-1x)
+- [Citation](#citation)
+
+## What microcosm does
+
+| Stage | Tools | Turned on by |
+|---|---|---|
+| **Read QC and host removal** | FastQC, fastp, hostile | always (`--skip_preprocess` to skip) |
+| **Read-based taxonomic profiling** | sourmash + YACHT (`microcosm` profiler), sylph (+ sylph-tax) | `--enable_readbase`, `--readbased_taxotools` |
+| **Read-based post-processing** | standard table, phyloseq tables, taxburst charts | `--readbased_postprocess` |
+| **Read-based AMR genes** | RGI bwt (CARD) | `--enable_rgi_bwt` |
+| **Assembly** | MEGAHIT, metaSPAdes, QUAST, Bowtie2 | default route (no `--enable_readbase`) |
+| **Contig analysis** | SeqKit, samtools coverage, Pyrodigal or Prokka, geNomad, Tiara, skani | default (each step can be skipped) |
+| **Binning and refinement** | MetaBAT2, MaxBin2, COMEBin, SemiBin2, CONCOCT, VAMB; Binette or DAS Tool | default |
+| **Bin QC** | CheckM2, CheckM, BUSCO, GUNC, QUAST, `assembly_stats.py`; Tiara domains | `--binqc_tool`, `--run_gunc`, `--bin_domain_classification` |
+| **Bin annotation and classification** | Prokka or Bakta; sourmash or GTDB-Tk | `--bin_annotation_tool`, `--bin_classifier` |
+| **Bacterial genome analysis** | MLST, VirulenceFinder, PlasmidFinder; AMRFinderPlus, ABRicate, RGI, ResFinder/PointFinder/DisinFinder, DeepARG, hAMRonization, ARGnorm; Kleborate; SISTR, SeqSero2, Mykrobe + GenoTyphi, Paratype | `--enable_bacterial_downstream` (bins) or `--genome_input` (your genomes) |
+| **Report** | MultiQC (one report per run), software versions, run summary | always (`--skip_multiqc` to skip) |
+
+## Requirements and installation
+
+- **Nextflow ≥ 26.04.0** (the pipeline uses the Nextflow strict syntax) and Java 17 or later.
+- One of the profiles `conda`, `docker`, `singularity` or `apptainer`; add `gpu` (e.g. `-profile docker,gpu`) to use a
+  GPU for COMEBin and SemiBin2.
+- Linux or macOS (Windows through WSL). Memory: 32 GB for MEGAHIT, up to 128 GB for metaSPAdes and GTDB-Tk. Disk: at
+  least 256 GB for databases, environments and work files.
+
+```bash
+nextflow pull tnmquann/microcosm -r 2.0.0
+nextflow run tnmquann/microcosm -r 2.0.0 --help
+```
+
+Databases: sourmash and YACHT (read-based profiling and bin classification), sylph, skani and GTDB-Tk must be
+downloaded by you; hostile, CARD, geNomad, CheckM, CheckM2, GUNC, Bakta and the bacterial typing/AMR databases are
+downloaded by the pipeline when no path is given and can be saved to `${outdir}/Databases/`. See
+[Installation](https://github.com/tnmquann/microcosm/wiki/Installation) in the wiki.
+
+> [!CAUTION]
+> sourmash and YACHT databases must be built with the same database, k-mer size and scaled value.
 
 ## Input specifications
-*   **Sample CSV format:** `sample_id` is required and must be non-empty for every row.
-    ```csv
-    sample_id,run_id,group,short_reads_1,short_reads_2,long_reads
-    sample1,1,0,data/sample1_1.fq.gz,data/sample1_2.fq.gz,data/sample1.fastq.gz
-    sample2,0,0,data/sample2_1.fastq.gz,data/sample2_2.fastq.gz,
-    ```
-*   **Directory:** A directory containing paired-end FASTQ files.
+
+**Reads** (`--input`, with `--input_format csv` or `directory`):
+
+```csv
+sample_id,run_id,group,short_reads_1,short_reads_2,long_reads
+sample1,1,0,data/sample1_1.fq.gz,data/sample1_2.fq.gz,
+sample2,0,0,data/sample2_1.fastq.gz,data/sample2_2.fastq.gz,
+```
+
+`sample_id` is required for every row. A directory input must hold paired-end files named `*_1`/`*_2` or
+`*_R1`/`*_R2`. Pre-computed assemblies can be given with `--assembly_input` (columns
+`sample_id,run_id,group,assembler,fasta`).
+
+**Genomes** (`--genome_input`) for the bacterial genome analysis alone, without reads:
+
+```csv
+sample_id,fasta,lineage
+kpneumoniae_HS11286,genomes/kpneumoniae_HS11286.fasta.gz,
+styphi_CT18,genomes/styphi_CT18.fasta.gz,d__Bacteria;p__Pseudomonadota;c__Gammaproteobacteria;o__Enterobacterales;f__Enterobacteriaceae;g__Salmonella;s__Salmonella enterica
+```
+
+Optional columns: `run_id,group,assembler`. A genome with a valid GTDB lineage is used as given; a blank lineage is
+classified by the pipeline (sourmash, or GTDB-Tk with `--bin_classifier gtdbtk`). Relative paths are resolved against
+the CSV location. Examples: `test_data/bacterial_genomes/`.
 
 ## Quick start
 
-### Read-based analysis
-Once your `sourmash` and `YACHT` databases are ready, you can launch the `microcosm` pipeline. Below are examples for different input formats.
 ```bash
-# With csv file
-nextflow run main.nf \
-    --input /path/to/your/samples.csv \
-    --input_format csv \
-    -profile conda \
-    --outdir /path/to/output/directory \
-    --sourmash_database /path/to/your/sourmash_database \
-    --yacht_database /path/to/your/yacht_database.json \
-    --enable_readbase
+# 1. Read-based profiling (sourmash + YACHT), with RGI bwt and phyloseq/taxburst tables
+nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
+    --input samples.csv --outdir project_A --enable_readbase \
+    --sourmash_database /db/gtdb-rs226-reps.k31.rocksdb --sourmash_taxonomy_csv /db/gtdb-rs226.lineages.csv \
+    --yacht_database /db/yacht_rs226_k31.json \
+    --enable_rgi_bwt --readbased_postprocess all
 
-# With directory of FASTQ files
-nextflow run main.nf \
-    --input /path/to/your/fastq_directory \
-    --input_format directory \
-    -profile conda \
-    --outdir /path/to/output/directory \
-    --sourmash_database /path/to/your/sourmash_database \
-    --yacht_database /path/to/your/yacht_database.json \
-    --enable_readbase
+# 2. Read-based profiling with sylph only
+nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
+    --input samples.csv --outdir project_A_sylph --enable_readbase --readbased_taxotools sylph \
+    --sylph_database /db/gtdb-r226-c200-dbv2.syl2db \
+    --enable_sylphtax --sylph_taxonomy /db/gtdb_r226_metadata.tsv.gz
+
+# 3. Assembly, binning, bin QC/classification, then typing and AMR of the bacterial bins
+nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
+    --input samples.csv --outdir project_B \
+    --sourmash_database /db/gtdb-rs226-k51.rocksdb --sourmash_ksize 51 --sourmash_taxonomy_csv /db/gtdb-rs226.lineages.csv \
+    --binqc_tool checkm2,busco --run_gunc --enable_bacterial_downstream
+
+# 4. Typing and AMR of your own genome FASTA files, classified with GTDB-Tk
+nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
+    --genome_input genomes.csv --outdir project_C \
+    --bin_classifier gtdbtk --gtdbtk_db /db/gtdbtk/release226
 ```
 
-The examples above use `-profile conda`. Use `-profile docker` or `-profile apptainer` for containerized runs, and add `gpu` only when GPU runtime support is available, for example `-profile docker,gpu`.
+With no `--enable_readbase`, the assembly route runs MEGAHIT and metaSPAdes, contig analysis, MetaBAT2 / MaxBin2 /
+COMEBin / SemiBin2 with Binette refinement, CheckM2, Prokka and sourmash classification by default. `--binqc_tool`
+accepts one or more of `busco`, `checkm`, `checkm2` (each writes `Binning/QC/<tool>_summary.tsv`). Every step has a
+`--skip_<step>` switch; see [Parameters](https://github.com/tnmquann/microcosm/wiki/Parameters).
 
-### Optional read-based post-processing
+## Read-based analysis
 
-Add `--readbased_postprocess` to either read-based execution mode to create downstream-ready outputs from the merged Sourmash-YACHT CSV:
-
-```bash
-nextflow run main.nf \
-    --input /path/to/your/samples.csv \
-    --input_format csv \
-    --outdir /path/to/project_A \
-    --enable_readbase \
-    --readbased_postprocess all
-```
-
-Valid modes are `all`, `phyloseq`, `taxburst`, and `rgi_bwt`. The explicit `rgi_bwt` mode requires `--enable_rgi_bwt`. With `all`, the pipeline also writes the standard default processed CSV; RGI-BWT results are included only when RGI-BWT is enabled, otherwise the pipeline warns, skips that output group, and continues with default, phyloseq, and taxburst.
-
-### Read-based profilers: microcosm (sourmash + YACHT) and sylph
+### Profilers: microcosm (sourmash + YACHT) and sylph
 
 `--readbased_taxotools` chooses the read-based profiler: `microcosm` (default,
 sourmash + YACHT), `sylph`, or `microcosm,sylph` to run both. sylph profiles
@@ -143,95 +186,25 @@ it) is skipped when several databases are given.
 and `--enable_copyintermediate` (YACHT tables, collected read CSV) turn the
 publishing of those intermediate files on or off.
 
+### Post-processing
+
+Add `--readbased_postprocess` to create downstream-ready outputs from the merged sourmash + YACHT results:
+
+| Mode | Output (`Readbased_Analysis/Post_processing/`) |
+|---|---|
+| `all` | everything below; RGI bwt tables only with `--enable_rgi_bwt` (otherwise a warning and the rest continues) |
+| `phyloseq` | `<prefix>_phyloseq/{otu_table,tax_table,sample_data}.csv` (also for sylph with `--enable_sylphtax`) |
+| `taxburst` | `<prefix>_taxburst/*.taxburst.csv` for taxburst charts |
+| `rgi_bwt` | `<prefix>_rgi_bwt/` RGI bwt gene tables over the samples (needs `--enable_rgi_bwt`) |
+
+`all` also writes the standard table `<prefix>_default/<prefix>.processed_microcosm.csv` (`<prefix>` = last folder
+name of `--outdir`).
+In single-sketch mode (`--enable_singlesketch`) the outputs are per sample (`<sample_id>/<mode>/`) plus all-sample
+aggregates.
+
 Read-based post-processing defaults to `--min_coverage 0.05`. `--readbased_postprocess_options` accepts one shell-style option string and safely tokenizes it before invoking `post_processing.py`; provide it explicitly to override the default, for example `--readbased_postprocess_options "--min_coverage 0.1 --use_average"`. If one individual value contains spaces, quote that value inside the outer option string.
 
-A MultiQC report is written to `${outdir}/MultiQC/<prefix>_multiqc_report.html`
-(turn off with `--skip_multiqc`), styled by `assets/multiqc_config.yml` with the
-microcosm logo. Sections: microcosm top taxa (one bar graph with a tab per rank,
-Strain to Domain, from `<prefix>.processed_microcosm.csv`, so it needs
-`--readbased_postprocess all`), sylph profile (genomes, mean ANI, taxonomic abundance per
-reference genome; no sylph-tax needed), sylph-tax (`--enable_sylphtax`), a bacterial
-genome overview (species, MLST, SISTR serovar, AMR genes per tool), FastQC/fastp,
-hostile, RGI bwt on reads (table + AMR gene families), QUAST and Bowtie2 for the
-assemblies, contigs (SeqKit + samtools coverage table, Pyrodigal genes or Prokka,
-geNomad plasmids and viruses, Tiara domains, skani best references), bins (Tiara
-domains, QUAST, assembly_stats.py, CheckM2, CheckM, BUSCO, GUNC, Prokka/Bakta,
-the MultiQC GTDB-Tk or sourmash gather module, and the microcosm bin taxonomy and
-bin summary), bacterial genomes (overview, Kleborate, Salmonella typing and RGI main), the run summary (parameters that
-differ from the defaults) and the software versions. Only the tools that ran get a
-section; tools without a MultiQC module are summarised by
-`bin/py_scripts/multiqc/tool_multiqc.py`, one task per tool. `--multiqc_config` and
-`--multiqc_extra_config` are applied after the default config; `--multiqc_logo`,
-`--multiqc_replace_names` and `--multiqc_sample_names` are passed to MultiQC.
-
-Software versions of every tool used in a run are collected in one file,
-`${outdir}/pipeline_info/microcosm_software_versions.yml`, next to the
-execution report.
-
-### Assembly-based analysis
-For assembly-based workflows, ensure your `sourmash` database is prepared.
-`--binqc_tool` accepts one or more of `busco`, `checkm`, `checkm2`
-(e.g. `--binqc_tool checkm2,checkm`); each tool writes its own
-`Binning/QC/<tool>_summary.tsv`.
-```bash
-nextflow run main.nf \
-    --input /path/to/your/samples.csv \
-    --input_format csv \
-    -profile conda \
-    --outdir /path/to/output/directory \
-    --sourmash_database /path/to/your/sourmash_database
-```
-
-## Output structure
-### Read-based subworkflow
-The following tree illustrates the organization of output files generated by the read-based subworkflow:
-
-```text
-outdir/
-├── Databases/
-│   └── RGI/
-├── Preprocess/
-│   ├── Merged_sequences/
-│   └── QC/
-│       ├── Raw_reads/
-│       ├── Remove_HostGenome/
-│       └── Trimming/
-├── Remove_HostGenome/
-├── Trimming/
-├── Readbased_Analysis/
-│   ├── rgi_bwt/
-│   ├── Post_processing/
-│   │   ├── <batch-prefix>_default/
-│   │   ├── <batch-prefix>_phyloseq/
-│   │   ├── <batch-prefix>_taxburst/
-│   │   ├── <batch-prefix>_rgi_bwt/
-│   │   └── <sample_id>/
-│   │       ├── default/
-│   │       ├── phyloseq/
-│   │       ├── taxburst/
-│   │       └── rgi_bwt/
-│   ├── sylph/                  (--readbased_taxotools sylph)
-│   │   ├── profile/  sylphtax/  phyloseq/
-│   │   └── <batch-prefix>_sylphtax_<datatype>.tsv
-│   └── Sourmash-YACHT/
-│       ├── final_results/
-│       ├── fastmultigather/
-│       ├── reads_collected/
-│       ├── sketches/
-│       │   ├── single_sketches/
-│       │   └── batch.batch.manysketch.zip
-│       ├── taxannotate/
-│       ├── taxmetagenome/
-│       └── yacht_results/
-```
-
-Each directory is created automatically by the pipeline and contains outputs relevant to its analysis step. The results of the ARG read-based analysis will be located in the folder `./Readbased_Analysis/rgi_bwt/`, and the results of the read-based taxonomic classification will be located in `./Readbased_Analysis/Sourmash-YACHT/final_results/`.
-
-Post-processing outputs are always published below `${outdir}/Readbased_Analysis/Post_processing`. Batch mode keeps the existing `<batch-prefix>_<mode>` layout, where the prefix is the basename of `outdir` (`/path/to/out/` becomes `out`). With `--readbased_postprocess all`, it also writes `<batch-prefix>_default/<batch-prefix>.processed_microcosm.csv`. Single-sketch mode uses the required CSV `sample_id`, or the normalized pairing key derived from directory input filenames (`SAMPLE_001_R1.fastq.gz` and `SAMPLE_001_R2.fastq.gz` become `SAMPLE_001`), and publishes all-mode outputs as `<sample_id>/<default|phyloseq|taxburst|rgi_bwt>`; its default CSV is `<sample_id>/default/<sample_id>.processed_microcosm.csv` and its RGI-BWT directory contains only direct `*.gene_mapping_data.txt` files. It also concatenates every sample's merged read-based table and publishes combined `<batch-prefix>_default`, `<batch-prefix>_phyloseq`, and `<batch-prefix>_taxburst` sets; its combined RGI-BWT group contains those same per-sample-named mapping files directly in `<batch-prefix>_rgi_bwt/`.
-
-### Assembly-based subworkflow
-
-#### Bacterial genome downstream analysis
+## Bacterial genome analysis
 
 Supply `--genome_input` with a CSV containing `sample_id,fasta` and optional
 `run_id,group,assembler,lineage` to analyse standalone genome FASTAs. A valid
@@ -322,6 +295,81 @@ Bacterial_Analysis/
 Each summary table is the tool's per-genome tables stacked, with `genome_id` as
 the first column.
 
+## MultiQC report
+
+A MultiQC report is written to `${outdir}/MultiQC/<prefix>_multiqc_report.html`
+(turn off with `--skip_multiqc`), styled by `assets/multiqc_config.yml` with the
+microcosm logo. Sections: microcosm top taxa (one bar graph with a tab per rank,
+Strain to Domain, from `<prefix>.processed_microcosm.csv`, so it needs
+`--readbased_postprocess all`), sylph profile (genomes, mean ANI, taxonomic abundance per
+reference genome; no sylph-tax needed), sylph-tax (`--enable_sylphtax`), a bacterial
+genome overview (species, MLST, SISTR serovar, AMR genes per tool), FastQC/fastp,
+hostile, RGI bwt on reads (table + AMR gene families), QUAST and Bowtie2 for the
+assemblies, contigs (SeqKit + samtools coverage table, Pyrodigal genes or Prokka,
+geNomad plasmids and viruses, Tiara domains, skani best references), bins (Tiara
+domains, QUAST, assembly_stats.py, CheckM2, CheckM, BUSCO, GUNC, Prokka/Bakta,
+the MultiQC GTDB-Tk or sourmash gather module, and the microcosm bin taxonomy and
+bin summary), bacterial genomes (overview, Kleborate, Salmonella typing and RGI main), the run summary (parameters that
+differ from the defaults) and the software versions. Only the tools that ran get a
+section; tools without a MultiQC module are summarised by
+`bin/py_scripts/multiqc/tool_multiqc.py`, one task per tool. `--multiqc_config` and
+`--multiqc_extra_config` are applied after the default config; `--multiqc_logo`,
+`--multiqc_replace_names` and `--multiqc_sample_names` are passed to MultiQC.
+
+Software versions of every tool used in a run are collected in one file,
+`${outdir}/pipeline_info/microcosm_software_versions.yml`, next to the
+execution report.
+
+## Output structure
+
+### Read-based subworkflow
+The following tree illustrates the organization of output files generated by the read-based subworkflow:
+
+```text
+outdir/
+├── Databases/
+│   └── RGI/
+├── Preprocess/
+│   ├── Merged_sequences/
+│   └── QC/
+│       ├── Raw_reads/
+│       ├── Remove_HostGenome/
+│       └── Trimming/
+├── Remove_HostGenome/
+├── Trimming/
+├── Readbased_Analysis/
+│   ├── rgi_bwt/
+│   ├── Post_processing/
+│   │   ├── <batch-prefix>_default/
+│   │   ├── <batch-prefix>_phyloseq/
+│   │   ├── <batch-prefix>_taxburst/
+│   │   ├── <batch-prefix>_rgi_bwt/
+│   │   └── <sample_id>/
+│   │       ├── default/
+│   │       ├── phyloseq/
+│   │       ├── taxburst/
+│   │       └── rgi_bwt/
+│   ├── sylph/                  (--readbased_taxotools sylph)
+│   │   ├── profile/  sylphtax/  phyloseq/
+│   │   └── <batch-prefix>_sylphtax_<datatype>.tsv
+│   └── Sourmash-YACHT/
+│       ├── final_results/
+│       ├── fastmultigather/
+│       ├── reads_collected/
+│       ├── sketches/
+│       │   ├── single_sketches/
+│       │   └── batch.batch.manysketch.zip
+│       ├── taxannotate/
+│       ├── taxmetagenome/
+│       └── yacht_results/
+```
+
+Each directory is created automatically by the pipeline and contains outputs relevant to its analysis step. The results of the ARG read-based analysis will be located in the folder `./Readbased_Analysis/rgi_bwt/`, and the results of the read-based taxonomic classification will be located in `./Readbased_Analysis/Sourmash-YACHT/final_results/`.
+
+Post-processing outputs are always published below `${outdir}/Readbased_Analysis/Post_processing`. Batch mode keeps the existing `<batch-prefix>_<mode>` layout, where the prefix is the basename of `outdir` (`/path/to/out/` becomes `out`). With `--readbased_postprocess all`, it also writes `<batch-prefix>_default/<batch-prefix>.processed_microcosm.csv`. Single-sketch mode uses the required CSV `sample_id`, or the normalized pairing key derived from directory input filenames (`SAMPLE_001_R1.fastq.gz` and `SAMPLE_001_R2.fastq.gz` become `SAMPLE_001`), and publishes all-mode outputs as `<sample_id>/<default|phyloseq|taxburst|rgi_bwt>`; its default CSV is `<sample_id>/default/<sample_id>.processed_microcosm.csv` and its RGI-BWT directory contains only direct `*.gene_mapping_data.txt` files. It also concatenates every sample's merged read-based table and publishes combined `<batch-prefix>_default`, `<batch-prefix>_phyloseq`, and `<batch-prefix>_taxburst` sets; its combined RGI-BWT group contains those same per-sample-named mapping files directly in `<batch-prefix>_rgi_bwt/`.
+
+### Assembly-based subworkflow
+
 The following tree illustrates the organization of output files generated by the assembly-based subworkflow:
 
 ```text
@@ -390,6 +438,17 @@ outdir/
 ├── MultiQC/
 └── pipeline_info/
 ```
+
+## Upgrading from metaflow 1.x
+
+- Use Nextflow ≥ 26.04. The repository moved to `tnmquann/microcosm` (old links redirect).
+- Processes are named `MICROCOSM:...` instead of `METAFLOW:...`: update custom configs that use full process names.
+  `-resume` does not reuse tasks of 1.x runs.
+- `<prefix>.processed_metaflow.csv` is now `<prefix>.processed_microcosm.csv`; `post_processing.py --input_format
+  raw_metaflow` is now `raw_microcosm`.
+- `--postprocess_options` is now `--readbased_postprocess_options` (default `--min_coverage 0.05`).
+- Resource limits use `--max_cpus`, `--max_memory`, `--max_time` (Nextflow `resourceLimits`); the old `*_max_cpu`,
+  `*_max_mem`, `*_max_time` parameters are gone.
 
 ## Error Handling
 
