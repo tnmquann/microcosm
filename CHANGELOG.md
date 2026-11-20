@@ -101,6 +101,11 @@ First release under the name **microcosm** (formerly **metaflow**; the GitHub re
 ### Fixed
 
 - Random Bakta crash `AttributeError: 'str' object has no attribute 'decode'` (upstream bakta#424).
+- Reads were mapped twice per assembly (BWA-MEM2 for contig analysis, `--binprepare_mappertool` for binning) and two
+  BAM sets were published. Reads are now mapped once with `--binprepare_mappertool` (`bowtie2` default, or `bwamem2`);
+  contig coverage and binning share the sorted BAM, published once in `Binning/mapping/sorted_bam/`
+  (`ContigsAnalysis/mapped_reads/` is gone).
+- Clean tool versions in `microcosm_software_versions.yml`: Kleborate (no `tput` warning), `sed` in sourmash fastmultigather, `cat` in read merging.
 - `ASSEMBLY_STATS` null handling; `BIN_CLASSIFICATION` version export; `DOMAIN_CLASSIFICATION` for MAGs given with
   `--postbinning_input`.
 - `HOSTILE_CLEAN` outputs sometimes not recognised; `--spades_options` not applied; `SAMTOOLS_SORT` input errors.

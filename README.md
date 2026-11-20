@@ -139,8 +139,9 @@ nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
 
 With no `--enable_readbase`, the assembly route runs MEGAHIT and metaSPAdes, contig analysis, MetaBAT2 / MaxBin2 /
 COMEBin / SemiBin2 with Binette refinement, CheckM2, Prokka and sourmash classification by default. `--binqc_tool`
-accepts one or more of `busco`, `checkm`, `checkm2` (each writes `Binning/QC/<tool>_summary.tsv`). Every step has a
-`--skip_<step>` switch; see [Parameters](https://github.com/tnmquann/microcosm/wiki/Parameters).
+accepts one or more of `busco`, `checkm`, `checkm2` (each writes `Binning/QC/<tool>_summary.tsv`). Reads are mapped to each
+assembly once with `--binprepare_mappertool` (`bowtie2` default, or `bwamem2`); the sorted BAM is shared by contig
+coverage and binning and saved once in `Binning/mapping/sorted_bam/`. Every step has a `--skip_<step>` switch; see [Parameters](https://github.com/tnmquann/microcosm/wiki/Parameters).
 
 ## Read-based analysis
 
@@ -428,8 +429,7 @@ outdir/
 │   ├── contig_stats/
 │   ├── coverage/
 │   ├── genomad/
-│   ├── skani/
-│   └── mapped_reads/
+│   └── skani/
 ├── Taxonomy/
 │   ├── sourmash/
 │   ├── GTDB-Tk/         (--bin_classifier gtdbtk)
@@ -446,6 +446,8 @@ outdir/
   `-resume` does not reuse tasks of 1.x runs.
 - `<prefix>.processed_metaflow.csv` is now `<prefix>.processed_microcosm.csv`; `post_processing.py --input_format
   raw_metaflow` is now `raw_microcosm`.
+- Reads are mapped to the assemblies once with `--binprepare_mappertool` (Bowtie2 by default; contig analysis used
+  BWA-MEM2 before): `ContigsAnalysis/mapped_reads/` is gone, the BAM files are in `Binning/mapping/sorted_bam/`.
 - `--postprocess_options` is now `--readbased_postprocess_options` (default `--min_coverage 0.05`).
 - Resource limits use `--max_cpus`, `--max_memory`, `--max_time` (Nextflow `resourceLimits`); the old `*_max_cpu`,
   `*_max_mem`, `*_max_time` parameters are gone.
