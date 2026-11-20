@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="grass" data-content_root="../../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Databases - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Inputs" href="../../usage/inputs/" /><link rel="prev" title="Installation" href="../installation/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Databases - microcosm</title><link rel="index" title="Index" href="../../genindex/" /><link rel="search" title="Search" href="../../search/" /><link rel="next" title="Command builder" href="../../usage/builder/" /><link rel="prev" title="Installation" href="../installation/" />
       <link rel="canonical" href="https://tnmquann.github.io/microcosm/getting-started/databases/" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=179a9995" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link
@@ -52,6 +52,9 @@
         </li><li class="link">
           <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
             <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/builder/">
+            <span>Command builder</span></a>
         </li><li class="link">
           <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
             <span>Cookbook</span></a>
@@ -97,6 +100,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
 <ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/builder/">Command builder</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
@@ -180,7 +184,7 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
   <article class="yue" role="main">
-          <section id="databases">
+          <section class="tex2jax_ignore mathjax_ignore" id="databases">
 <h1>Databases<a class="headerlink" href="#databases" title="Link to this heading">¶</a></h1>
 <p>Some databases must be downloaded by you; the others are downloaded by the pipeline when no path is given and can be saved in <code class="docutils literal notranslate"><span class="pre">&lt;outdir&gt;/Databases/</span></code> for the next run.</p>
 <section id="overview">
@@ -507,7 +511,7 @@ data-aria-dark="Switch to auto color mode">
 <section id="gtdb-tk">
 <h3>GTDB-Tk<a class="headerlink" href="#gtdb-tk" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>Not downloaded by the pipeline (the reference data is over 100 GB). Download and extract the GTDB-Tk reference data (release 226 for GTDB-Tk 2.7.2) following the <a class="reference external" href="https://ecogenomics.github.io/GTDBTk/installing/index.html#gtdb-tk-reference-data">GTDB-Tk docs</a>, then pass the extracted folder with <code class="docutils literal notranslate"><span class="pre">--gtdbtk_db</span></code>. Only needed with <code class="docutils literal notranslate"><span class="pre">--bin_classifier</span> <span class="pre">gtdbtk</span></code>.</p></li>
+<li><p>Not downloaded by the pipeline (the reference data is over 100 GB). Download and extract the GTDB-Tk reference data (release 226 for GTDB-Tk 2.5.2, the version the pipeline runs) following the <a class="reference external" href="https://ecogenomics.github.io/GTDBTk/installing/index.html#gtdb-tk-reference-data">GTDB-Tk docs</a>, then pass the extracted folder with <code class="docutils literal notranslate"><span class="pre">--gtdbtk_db</span></code>. Only needed with <code class="docutils literal notranslate"><span class="pre">--bin_classifier</span> <span class="pre">gtdbtk</span></code>.</p></li>
 </ul>
 </section>
 <section id="bacterial-genome-analysis-databases">
@@ -573,10 +577,10 @@ data-aria-dark="Switch to auto color mode">
         <span>Previous</span><div class="title">Installation</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="../../usage/inputs/">
+    <a href="../../usage/builder/">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">Inputs</div>
+        <div class="title">Command builder</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>

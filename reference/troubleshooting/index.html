@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/togglebutton.css?v=9c3e77be" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=4ee52e62" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=179a9995" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link
@@ -52,6 +52,9 @@
         </li><li class="link">
           <a href="https://tnmquann.github.io/microcosm/pipeline/overview/">
             <span>Pipeline</span></a>
+        </li><li class="link">
+          <a href="https://tnmquann.github.io/microcosm/usage/builder/">
+            <span>Command builder</span></a>
         </li><li class="link">
           <a href="https://tnmquann.github.io/microcosm/usage/cookbook/">
             <span>Cookbook</span></a>
@@ -97,6 +100,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">Using microcosm</span></p>
 <ul>
+<li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/builder/">Command builder</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/inputs/">Inputs</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/running/">Running the pipeline</a></li>
 <li class="toctree-l1 _expand"><a class="reference internal" href="../../usage/cookbook/">Cookbook</a></li>
@@ -169,7 +173,7 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="relative min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
   <article class="yue" role="main">
-          <section id="troubleshooting-faq">
+          <section class="tex2jax_ignore mathjax_ignore" id="troubleshooting-faq">
 <h1>Troubleshooting &amp; FAQ<a class="headerlink" href="#troubleshooting-faq" title="Link to this heading">¶</a></h1>
 <section id="upgrading-from-metaflow-1-x">
 <h2>Upgrading from metaflow 1.x<a class="headerlink" href="#upgrading-from-metaflow-1-x" title="Link to this heading">¶</a></h2>
@@ -203,8 +207,8 @@ A high unclassified proportion (&gt;50%) represents the estimated DNA mass in yo
 <ul class="simple">
 <li><p><strong>Strain-level bias:</strong> If your sample contains a specific strain absent from the database (or only a distant relative is present), its DNA mass cannot be accurately assigned.</p></li>
 <li><p><strong>Low ANI (Average Nucleotide Identity):</strong> Low genetic similarity between sample and reference reduces k-mer matches, underestimating the identified DNA mass (<code class="docutils literal notranslate"><span class="pre">bp_match</span></code>).</p></li>
-<li><p><strong>High scaled parameter ($\sigma$):</strong> A large scaled value (e.g., 10,000) undersamples the data. Rare organisms may be missed entirely, or their abundance estimated unreliably.</p></li>
-<li><p><strong>Inappropriate k-mer size:</strong> A very large $k$ (e.g., 51) makes the search highly specific but &quot;brittle.&quot; Minor evolutionary divergences prevent k-mers from matching, reducing sensitivity.</p></li>
+<li><p><strong>High scaled parameter (<span class="math notranslate nohighlight">\(\sigma\)</span>):</strong> A large scaled value (e.g., 10,000) undersamples the data. Rare organisms may be missed entirely, or their abundance estimated unreliably.</p></li>
+<li><p><strong>Inappropriate k-mer size:</strong> A very large <span class="math notranslate nohighlight">\(k\)</span> (e.g., 51) makes the search highly specific but &quot;brittle.&quot; Minor evolutionary divergences prevent k-mers from matching, reducing sensitivity.</p></li>
 </ul>
 </li>
 <li><p><strong>Assembler limitations:</strong></p>
@@ -228,7 +232,12 @@ A high unclassified proportion (&gt;50%) represents the estimated DNA mass in yo
 <section id="how-is-relative-abundance-calculated">
 <h2>How is Relative Abundance calculated?<a class="headerlink" href="#how-is-relative-abundance-calculated" title="Link to this heading">¶</a></h2>
 <p>In the read-based sub-workflow, relative abundance is computed in <code class="docutils literal notranslate"><span class="pre">${projectDir}/bin/py_scripts/read_based/process_sourmash_results.py</span></code> using the formula:</p>
-<p>$$ \boxed{\text{relative\_abundance} = \left(\frac{\text{unique\_intersect\_bp}}{\text{scaled}} \times \text{median\_abund}\right) \times \frac{1}{\text{total\_weighted\_hashes}}} $$</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+\boxed{\text{relative\_abundance} = \left(\frac{\text{unique\_intersect\_bp}}{\text{scaled}} \times \text{median\_abund}\right) \times \frac{1}{\text{total\_weighted\_hashes}}}
+\]</div>
+</div>
 <details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text"><strong>Why use <code>median_abund</code> instead of <code>mean_abund</code>?</strong></span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
@@ -315,5 +324,7 @@ A high unclassified proportion (&gt;50%) represents the estimated DNA mass in yo
       <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
       <script src="../../_static/design-tabs.js?v=f930bc37"></script>
       <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script>
+      <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script></body>
 </html>

@@ -37,10 +37,8 @@ html.light {
     text-align: center;
     padding: 2.5rem 1rem 2rem;
     margin: 0 0 1.5rem;
-    border-radius: 18px;
-    background:
-        radial-gradient(1200px 300px at 50% -40%, rgba(35, 175, 98, 0.18), transparent 70%),
-        var(--sy-c-surface);
+    border-radius: 12px;
+    background: var(--sy-c-surface);
     border: 1px solid var(--mc-border);
 }
 .mc-hero-logo { width: min(420px, 85%); height: auto; margin: 0 auto 0.6rem; display: block; }
@@ -49,19 +47,19 @@ html.dark .mc-hero-tagline { color: var(--mc-green); }
 .mc-hero-text { max-width: 46rem; margin: 0 auto 1.2rem; font-size: 1.02rem; opacity: 0.9; }
 .mc-hero-buttons { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
 .mc-btn {
-    display: inline-block; padding: 0.55rem 1.2rem; border-radius: 999px; font-weight: 600; text-decoration: none !important;
-    border: 1.5px solid var(--mc-green); color: var(--mc-green-dark) !important; transition: all 0.15s ease;
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0.55rem 1.2rem; border-radius: 10px; font-weight: 600;
+    text-decoration: none !important; border: 1.5px solid var(--mc-green); color: var(--mc-green-dark) !important;
+    transition: transform 0.12s ease, background-color 0.15s ease;
 }
 html.dark .mc-btn { color: var(--mc-green) !important; }
 .mc-btn:hover { background: rgba(35, 175, 98, 0.12); transform: translateY(-1px); }
+.mc-btn:active { transform: translateY(1px); }
 .mc-btn-primary { background: var(--mc-green); color: white !important; }
 html.dark .mc-btn-primary { color: white !important; }
 .mc-btn-primary:hover { background: var(--mc-green-dark); }
-.mc-badges { display: flex; gap: 0.45rem; justify-content: center; flex-wrap: wrap; }
-.mc-badge {
-    font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 999px;
-    background: rgba(35, 175, 98, 0.12); color: var(--mc-green-dark); border: 1px solid var(--mc-border);
-}
+.mc-badges { display: flex; gap: 0 0.9rem; justify-content: center; flex-wrap: wrap; }
+.mc-badge { font-size: 0.82rem; font-weight: 600; color: var(--mc-green-dark); }
+.mc-badge + .mc-badge::before { content: "·"; margin-right: 0.9rem; color: var(--sy-c-light); font-weight: 400; }
 html.dark .mc-badge { color: #9be3bb; }
 /* the page title is replaced by the hero logo on the home page */
 .yue section#microcosm > h1 { display: none; }
@@ -71,7 +69,7 @@ html.dark .mc-badge { color: #9be3bb; }
     border: 1px solid var(--mc-border) !important; border-radius: 14px !important;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.sd-card.mc-card:hover, .sd-card.mc-card-small:hover { transform: translateY(-3px); box-shadow: var(--mc-shadow); }
+.sd-card.mc-card:hover, .sd-card.mc-card-small:hover { transform: translateY(-2px); border-color: var(--mc-green) !important; }
 .sd-card.mc-card .sd-card-title { font-size: 1.08rem; color: var(--mc-green-dark); }
 html.dark .sd-card.mc-card .sd-card-title { color: var(--mc-green); }
 .sd-card.mc-card-small .sd-card-title { font-size: 0.98rem; margin-bottom: 0.2rem; }
