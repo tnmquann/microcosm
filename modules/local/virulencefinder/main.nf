@@ -61,8 +61,8 @@ process VIRULENCEFINDER_RUN {
     """
     echo '{}' > ${prefix}.standard.json
     echo '{}' > ${prefix}.legacy.json
-    printf 'Database\tVirulence factor\n' > ${prefix}.tsv
-    printf 'VirulenceFinder Results\n\nNo hit found\n' > ${prefix}.txt
+    printf 'Database\\tVirulence factor\\n' > ${prefix}.tsv
+    printf 'VirulenceFinder Results\\n\\nNo hit found\\n' > ${prefix}.txt
     touch ${prefix}-hit_in_genome_seq.fsa
     touch ${prefix}-virulence_genes.fsa
 

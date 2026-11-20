@@ -29,4 +29,14 @@ process QUAST_BINS_SUMMARY {
         cp: \$(cp --version 2>&1 | sed -n 1p | sed 's/cp (GNU coreutils) //')
     END_VERSIONS
     """
+
+    stub:
+    """
+    printf 'Assembly\\t# contigs\\tTotal length\\tN50\\n' > quast_summary.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        cp: 9.5
+    END_VERSIONS
+    """
 }

@@ -34,4 +34,17 @@ process QUAST_BINS {
         metaquast: \$(metaquast.py --version | sed "s/QUAST v//; s/ (MetaQUAST mode)//")
     END_VERSIONS
     """
+
+    stub:
+    def prefix = task.ext.prefix ?: "${meta.assembler}-${meta.binner}-${meta.binrefine}-${meta.id}"
+    """
+    mkdir -p QUAST/stub
+    printf 'Assembly\\t# contigs\\tTotal length\\tN50\\n' > "QUAST/${prefix}-quast_summary.tsv"
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: 3.13
+        metaquast: 5.3.0
+    END_VERSIONS
+    """
 }

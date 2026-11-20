@@ -25,4 +25,17 @@ process QUAST_METAQUAST {
         metaquast: \$(metaquast.py --version | sed "s/QUAST v//; s/ (MetaQUAST mode)//")
     END_VERSIONS
     """
+
+    stub:
+    """
+    mkdir -p QUAST
+    printf 'Assembly\\t${meta.assembler}-${meta.id}\\n# contigs\\t0\\nTotal length\\t0\\nN50\\t0\\n' > QUAST/report.tsv
+    cp QUAST/report.tsv QUAST/report_rawassemblies.tsv
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python: 3.13
+        metaquast: 5.3.0
+    END_VERSIONS
+    """
 }
