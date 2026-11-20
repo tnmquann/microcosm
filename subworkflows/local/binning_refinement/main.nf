@@ -109,7 +109,7 @@ workflow BINNING_REFINEMENT {
             }
     } else if (params.refine_tool == 'binette') {
         // Use CheckM2 database passed from main workflow (required for Binette)
-        // Database setup is handled in the main metaflow.nf to avoid duplicate downloads
+        // Database setup is handled in the main microcosm.nf to avoid duplicate downloads
         // NOTE: ch_checkm2_db will contain the database ONLY if needed by main workflow
         //       (i.e., when binqc_tool == 'checkm2' OR refine_tool == 'binette')
         //       Other refinement tools like DAS_TOOL do NOT reach this code path

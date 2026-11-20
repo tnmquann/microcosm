@@ -1,6 +1,6 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com/tnmquann/profiler_sourmash/main/nextflow_schema.json",
+    "$id": "https://raw.githubusercontent.com/tnmquann/microcosm/main/nextflow_schema.json",
     "title": "Taxonomic Profiling Pipeline with Hostile and Sourmash",
     "description": "Pipeline for taxonomic profiling using Sourmash after cleaning reads with Hostile",
     "type": "object",

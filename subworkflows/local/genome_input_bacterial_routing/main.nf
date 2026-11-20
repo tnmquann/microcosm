@@ -8,7 +8,7 @@ include { VALIDATE_GENOME_INPUT } from '../../../modules/local/input/validate_ge
 include { NORMALIZE_GENOME_CLASSIFICATIONS } from '../../../modules/local/finalize/normalize_genome_classifications/main'
 include { PUBLISH_GENOME_ROUTING } from '../../../modules/local/finalize/publish_genome_routing/main'
 // Intentional nested use: standalone --genome_input rows with blank lineage
-// are classified here; assembly-produced bins are classified by workflow/metaflow.nf.
+// are classified here; assembly-produced bins are classified by workflow/microcosm.nf.
 include { BIN_CLASSIFICATION } from '../bin_classification/main'
 include { readDecisionTable; decisionFor } from '../utils_bacterial_lineage/main'
 include { binClassificationAvailable; binClassifier } from '../utils_microcosm/main'

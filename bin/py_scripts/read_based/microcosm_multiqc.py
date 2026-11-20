@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """MultiQC custom content for the microcosm read-based profile.
 
-Reads <prefix>.processed_metaflow.csv (post_processing.py default output) and
+Reads <prefix>.processed_microcosm.csv (post_processing.py default output) and
 writes microcosm_mqc.json: one "microcosm" section with one "Top taxa" bar
 graph that has a tab per rank (Strain = genome, Species ... Domain), laid out
 like MultiQC's sylph-tax module. Values are percent of weighted k-mers
@@ -116,7 +116,7 @@ def write_json(path: Path, datasets: list[dict], categories: list[dict], labels:
             "Read-based taxonomic profile from microcosm (sourmash fastmultigather + YACHT, GTDB). "
             f"{level}Top {top} taxa per rank as percent of weighted k-mers; Other = remaining classified taxa; "
             f"{scale}Full table: "
-            "Readbased_Analysis/Post_processing/&lt;prefix&gt;_default/&lt;prefix&gt;.processed_metaflow.csv."
+            "Readbased_Analysis/Post_processing/&lt;prefix&gt;_default/&lt;prefix&gt;.processed_microcosm.csv."
         ),
         "plot_type": "bargraph",
         "pconfig": {
@@ -134,7 +134,7 @@ def write_json(path: Path, datasets: list[dict], categories: list[dict], labels:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--input", type=Path, required=True, help="<prefix>.processed_metaflow.csv")
+    parser.add_argument("--input", type=Path, required=True, help="<prefix>.processed_microcosm.csv")
     parser.add_argument("--outdir", type=Path, default=Path("."))
     parser.add_argument("--top", type=int, default=10)
     parser.add_argument("--min_coverage", type=float, help="YACHT min_coverage level to plot (default: every row as one bar)")

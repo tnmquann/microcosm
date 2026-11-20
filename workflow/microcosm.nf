@@ -143,7 +143,7 @@ ${indented}
 """
 }
 
-workflow METAFLOW {
+workflow MICROCOSM {
     main:
         schema_path = projectDir.name == 'workflow' ? '../nextflow_schema.json' : 'nextflow_schema.json'
 
@@ -739,7 +739,7 @@ workflow METAFLOW {
         // Final MultiQC report (nf-core/mag style) and the run-wide software versions:
         // read QC, bin QC/annotation, sylph-tax, microcosm top taxa, bacterial genome overview.
         if (!params.skip_multiqc) {
-            def processed_csv_name = "${deriveReadbasedBatchPrefix(params.outdir)}.processed_metaflow.csv"
+            def processed_csv_name = "${deriveReadbasedBatchPrefix(params.outdir)}.processed_microcosm.csv"
             MICROCOSM_MULTIQC_TABLES(
                 read_based_postprocess_default_ch
                     .map { _meta, default_dir -> file("${default_dir}/${processed_csv_name}") }

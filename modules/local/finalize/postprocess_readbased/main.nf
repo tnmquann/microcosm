@@ -52,7 +52,7 @@ process POSTPROCESS_READBASED {
         "--input",
         "merged_sourmash_yacht.csv",
         "--input_format",
-        "raw_metaflow",
+        "raw_microcosm",
         "--output",
         os.environ["POSTPROCESS_TMP_DIR"],
         "--output_format",
@@ -90,7 +90,7 @@ process POSTPROCESS_READBASED {
         local mode_tmp='postprocess_tmp/default'
         local -a generated_files=()
         local -a remaining_outputs=()
-        local default_csv_name="${output_prefix}.processed_metaflow.csv"
+        local default_csv_name="${output_prefix}.processed_microcosm.csv"
 
         rm -rf "\${mode_tmp}"
         mkdir -p "\${mode_tmp}"
@@ -98,7 +98,7 @@ process POSTPROCESS_READBASED {
         run_postprocess_command default "\${mode_tmp}"
 
         mapfile -d '' -t generated_files < <(
-            find "\${mode_tmp}" -mindepth 1 -maxdepth 1 -type f -name '*.processed_metaflow.csv' -print0
+            find "\${mode_tmp}" -mindepth 1 -maxdepth 1 -type f -name '*.processed_microcosm.csv' -print0
         )
         if [[ "\${#generated_files[@]}" -ne 1 ]]; then
             echo "ERROR: Expected exactly one default processed CSV in \${mode_tmp}; found \${#generated_files[@]}." >&2
@@ -175,7 +175,7 @@ process POSTPROCESS_READBASED {
     """
     if ${run_default}; then
         mkdir -p "${output_prefix}_default"
-        touch "${output_prefix}_default/${output_prefix}.processed_metaflow.csv"
+        touch "${output_prefix}_default/${output_prefix}.processed_microcosm.csv"
     fi
 
     if ${run_phyloseq}; then

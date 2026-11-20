@@ -107,7 +107,7 @@ nextflow_process {
                 { assert process.out.rgi_bwt.size() == 1 },
                 { assert path("${process.out.rgi_bwt[0][1]}/SAMPLE_001/SAMPLE_001.gene_mapping_data.txt").exists() },
                 { assert path("${process.out.rgi_bwt[0][1]}/SAMPLE_002/SAMPLE_002.gene_mapping_data.txt").exists() },
-                { assert path("${process.out.default_output[0][1]}/project_A.processed_metaflow.csv").exists() }
+                { assert path("${process.out.default_output[0][1]}/project_A.processed_microcosm.csv").exists() }
             )
         }
     }

@@ -1,6 +1,6 @@
 {
-  "name": "profiler_sourmash",
-  "homePage": "https://github.com/tnmquann/profiler_sourmash",
+  "name": "microcosm",
+  "homePage": "https://github.com/tnmquann/microcosm",
   "repos": {
     "https://github.com/nf-core/modules.git": {
       "modules": {

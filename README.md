@@ -1,4 +1,4 @@
-# metaflow
+# microcosm
 
 [![Nextflow](https://img.shields.io/badge/version-%E2%89%A526.04.0-green?style=flat&logo=nextflow&logoColor=white&color=%230DC09D&link=https%3A%2F%2Fnextflow.io)](https://www.nextflow.io/)
 [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
@@ -8,13 +8,13 @@
 [![run with slurm](https://img.shields.io/badge/run%20with-slurm-1AAEE8.svg?labelColor=000000)](https://www.schedmd.com)
 ---
 
-**metaflow** is a robust, modular pipeline built on [Nextflow](https://www.nextflow.io/) for comprehensive analysis of Illumina **short-read** metagenomic data. Designed with practical experience in mind, this workflow streamlines both rapid, read-level classification and high-resolution genome assembly, making it accessible to users with minimal computational background. It delivers fast, actionable results for professionals in molecular epidemiology, enabling timely insights for outbreak investigation and surveillance.
+**microcosm** is a robust, modular pipeline built on [Nextflow](https://www.nextflow.io/) for comprehensive analysis of Illumina **short-read** metagenomic data. Designed with practical experience in mind, this workflow streamlines both rapid, read-level classification and high-resolution genome assembly, making it accessible to users with minimal computational background. It delivers fast, actionable results for professionals in molecular epidemiology, enabling timely insights for outbreak investigation and surveillance.
 
-This pipeline was developed based on the concepts and design principles of [`nf-core/mag`](https://nf-co.re/mag/latest/) and [`SOMA`](https://github.com/ukhsa-collaboration/SOMA). Many modifications have been made to the original pipelines, reflecting both practical experience and methodological preferences. Most importantly, **metaflow** is optimized to run efficiently on resource-limited devices, ensuring broad accessibility in both laboratory and field settings.
+This pipeline was developed based on the concepts and design principles of [`nf-core/mag`](https://nf-co.re/mag/latest/) and [`SOMA`](https://github.com/ukhsa-collaboration/SOMA). Many modifications have been made to the original pipelines, reflecting both practical experience and methodological preferences. Most importantly, **microcosm** is optimized to run efficiently on resource-limited devices, ensuring broad accessibility in both laboratory and field settings.
 
 
 <p align="center">
-  <img src="https://github.com/tnmquann/profiler_sourmash/blob/main/docs/images/metaflow_currentbeta_cleaned_metromap_light.png" width="70%" alt="metaflow workflow diagram"/>
+  <img src="https://github.com/tnmquann/microcosm/blob/main/docs/images/microcosm_currentbeta_cleaned_metromap_light.png" width="70%" alt="microcosm workflow diagram"/>
 </p>
 
 ## Overview
@@ -27,12 +27,12 @@ This pipeline performs taxonomic profiling of shotgun metagenomics data through 
 - **Metagenome Assembly & Binning**  
   - The pipeline assembles contigs and performs binning to recover Metagenome Assembled Genomes (MAGs), enabling *in silico* characterization of microbial communities.
 
-For step-by-step installation instructions, parameter explanations, and advanced usage tutorials, please refer to [wiki page](https://github.com/tnmquann/profiler_sourmash/wiki).
+For step-by-step installation instructions, parameter explanations, and advanced usage tutorials, please refer to [wiki page](https://github.com/tnmquann/microcosm/wiki).
 
 ## Pipeline requirements and Installation overview
 
 ### Software environment
-- Nextflow version 26.04.0 or later is required as the workflow engine for metaflow v2.0.0 strict syntax compatibility.
+- Nextflow version 26.04.0 or later is required as the workflow engine for microcosm v2.0.0 strict syntax compatibility.
 - Conda or Mamba is used for reproducible package and environment management, with Mamba preferred for faster dependency resolution.
 - Container runtimes such as Docker or Apptainer are optional but improve portability and reproducibility across heterogeneous systems.
 
@@ -47,7 +47,7 @@ For step-by-step installation instructions, parameter explanations, and advanced
 - Conda or Mamba installation finalizes the environment setup, with optional container runtime installation to enhance execution consistency.
 - Execution profiles include `conda`, `docker`, and `apptainer`; GPU-capable execution is opt-in with profile combinations such as `docker,gpu` or `apptainer,gpu` on hosts that provide compatible GPU runtime support.
 > [!NOTE]
-> metaflow relies on `sourmash` and `YACHT` for robust taxonomic classification. For detailed setup instructions, please refer to the [Manual Database Setup](https://github.com/tnmquann/profiler_sourmash/wiki/Installation#manual-database-setup-instructions) section.
+> microcosm relies on `sourmash` and `YACHT` for robust taxonomic classification. For detailed setup instructions, please refer to the [Manual Database Setup](https://github.com/tnmquann/microcosm/wiki/Installation#manual-database-setup-instructions) section.
 
 ## Input specifications
 *   **Sample CSV format:** `sample_id` is required and must be non-empty for every row.
@@ -61,7 +61,7 @@ For step-by-step installation instructions, parameter explanations, and advanced
 ## Quick start
 
 ### Read-based analysis
-Once your `sourmash` and `YACHT` databases are ready, you can launch the `metaflow` pipeline. Below are examples for different input formats.
+Once your `sourmash` and `YACHT` databases are ready, you can launch the `microcosm` pipeline. Below are examples for different input formats.
 ```bash
 # With csv file
 nextflow run main.nf \
@@ -148,7 +148,7 @@ Read-based post-processing defaults to `--min_coverage 0.05`. `--readbased_postp
 A MultiQC report is written to `${outdir}/MultiQC/<prefix>_multiqc_report.html`
 (turn off with `--skip_multiqc`), styled by `assets/multiqc_config.yml` with the
 microcosm logo. Sections: microcosm top taxa (one bar graph with a tab per rank,
-Strain to Domain, from `<prefix>.processed_metaflow.csv`, so it needs
+Strain to Domain, from `<prefix>.processed_microcosm.csv`, so it needs
 `--readbased_postprocess all`), sylph profile (genomes, mean ANI, taxonomic abundance per
 reference genome; no sylph-tax needed), sylph-tax (`--enable_sylphtax`), a bacterial
 genome overview (species, MLST, SISTR serovar, AMR genes per tool), FastQC/fastp,
@@ -227,7 +227,7 @@ outdir/
 
 Each directory is created automatically by the pipeline and contains outputs relevant to its analysis step. The results of the ARG read-based analysis will be located in the folder `./Readbased_Analysis/rgi_bwt/`, and the results of the read-based taxonomic classification will be located in `./Readbased_Analysis/Sourmash-YACHT/final_results/`.
 
-Post-processing outputs are always published below `${outdir}/Readbased_Analysis/Post_processing`. Batch mode keeps the existing `<batch-prefix>_<mode>` layout, where the prefix is the basename of `outdir` (`/path/to/out/` becomes `out`). With `--readbased_postprocess all`, it also writes `<batch-prefix>_default/<batch-prefix>.processed_metaflow.csv`. Single-sketch mode uses the required CSV `sample_id`, or the normalized pairing key derived from directory input filenames (`SAMPLE_001_R1.fastq.gz` and `SAMPLE_001_R2.fastq.gz` become `SAMPLE_001`), and publishes all-mode outputs as `<sample_id>/<default|phyloseq|taxburst|rgi_bwt>`; its default CSV is `<sample_id>/default/<sample_id>.processed_metaflow.csv` and its RGI-BWT directory contains only direct `*.gene_mapping_data.txt` files. It also concatenates every sample's merged read-based table and publishes combined `<batch-prefix>_default`, `<batch-prefix>_phyloseq`, and `<batch-prefix>_taxburst` sets; its combined RGI-BWT group contains those same per-sample-named mapping files directly in `<batch-prefix>_rgi_bwt/`.
+Post-processing outputs are always published below `${outdir}/Readbased_Analysis/Post_processing`. Batch mode keeps the existing `<batch-prefix>_<mode>` layout, where the prefix is the basename of `outdir` (`/path/to/out/` becomes `out`). With `--readbased_postprocess all`, it also writes `<batch-prefix>_default/<batch-prefix>.processed_microcosm.csv`. Single-sketch mode uses the required CSV `sample_id`, or the normalized pairing key derived from directory input filenames (`SAMPLE_001_R1.fastq.gz` and `SAMPLE_001_R2.fastq.gz` become `SAMPLE_001`), and publishes all-mode outputs as `<sample_id>/<default|phyloseq|taxburst|rgi_bwt>`; its default CSV is `<sample_id>/default/<sample_id>.processed_microcosm.csv` and its RGI-BWT directory contains only direct `*.gene_mapping_data.txt` files. It also concatenates every sample's merged read-based table and publishes combined `<batch-prefix>_default`, `<batch-prefix>_phyloseq`, and `<batch-prefix>_taxburst` sets; its combined RGI-BWT group contains those same per-sample-named mapping files directly in `<batch-prefix>_rgi_bwt/`.
 
 ### Assembly-based subworkflow
 
@@ -401,7 +401,7 @@ The pipeline implements an automatic error recovery strategy:
 ## Citation
 
 If you use this pipeline, please cite:
-> Minh-Quan T.N., Nguyen M.T.S. (2025). metaflow: A Nextflow pipeline for comprehensive analysis of short-read metagenomic data using sourmash and YACHT.
+> Minh-Quan T.N., Nguyen M.T.S. (2025). microcosm: A Nextflow pipeline for comprehensive analysis of short-read metagenomic data using sourmash and YACHT.
 
 ## Acknowledgements
 

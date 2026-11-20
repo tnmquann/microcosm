@@ -28,7 +28,7 @@ GATHER_REQUIRED_COLUMNS = [
     "ksize",
 ]
 
-RAW_METAFLOW_STANDARD_COLUMNS = [
+RAW_MICROCOSM_STANDARD_COLUMNS = [
     "sample_name",
     "lineage",
     "query_md5",
@@ -48,13 +48,13 @@ RAW_METAFLOW_STANDARD_COLUMNS = [
     "source_file",
 ]
 
-RAW_METAFLOW_TAXBURST_EXTRA_COLUMNS = [
+RAW_MICROCOSM_TAXBURST_EXTRA_COLUMNS = [
     "n_unique_weighted_found",
     "sum_weighted_found",
     "median_abund",
 ]
 
-RAW_METAFLOW_NUMERIC_COLUMNS = [
+RAW_MICROCOSM_NUMERIC_COLUMNS = [
     "f_unique_to_query",
     "average_abund",
     "median_abund",
@@ -67,18 +67,18 @@ RAW_METAFLOW_NUMERIC_COLUMNS = [
     "sum_weighted_found",
 ]
 
-RAW_METAFLOW_STRICT_GROUP_METADATA_COLUMNS = [
+RAW_MICROCOSM_STRICT_GROUP_METADATA_COLUMNS = [
     "query_bp",
     "total_weighted_hashes",
 ]
 
-RAW_METAFLOW_SOFT_GROUP_METADATA_COLUMNS = [
+RAW_MICROCOSM_SOFT_GROUP_METADATA_COLUMNS = [
     "p_vals",
     "actual_confidence_with_coverage",
     "alt_confidence_mut_rate_with_coverage",
 ]
 
-RAW_METAFLOW_REFERENCED_COLUMNS = [
+RAW_MICROCOSM_REFERENCED_COLUMNS = [
     "WGS_ID",
     "lineage",
     "query_md5",
@@ -101,7 +101,7 @@ RAW_METAFLOW_REFERENCED_COLUMNS = [
     "sum_weighted_found",
 ]
 
-RAW_METAFLOW_PREFERRED_GROUP_COLUMNS = [
+RAW_MICROCOSM_PREFERRED_GROUP_COLUMNS = [
     "__sample_name",
     "file_name",
     "query_md5",
@@ -110,7 +110,7 @@ RAW_METAFLOW_PREFERRED_GROUP_COLUMNS = [
     "scaled",
 ]
 
-RAW_METAFLOW_MINIMUM_INFORMATIVE_COLUMNS = [
+RAW_MICROCOSM_MINIMUM_INFORMATIVE_COLUMNS = [
     "organism_name",
     "WGS_ID",
     "query_md5",
@@ -148,7 +148,7 @@ class SplitTarget:
 
 
 @dataclass
-class RawMetaflowWarningCollector:
+class RawMicrocosmWarningCollector:
     input_path: Path
     messages: list[str] = field(default_factory=list)
     seen: set[str] = field(default_factory=set)
@@ -163,13 +163,13 @@ class RawMetaflowWarningCollector:
         if not self.messages:
             return
         details = "\n".join(f"  - {message}" for message in self.messages)
-        LOGGER.warning("raw_metaflow warnings for %s:\n%s", self.input_path, details)
+        LOGGER.warning("raw_microcosm warnings for %s:\n%s", self.input_path, details)
 
 
 def emit_warning(
     message: str,
     *,
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> None:
     if collector is None:
         LOGGER.warning("%s", message)
@@ -180,15 +180,15 @@ def emit_warning(
 def build_parser() -> argparse.ArgumentParser:
     examples = """Examples:
   python process_metagenomic_microgen2026.py --input "data/*.csv" --input_format gather
-  python process_metagenomic_microgen2026.py --input "data/{a,b}.tsv" --input_format raw_metaflow --output results.csv
-  python process_metagenomic_microgen2026.py --input merged.csv --input_format raw_metaflow --remove_unclassified --split
-  python process_metagenomic_microgen2026.py --input merged.csv --input_format raw_metaflow --min_coverage 0.01 --output_format phyloseq
-  python process_metagenomic_microgen2026.py --input merged.csv --input_format raw_metaflow --output_format taxburst
+  python process_metagenomic_microgen2026.py --input "data/{a,b}.tsv" --input_format raw_microcosm --output results.csv
+  python process_metagenomic_microgen2026.py --input merged.csv --input_format raw_microcosm --remove_unclassified --split
+  python process_metagenomic_microgen2026.py --input merged.csv --input_format raw_microcosm --min_coverage 0.01 --output_format phyloseq
+  python process_metagenomic_microgen2026.py --input merged.csv --input_format raw_microcosm --output_format taxburst
 """
     parser = argparse.ArgumentParser(
         description=(
             "Process plain-text CSV/TSV/TXT metagenomics tabular files for gather "
-            "splitting or raw_metaflow standardization."
+            "splitting or raw_microcosm standardization."
         ),
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -202,7 +202,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--input_format",
         required=True,
-        choices=["gather", "raw_metaflow"],
+        choices=["gather", "raw_microcosm"],
         help="Declared schema for all input files.",
     )
     parser.add_argument(
@@ -215,17 +215,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--split",
         action="store_true",
-        help="For raw_metaflow only: also create one processed CSV per sample_name. taxburst always emits split files.",
+        help="For raw_microcosm only: also create one processed CSV per sample_name. taxburst always emits split files.",
     )
     parser.add_argument(
         "--remove_unclassified",
         action="store_true",
-        help="For raw_metaflow only: omit synthetic unclassified rows and renormalize f_weighted_at_rank.",
+        help="For raw_microcosm only: omit synthetic unclassified rows and renormalize f_weighted_at_rank.",
     )
     parser.add_argument(
         "--min_coverage",
         type=float,
-        help="For raw_metaflow only: keep rows whose file_name contains min_coverage{value}.",
+        help="For raw_microcosm only: keep rows whose file_name contains min_coverage{value}.",
     )
     parser.add_argument(
         "--use_average",
@@ -236,7 +236,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--output_format",
         choices=["default", "phyloseq", "taxburst"],
         default="default",
-        help="Output layout for raw_metaflow processing. Supported: default, phyloseq, taxburst. Default: default.",
+        help="Output layout for raw_microcosm processing. Supported: default, phyloseq, taxburst. Default: default.",
     )
     return parser
 
@@ -258,7 +258,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.input_format == "gather":
             process_gather_inputs(input_paths, output_target)
         else:
-            process_raw_metaflow_inputs(input_paths, output_target, args)
+            process_raw_microcosm_inputs(input_paths, output_target, args)
     except ProcessingError as exc:
         LOGGER.error(str(exc))
         return 1
@@ -270,14 +270,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def validate_cli_arguments(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
-    if args.split and args.input_format != "raw_metaflow":
-        parser.error("--split is only valid with --input_format raw_metaflow.")
-    if args.remove_unclassified and args.input_format != "raw_metaflow":
-        parser.error("--remove_unclassified is only valid with --input_format raw_metaflow.")
-    if args.min_coverage is not None and args.input_format != "raw_metaflow":
-        parser.error("--min_coverage is only valid with --input_format raw_metaflow.")
-    if args.output_format != "default" and args.input_format != "raw_metaflow":
-        parser.error(f"--output_format {args.output_format} is only valid with --input_format raw_metaflow.")
+    if args.split and args.input_format != "raw_microcosm":
+        parser.error("--split is only valid with --input_format raw_microcosm.")
+    if args.remove_unclassified and args.input_format != "raw_microcosm":
+        parser.error("--remove_unclassified is only valid with --input_format raw_microcosm.")
+    if args.min_coverage is not None and args.input_format != "raw_microcosm":
+        parser.error("--min_coverage is only valid with --input_format raw_microcosm.")
+    if args.output_format != "default" and args.input_format != "raw_microcosm":
+        parser.error(f"--output_format {args.output_format} is only valid with --input_format raw_microcosm.")
     if args.output_format == "phyloseq" and args.split:
         parser.error("--split is not supported with --output_format phyloseq.")
     if args.output_format == "taxburst" and args.remove_unclassified:
@@ -465,7 +465,7 @@ def warn_on_missing_optional_columns(
     path: Path,
     *,
     context: str,
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> None:
     missing = [column for column in optional_columns if column not in dataframe.columns]
     if missing:
@@ -522,7 +522,7 @@ def validate_group_key_values(dataframe: pd.DataFrame, columns: Sequence[str], p
             )
 
 
-def resolve_raw_metaflow_required_columns(
+def resolve_raw_microcosm_required_columns(
     *,
     use_average: bool,
     include_synthetic_unclassified: bool,
@@ -542,13 +542,13 @@ def resolve_raw_metaflow_required_columns(
     return list(dict.fromkeys(required))
 
 
-def resolve_raw_metaflow_non_null_columns(
+def resolve_raw_microcosm_non_null_columns(
     *,
     use_average: bool,
     include_synthetic_unclassified: bool,
     min_coverage: float | None,
 ) -> list[str]:
-    required = resolve_raw_metaflow_required_columns(
+    required = resolve_raw_microcosm_required_columns(
         use_average=use_average,
         include_synthetic_unclassified=include_synthetic_unclassified,
         min_coverage=min_coverage,
@@ -556,12 +556,12 @@ def resolve_raw_metaflow_non_null_columns(
     return required
 
 
-def validate_raw_metaflow_minimum_columns(dataframe: pd.DataFrame, path: Path) -> None:
-    present = [column for column in RAW_METAFLOW_MINIMUM_INFORMATIVE_COLUMNS if column in dataframe.columns]
+def validate_raw_microcosm_minimum_columns(dataframe: pd.DataFrame, path: Path) -> None:
+    present = [column for column in RAW_MICROCOSM_MINIMUM_INFORMATIVE_COLUMNS if column in dataframe.columns]
     if not present:
         raise ProcessingError(
-            f"{path} does not contain any recognizable raw_metaflow identification/result columns. "
-            f"Expected at least one of: {', '.join(RAW_METAFLOW_MINIMUM_INFORMATIVE_COLUMNS)}"
+            f"{path} does not contain any recognizable raw_microcosm identification/result columns. "
+            f"Expected at least one of: {', '.join(RAW_MICROCOSM_MINIMUM_INFORMATIVE_COLUMNS)}"
         )
 
 
@@ -580,9 +580,9 @@ def split_formula_ready_rows(
 
 
 def resolve_raw_output_columns(output_format: str) -> list[str]:
-    columns = list(RAW_METAFLOW_STANDARD_COLUMNS)
+    columns = list(RAW_MICROCOSM_STANDARD_COLUMNS)
     if output_format == "taxburst":
-        columns.extend(RAW_METAFLOW_TAXBURST_EXTRA_COLUMNS)
+        columns.extend(RAW_MICROCOSM_TAXBURST_EXTRA_COLUMNS)
     return columns
 
 
@@ -619,18 +619,18 @@ def column_has_meaningful_values(series: pd.Series) -> bool:
     return bool((text.notna() & text.str.strip().ne("")).any())
 
 
-def resolve_raw_metaflow_group_columns(
+def resolve_raw_microcosm_group_columns(
     dataframe: pd.DataFrame,
     input_path: Path,
     *,
     include_file_name: bool = True,
     warn_on_reduced: bool = True,
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> list[str]:
     available: list[str] = []
     reduced: list[str] = []
 
-    for column in RAW_METAFLOW_PREFERRED_GROUP_COLUMNS:
+    for column in RAW_MICROCOSM_PREFERRED_GROUP_COLUMNS:
         if column == "__sample_name__":
             available.append(column)
             continue
@@ -643,7 +643,7 @@ def resolve_raw_metaflow_group_columns(
 
     if reduced and warn_on_reduced:
         emit_warning(
-            f"raw_metaflow grouping is using a reduced key because these columns are missing or empty: {', '.join(reduced)}",
+            f"raw_microcosm grouping is using a reduced key because these columns are missing or empty: {', '.join(reduced)}",
             collector=collector,
         )
 
@@ -679,18 +679,18 @@ def build_passthrough_precomputed_rows(dataframe: pd.DataFrame, *, output_format
     return standardized.reindex(columns=resolve_raw_output_columns(output_format))
 
 
-def drop_blank_raw_metaflow_records(
+def drop_blank_raw_microcosm_records(
     dataframe: pd.DataFrame,
     input_path: Path,
     *,
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> pd.DataFrame:
     file_name_blank = dataframe["file_name"].isna()
     if "file_name" in dataframe.columns:
         file_name_blank = file_name_blank | dataframe["file_name"].astype("string").str.strip().eq("")
     if file_name_blank.any():
         emit_warning(
-            f"{int(file_name_blank.sum())} raw_metaflow rows have blank file_name and will be dropped before downstream processing.",
+            f"{int(file_name_blank.sum())} raw_microcosm rows have blank file_name and will be dropped before downstream processing.",
             collector=collector,
         )
         dataframe = dataframe.loc[~file_name_blank].copy()
@@ -698,7 +698,7 @@ def drop_blank_raw_metaflow_records(
     relative_abundance_blank = dataframe["relative_abundance"].isna()
     if relative_abundance_blank.any():
         emit_warning(
-            f"{int(relative_abundance_blank.sum())} raw_metaflow rows have blank relative_abundance after blank file_name rows were removed and will be dropped before downstream processing.",
+            f"{int(relative_abundance_blank.sum())} raw_microcosm rows have blank relative_abundance after blank file_name rows were removed and will be dropped before downstream processing.",
             collector=collector,
         )
         dataframe = dataframe.loc[~relative_abundance_blank].copy()
@@ -769,7 +769,7 @@ def resolve_gather_output_path(input_path: Path, output_target: OutputTarget, fi
     return output_target.path
 
 
-def process_raw_metaflow_inputs(
+def process_raw_microcosm_inputs(
     input_paths: Sequence[Path],
     output_target: OutputTarget,
     args: argparse.Namespace,
@@ -783,7 +783,7 @@ def process_raw_metaflow_inputs(
         )
 
     processed_results = [
-        process_raw_metaflow_file(
+        process_raw_microcosm_file(
             input_path=path,
             use_average=args.use_average,
             remove_unclassified=args.remove_unclassified,
@@ -853,7 +853,7 @@ def process_raw_metaflow_inputs(
             LOGGER.info("Wrote phyloseq outputs in %s", phyloseq_dir)
 
 
-def process_raw_metaflow_file(
+def process_raw_microcosm_file(
     input_path: Path,
     *,
     use_average: bool,
@@ -862,12 +862,12 @@ def process_raw_metaflow_file(
     output_format: str = "default",
     suppress_remove_unclassified_warning: bool = False,
 ) -> ProcessedResult:
-    warning_collector = RawMetaflowWarningCollector(input_path)
+    warning_collector = RawMicrocosmWarningCollector(input_path)
     dataframe = read_table(input_path)
-    validate_raw_metaflow_minimum_columns(dataframe, input_path)
+    validate_raw_microcosm_minimum_columns(dataframe, input_path)
     output_columns = resolve_raw_output_columns(output_format)
     include_synthetic_unclassified = raw_output_includes_synthetic_unclassified(output_format, remove_unclassified)
-    required_columns = resolve_raw_metaflow_required_columns(
+    required_columns = resolve_raw_microcosm_required_columns(
         use_average=use_average,
         include_synthetic_unclassified=include_synthetic_unclassified,
         min_coverage=min_coverage,
@@ -876,13 +876,13 @@ def process_raw_metaflow_file(
         validate_required_columns(dataframe, ["relative_abundance", "file_name"], input_path)
     warn_on_missing_optional_columns(
         dataframe,
-        [column for column in RAW_METAFLOW_REFERENCED_COLUMNS if column not in required_columns],
+        [column for column in RAW_MICROCOSM_REFERENCED_COLUMNS if column not in required_columns],
         input_path,
-        context="raw_metaflow",
+        context="raw_microcosm",
         collector=warning_collector,
     )
-    dataframe = add_missing_columns(dataframe, RAW_METAFLOW_REFERENCED_COLUMNS)
-    dataframe = drop_blank_raw_metaflow_records(dataframe, input_path, collector=warning_collector)
+    dataframe = add_missing_columns(dataframe, RAW_MICROCOSM_REFERENCED_COLUMNS)
+    dataframe = drop_blank_raw_microcosm_records(dataframe, input_path, collector=warning_collector)
     if dataframe.empty:
         standardized = pd.DataFrame(columns=output_columns)
         standardized["__source_sample_name__"] = pd.Series(dtype="object")
@@ -900,7 +900,7 @@ def process_raw_metaflow_file(
     dataframe["__provenance"] = str(input_path)
     dataframe = coerce_numeric_columns(
         dataframe,
-        RAW_METAFLOW_NUMERIC_COLUMNS,
+        RAW_MICROCOSM_NUMERIC_COLUMNS,
         input_path,
         allow_missing=True,
     )
@@ -921,7 +921,7 @@ def process_raw_metaflow_file(
 
     post_filter_rows = working.copy()
     formula_column = "average_abund" if use_average else "median_abund"
-    formula_required_columns = resolve_raw_metaflow_non_null_columns(
+    formula_required_columns = resolve_raw_microcosm_non_null_columns(
         use_average=use_average,
         include_synthetic_unclassified=include_synthetic_unclassified,
         min_coverage=min_coverage,
@@ -950,7 +950,7 @@ def process_raw_metaflow_file(
     require_non_null_values(working, formula_required_columns, input_path)
     ensure_nonzero(working, "scaled", input_path)
     ensure_nonzero(working, "total_weighted_hashes", input_path)
-    consistency_group_columns = resolve_raw_metaflow_group_columns(
+    consistency_group_columns = resolve_raw_microcosm_group_columns(
         working,
         input_path,
         collector=warning_collector,
@@ -962,7 +962,7 @@ def process_raw_metaflow_file(
         include_synthetic_unclassified=include_synthetic_unclassified,
         collector=warning_collector,
     )
-    synthetic_group_columns = resolve_raw_metaflow_group_columns(
+    synthetic_group_columns = resolve_raw_microcosm_group_columns(
         working,
         input_path,
         include_file_name=min_coverage is None,
@@ -1043,7 +1043,7 @@ def apply_min_coverage_filter(
     min_coverage: float,
     input_path: Path,
     *,
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> pd.DataFrame:
     filtered = dataframe.copy()
     filtered = filtered[filtered["relative_abundance"].notna()].copy()
@@ -1080,12 +1080,12 @@ def ensure_consistent_group_metadata(
     group_columns: Sequence[str],
     *,
     include_synthetic_unclassified: bool = True,
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> None:
     if not group_columns or not include_synthetic_unclassified:
         return
 
-    for column in RAW_METAFLOW_STRICT_GROUP_METADATA_COLUMNS:
+    for column in RAW_MICROCOSM_STRICT_GROUP_METADATA_COLUMNS:
         if column not in dataframe.columns or not dataframe[column].notna().any():
             continue
         conflicts = dataframe.groupby(list(group_columns), dropna=False)[column].apply(
@@ -1094,11 +1094,11 @@ def ensure_consistent_group_metadata(
         if conflicts.any():
             conflict_keys = list(conflicts[conflicts].index[:3])
             raise ProcessingError(
-                f"{input_path} contains inconsistent '{column}' values within raw_metaflow grouping units. "
+                f"{input_path} contains inconsistent '{column}' values within raw_microcosm grouping units. "
                 f"Example conflicting groups: {conflict_keys}"
             )
 
-    for column in RAW_METAFLOW_SOFT_GROUP_METADATA_COLUMNS:
+    for column in RAW_MICROCOSM_SOFT_GROUP_METADATA_COLUMNS:
         if column not in dataframe.columns or not dataframe[column].notna().any():
             continue
         conflicts = dataframe.groupby(list(group_columns), dropna=False)[column].apply(
@@ -1107,7 +1107,7 @@ def ensure_consistent_group_metadata(
         if conflicts.any():
             conflict_keys = list(conflicts[conflicts].index[:3])
             emit_warning(
-                f"Inconsistent '{column}' values were found within raw_metaflow grouping units. "
+                f"Inconsistent '{column}' values were found within raw_microcosm grouping units. "
                 f"Synthetic unclassified rows leave this metadata blank. Example conflicting groups: {conflict_keys}",
                 collector=collector,
             )
@@ -1137,10 +1137,10 @@ def build_synthetic_unclassified_rows(
     provenance_value: str,
     blank_min_coverage: bool,
     group_columns: Sequence[str],
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> pd.DataFrame:
     if working.empty:
-        return pd.DataFrame(columns=RAW_METAFLOW_STANDARD_COLUMNS)
+        return pd.DataFrame(columns=RAW_MICROCOSM_STANDARD_COLUMNS)
 
     grouped = working.groupby(list(group_columns), dropna=False, sort=False)
     summaries = grouped.agg(
@@ -1233,7 +1233,7 @@ def clip_tiny_negative_values(
     input_path: Path,
     columns: Sequence[str],
     tolerance: float = 1e-9,
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> pd.DataFrame:
     for column in columns:
         if column not in dataframe.columns:
@@ -1253,7 +1253,7 @@ def warn_on_suspicious_unclassified_values(
     *,
     input_path: Path,
     columns: Sequence[str],
-    collector: RawMetaflowWarningCollector | None = None,
+    collector: RawMicrocosmWarningCollector | None = None,
 ) -> None:
     suspicious = pd.Series(False, index=dataframe.index)
     for column in columns:
@@ -1279,7 +1279,7 @@ def wgs_ids_complete(dataframe: pd.DataFrame) -> bool:
 def merge_processed_raw_results(results: Sequence[ProcessedResult]) -> pd.DataFrame:
     ensure_compatible_frames(
         [result.dataframe for result in results],
-        context="Processed raw_metaflow outputs are not compatible for merging.",
+        context="Processed raw_microcosm outputs are not compatible for merging.",
     )
 
     merged = pd.concat([result.dataframe for result in results], ignore_index=True, sort=False)
@@ -1326,7 +1326,7 @@ def resolve_raw_default_output_path(
     source_label: str | None = None,
 ) -> Path:
     label = source_label or source_path.name
-    filename = f"{label}.processed_metaflow.csv"
+    filename = f"{label}.processed_microcosm.csv"
     if output_target.mode == "auto":
         return source_path.parent / filename
     if output_target.mode == "directory":
@@ -1448,7 +1448,7 @@ def write_split_outputs(
     output_directory: Path,
     *,
     filename_prefix: str = "",
-    filename_suffix: str = ".processed_metaflow.split.csv",
+    filename_suffix: str = ".processed_microcosm.split.csv",
 ) -> None:
     if "__source_sample_name__" in dataframe.columns:
         frame_to_split = dataframe.drop(columns="__source_sample_name__")

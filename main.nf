@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 nextflow.enable.dsl = 2
 
-include { METAFLOW } from './workflow/metaflow'
+include { MICROCOSM } from './workflow/microcosm'
 
 // Typed declarations for the non-string params (defaults live in conf/*.config, which win).
 // With the strict syntax (NXF_SYNTAX_PARSER=v2) undeclared CLI values reach scripts as
@@ -140,6 +140,6 @@ params {
 
 workflow {
     if (!(workflow.preview && !params.input && !params.assembly_input && !params.genome_input)) {
-        METAFLOW()
+        MICROCOSM()
     }
 }
