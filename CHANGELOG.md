@@ -124,7 +124,7 @@ First release under the name **microcosm** (formerly **metaflow**; the GitHub re
 | csvtk | 0.31.0 | 0.37.0 |
 | fastp | 0.24.0 | 1.1.0 |
 | geNomad | 1.11.0 | 1.12.0 |
-| GTDB-Tk | 2.5.2 | 2.7.2 |
+| GTDB-Tk | 2.5.2 | 2.5.2 (pinned: 2.7.2 needs GTDB R232) |
 | GUNC | 1.0.6 | 1.1.0 |
 | hostile | 2.0.1 | 2.0.2 |
 | MultiQC | 1.29 | 1.35 |
