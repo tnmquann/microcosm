@@ -298,8 +298,8 @@
           var items = [];
           if (useMicrocosm()) items.push(['YACHT on, with one sourmash database', yachtRuns()]);
           if (pp === 'rgi_bwt') items.push(['AMR genes in reads (RGI bwt)', on('enable_rgi_bwt')]);
-          if (pp === 'all' && useMicrocosm()) items.push(['AMR genes in reads (RGI bwt), only for the merged AMR table', on('enable_rgi_bwt') || null]);
-          if (pp === 'taxburst' || pp === 'rgi_bwt') items.push(['sourmash + YACHT among the profilers', useMicrocosm()]);
+          if (pp === 'all') items.push(['AMR genes in reads (RGI bwt), only for the AMR results', on('enable_rgi_bwt') || null]);
+          if (pp === 'taxburst') items.push(['sourmash + YACHT among the profilers', useMicrocosm()]);
           if ((pp === 'phyloseq' || pp === 'all') && useSylph()) items.push(['sylph-tax on, for the sylph lineages', on('enable_sylphtax')]);
           need('Post-processing: ' + pp, items);
         }
@@ -812,23 +812,22 @@
     }
     if (mode === 'rgi_bwt') {
       if (!rgi) return { why: 'Needs the AMR genes in reads step (RGI bwt) to be on.', fix: { step: 'readsamr', label: 'Go to AMR genes in reads' } };
-      if (!mic) return { why: 'RGI bwt still runs for each sample, but the merged AMR table is built with the sourmash + YACHT result. Add sourmash + YACHT as a profiler.', fix: toProfile };
-      return { gives: 'One table of RGI bwt results across all samples.' };
+      return { gives: 'The RGI bwt results of every sample gathered in one folder, ready to compare across samples. Works with either profiler.' };
     }
     if (syl && !tax) return { why: 'sylph results need lineages for the phyloseq tables: turn on sylph-tax.', fix: toProfile };
     var parts = ['phyloseq tables (' + [mic ? 'sourmash + YACHT' : null, syl ? 'sylph-tax' : null].filter(Boolean).join(', ') + ')'];
-    if (mic) parts.push('taxburst charts');
-    if (mic && rgi) parts.push('the merged AMR table');
+    if (mic) parts.push('taxburst charts', 'the processed microcosm table');
+    if (rgi) parts.push('the RGI bwt results of all samples');
     var missing = [];
-    if (!mic) missing.push('taxburst and the merged AMR table need sourmash + YACHT');
-    else if (!rgi) missing.push('no AMR table, since RGI bwt is off');
-    return { gives: 'Everything that applies: ' + parts.join(', ') + '.' + (missing.length ? ' Not made: ' + missing.join('; ') + '.' : ''), same: !mic ? 'phyloseq' : null };
+    if (!mic) missing.push('taxburst charts, which need sourmash + YACHT');
+    if (!rgi) missing.push('AMR results, since RGI bwt is off');
+    return { gives: 'Everything that applies: ' + parts.join(', ') + '.' + (missing.length ? ' Not made: ' + missing.join('; ') + '.' : ''), same: !mic && !rgi ? 'phyloseq' : null };
   }
 
   function renderPostprocess() {
     var current = get('readbased_postprocess') || '';
     var modes = [['', 'No'], ['phyloseq', 'Tables for R (phyloseq)'], ['taxburst', 'Interactive charts (taxburst)'],
-      ['rgi_bwt', 'Merged AMR gene table'], ['all', 'All that apply']];
+      ['rgi_bwt', 'AMR results of all samples (RGI bwt)'], ['all', 'All that apply']];
     var list = h('div', { class: 'mcb-opts', role: 'radiogroup', 'aria-label': 'Post-processing' });
     modes.forEach(function (m) {
       var info = postprocessInfo(m[0]), active = current === m[0], blocked = !!info.why;
@@ -849,7 +848,7 @@
       h('span', { class: 'mcb-label' }, 'Do you want tables and charts that merge all samples?', h('span', { class: 'mcb-flag' }, '--readbased_postprocess')),
       list)];
     var cur = postprocessInfo(current);
-    if (current === 'all' && cur.same) out.push(note('info', 'With sylph only, "All that apply" gives the same files as phyloseq.'));
+    if (current === 'all' && cur.same) out.push(note('info', 'With sylph only and RGI bwt off, "All that apply" gives the same files as phyloseq.'));
     if (current && useMicrocosm()) {
       out.push(textInput('readbased_postprocess_options', { label: 'Post-processing options', wide: true,
         help: 'Passed to the post-processing script as typed, e.g. --min_coverage 0.1 --remove_unclassified.' +
@@ -1189,9 +1188,9 @@
       if (pp) {
         if (useMicrocosm() && !yachtRuns()) err('postprocess', 'post-processing needs YACHT on and one sourmash database');
         if (pp === 'rgi_bwt' && !on('enable_rgi_bwt')) err('postprocess', 'RGI tables need AMR genes in reads');
-        if ((pp === 'taxburst' || pp === 'rgi_bwt') && !useMicrocosm()) err('postprocess', pp + ' uses the sourmash + YACHT result');
+        if (pp === 'taxburst' && !useMicrocosm()) err('postprocess', 'taxburst draws the sourmash + YACHT result');
         if ((pp === 'all' || pp === 'phyloseq') && useSylph() && !on('enable_sylphtax')) err('postprocess', 'sylph phyloseq tables need sylph-tax');
-        if (pp === 'all' && useMicrocosm() && !on('enable_rgi_bwt')) warn('postprocess', 'without AMR genes in reads, "all" writes no AMR table');
+        if (pp === 'all' && !on('enable_rgi_bwt')) warn('postprocess', 'without AMR genes in reads, "all" collects no AMR results');
       }
     }
     if (asm()) {
