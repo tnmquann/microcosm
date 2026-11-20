@@ -12,7 +12,7 @@ process KLEBORATE_V3_RUN {
 
     output:
     tuple val(meta), path("*.txt"), emit: txt, optional: true
-    tuple val("${task.process}"), val('kleborate'), eval("kleborate --version 2>&1 | sed 's/^Kleborate v//'"), emit: versions_kleborate, topic: versions
+    tuple val("${task.process}"), val('kleborate'), eval("kleborate --version 2>&1 | grep -oE '[0-9]+(\\.[0-9]+)+' | head -1"), emit: versions_kleborate, topic: versions
 
     when:
     task.ext.when == null || task.ext.when
