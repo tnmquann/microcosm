@@ -17,6 +17,7 @@ include { SYLPHTAX_TAXPROF } from '../../../modules/nf-core/sylphtax/taxprof/mai
 include { SYLPH_POSTPROCESS } from '../../../modules/local/sylph/postprocess/main'
 include { RGI_PREPARECARDDB } from '../../../modules/local/rgi/preparecarddb/main'
 include { RGI_BWT } from '../../../modules/local/rgi/bwt/main'
+include { POSTPROCESS_READBASED } from '../../../modules/local/finalize/postprocess_readbased/main'
 include { pathList } from '../utils_microcosm/main'
 
 workflow READ_BASED_SYLPH {
@@ -79,6 +80,18 @@ workflow READ_BASED_SYLPH {
         RGI_BWT(cleaned_reads_ch.map { meta, reads -> [meta, reads[0], reads[1]] }, ch_rgi_db)
         versions_ch = versions_ch.mix(RGI_BWT.out.versions)
         ch_rgi_results = RGI_BWT.out.outdir
+
+        // Collecting the RGI-BWT folders of all samples needs no taxonomy table, so it also runs without sourmash + YACHT
+        if (params.readbased_postprocess in ['rgi_bwt', 'all']) {
+            POSTPROCESS_READBASED(
+                RGI_BWT.out.outdir
+                    .map { _meta, rgi_dir -> rgi_dir }
+                    .collect()
+                    .map { rgi_dirs -> [[id: output_prefix], output_prefix, 'rgi_bwt', false, false, ' ', [], rgi_dirs] },
+                file("${projectDir}/bin/py_scripts/read_based/post_processing.py", checkIfExists: true)
+            )
+            versions_ch = versions_ch.mix(POSTPROCESS_READBASED.out.versions)
+        }
     }
 
     emit:
