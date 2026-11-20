@@ -546,12 +546,13 @@
                 "skip_binning_bamabund": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Skip mapping reads to assemblies for binning"
+                    "description": "Skip binning abundance (depth) preparation. Reads are still mapped once when contig analysis runs."
                 },
                 "binprepare_mappertool": {
                     "type": "string",
                     "default": "bowtie2",
-                    "description": "Mapper tool for binning preparation",
+                    "description": "Read mapper used once for both contig analysis (coverage) and binning (depths): bowtie2 (default) or bwamem2",
+                    "help_text": "Reads are mapped to each assembly a single time; the sorted BAM is shared by contig analysis and binning and published once in Binning/mapping/sorted_bam/ (--save_assembly_mapped_reads).",
                     "enum": ["bowtie2", "bwamem2"]
                 },
                 "bowtie2_mode": {
@@ -561,7 +562,7 @@
                 "save_assembly_mapped_reads": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Save BAM and BAI files from read mapping"
+                    "description": "Save the sorted BAM and BAI files of the read mapping (Binning/mapping/sorted_bam/), shared by contig analysis and binning"
                 },
                 "skip_metabat2": {
                     "type": "boolean",

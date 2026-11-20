@@ -420,14 +420,19 @@ workflow MICROCOSM {
             def all_assemblies = assembly_megahit_contigs_ch.mix(assembly_metaspades_contigs_ch)
             
             if (!params.skip_binning_bamabund) {
-                BINNING_BAMABUND(all_assemblies, cleaned_reads_source)
-                binning_bam_ch = BINNING_BAMABUND.out.bam_bai ?: channel.empty()
-                binning_versions_ch = binning_versions_ch.mix(BINNING_BAMABUND.out.versions ?: channel.empty())
-                multiqc_files_ch = multiqc_files_ch.mix(BINNING_BAMABUND.out.multiqc_files)
+                if (params.assembly_input) {
+                    BINNING_BAMABUND(all_assemblies, cleaned_reads_source)
+                    binning_bam_ch = BINNING_BAMABUND.out.bam_bai ?: channel.empty()
+                    binning_versions_ch = binning_versions_ch.mix(BINNING_BAMABUND.out.versions ?: channel.empty())
+                    multiqc_files_ch = multiqc_files_ch.mix(BINNING_BAMABUND.out.multiqc_files)
+                } else {
+                    // Reads were mapped once in ASSEMBLY_BASED (BAM shared with contig analysis)
+                    binning_bam_ch = ASSEMBLY_BASED.out.bam_bai
+                }
 
-                // Run BINNING with outputs from BINNING_BAMABUND
-                if (!params.skip_binning && !params.skip_binning_bamabund) {
-                    BINNING(all_assemblies, BINNING_BAMABUND.out.bam_bai)
+                // Run BINNING with the sorted BAM/BAI
+                if (!params.skip_binning) {
+                    BINNING(all_assemblies, binning_bam_ch)
                     binning_versions_ch = binning_versions_ch.mix(BINNING.out.versions ?: channel.empty())
 
                     // Initialize channels for raw bins with metadata

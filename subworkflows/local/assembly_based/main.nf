@@ -5,6 +5,7 @@ include { MEGAHIT } from '../../../modules/nf-core/megahit/main'
 include { SPADES as METASPADES } from '../../../modules/nf-core/spades/main'
 include { QUAST_METAQUAST as METAQUAST } from '../../../modules/local/quast/metaquast/main'
 include { CONTIG_ANALYSIS } from '../contig_analysis/main'
+include { BINNING_BAMABUND } from '../binning_bamabund/main'
 
 workflow ASSEMBLY_BASED {
     take:
@@ -65,13 +66,26 @@ workflow ASSEMBLY_BASED {
         ch_multiqc_files = ch_multiqc_files.mix(METAQUAST.out.report) // MultiQC "QUAST: assembly"
     }
 
+    // Read mapping, done once with --binprepare_mappertool (bowtie2 default, or bwamem2):
+    // contig coverage and binning depths share the same sorted BAM.
+    def ch_bam_bai = channel.empty()
+    def ch_sorted_bam = channel.empty()
+    if (!params.skip_binning_bamabund || !params.skip_contig_analysis) {
+        BINNING_BAMABUND(ch_all_assemblies, cleaned_reads_ch)
+        versions_ch = versions_ch.mix(BINNING_BAMABUND.out.versions)
+        ch_multiqc_files = ch_multiqc_files.mix(BINNING_BAMABUND.out.multiqc_files) // MultiQC "Bowtie2: reads mapped to assemblies"
+        ch_bam_bai = BINNING_BAMABUND.out.bam_bai
+        // drop reads_id so the BAM meta matches the assembly meta used by the other contig steps
+        ch_sorted_bam = BINNING_BAMABUND.out.bam.map { meta, bam -> [meta.findAll { key, _value -> key != 'reads_id' }, bam] }
+    }
+
     // CONTIG_ANALYSIS (runs in parallel with QUAST)
     def contig_analysis_coverage = channel.empty()
     def contig_analysis_versions = channel.empty()
     def contig_analysis_bundle = channel.empty()
     
     if (!params.skip_contig_analysis) {
-        CONTIG_ANALYSIS(ch_all_assemblies, cleaned_reads_ch)
+        CONTIG_ANALYSIS(ch_all_assemblies, ch_sorted_bam)
         contig_analysis_coverage = CONTIG_ANALYSIS.out.coverage
         contig_analysis_versions = CONTIG_ANALYSIS.out.versions
         contig_analysis_bundle = CONTIG_ANALYSIS.out.contig_qc_bundle
@@ -86,5 +100,6 @@ workflow ASSEMBLY_BASED {
     quast_qc = params.skip_quast ? null : METAQUAST.out.qc
     contig_qc_coverage = contig_analysis_coverage.ifEmpty(null)
     contig_qc_bundle = contig_analysis_bundle.ifEmpty(null)
+    bam_bai = ch_bam_bai // [meta, [bam], [bai]] per assembly, for binning
     multiqc_files = ch_multiqc_files
 }

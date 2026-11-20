@@ -7,8 +7,6 @@ include { TIARA_TIARA } from '../../../modules/nf-core/tiara/tiara/main'
 include { SEQKIT_FX2TAB } from '../../../modules/nf-core/seqkit/fx2tab/main'
 include { GENOMAD_ENDTOEND } from '../../../modules/nf-core/genomad/endtoend/main'
 include { GENOMAD_DOWNLOAD } from '../../../modules/nf-core/genomad/download/main'
-include { BWAMEM2_INDEX as BWAMEM2_INDEX_CONTIGS } from '../../../modules/nf-core/bwamem2/index/main'
-include { BWAMEM2_MEM as BWAMEM2_MEM_CONTIGS } from '../../../modules/nf-core/bwamem2/mem/main'
 include { SAMTOOLS_COVERAGE } from '../../../modules/local/samtools/coverage/main'
 
 // Annotation modules
@@ -27,47 +25,13 @@ include { GUNZIP as GUNZIP_PYRODIGAL_GBK } from '../../../modules/nf-core/gunzip
 workflow CONTIG_ANALYSIS {
     take:
     ch_assemblies      // Channel: [ val(meta), path(contigs) ] - from MEGAHIT/METASPADES
-    ch_cleaned_reads   // Channel: [ val(meta), [ reads ] ] - from HOSTILE_CLEAN
+    ch_sorted_bam      // Channel: [ val(meta), path(bam) ] - sorted reads-to-assembly BAM, mapped once in ASSEMBLY_BASED
 
     main:
     ch_versions = channel.empty()
 
-    // Step 1: Index assemblies with BWA-MEM2
-    BWAMEM2_INDEX_CONTIGS(ch_assemblies)
-    ch_versions = ch_versions.mix(BWAMEM2_INDEX_CONTIGS.out.versions_bwamem2)
-
-    // Step 2: Prepare input for BWA-MEM2 MEM (join reads with index by meta.id)
-    ch_reads_with_index = ch_cleaned_reads
-        .map { meta, reads -> 
-            def key = meta.id
-            [key, meta, reads]
-        }
-        .combine(
-            BWAMEM2_INDEX_CONTIGS.out.index.map { meta, index ->
-                def key = meta.id
-                [key, meta, index]
-            },
-            by: 0
-        )
-        .map { _key, meta_reads, reads, meta_assembly, index ->
-            // Merge meta information, keeping assembler from assembly
-            def meta_merged = meta_reads + [assembler: meta_assembly.assembler]
-            [meta_merged, reads, meta_assembly, index]
-        }
-
-    // Step 3: Map reads to assemblies (sort BAM output)
-    BWAMEM2_MEM_CONTIGS(
-        ch_reads_with_index.map { meta, reads, _meta_asm, _index -> [meta, reads] },
-        ch_reads_with_index.map { _meta, _reads, meta_asm, index -> [meta_asm, index] },
-        ch_assemblies.map { meta, assembly -> [meta, assembly] },
-        true  // sort_bam = true
-    )
-    ch_versions = ch_versions
-        .mix(BWAMEM2_MEM_CONTIGS.out.versions_bwamem2)
-        .mix(BWAMEM2_MEM_CONTIGS.out.versions_samtools)
-
-    // Step 4: Calculate coverage statistics (simplified - only BAM input)
-    SAMTOOLS_COVERAGE(BWAMEM2_MEM_CONTIGS.out.bam)
+    // Coverage statistics from the shared BAM (no second mapping)
+    SAMTOOLS_COVERAGE(ch_sorted_bam)
     ch_versions = ch_versions.mix(SAMTOOLS_COVERAGE.out.versions)
 
     // Step 5: Extract contig sequence metadata
@@ -202,7 +166,7 @@ workflow CONTIG_ANALYSIS {
 
     emit:
     multiqc_files      = ch_multiqc_files
-    bam                = BWAMEM2_MEM_CONTIGS.out.bam
+    bam                = ch_sorted_bam
     coverage           = SAMTOOLS_COVERAGE.out.coverage
     seqkit_stats       = SEQKIT_FX2TAB.out.text
     tiara_class        = ch_tiara_results

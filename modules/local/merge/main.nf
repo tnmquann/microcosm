@@ -22,7 +22,7 @@ process MERGE_PAIREDENDSEQS {
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        cat: \$(cat --version 2>&1 | head -n 1 || echo "cat (coreutils)")
+        cat: \$(cat --version 2>&1 | head -n 1 | sed 's/^.* //')
     END_VERSIONS
     """
 
