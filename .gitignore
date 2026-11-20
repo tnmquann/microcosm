@@ -26,3 +26,4 @@ docs/src/_build/
 .DS_Store
 *.py[cod]
 *.egg-info/
+docs/src/reference/parameters.md

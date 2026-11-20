@@ -1,94 +1,100 @@
-html[data-accent-color='brown'] {
-    /* --accent-9: #88254D;  */
-    --color-surface-accent: #30136709;
-    --accent-9: #2F7135;
+/* microcosm documentation theme (Shibuya). Green accent from the microcosm logo (#23AF62). */
+
+html[data-accent-color='grass'] {
+    --accent-9: #1f8f52;
+    --accent-10: #1b7d48;
+    --accent-11: #17703f;
     --accent-contrast: white;
-
-    --accent-a1: #1CAD6307;
-    --accent-a2: #0B7F300D;
-    --accent-a3: #016c0d2c;
-    --accent-a4: #0293122C;
-    --accent-a5: #048B0A3E;
-    --accent-a6: #01810453;
-    --accent-a7: #01780770;
-    --accent-a8: #01770999;
-    --accent-a9: #005808C0;
-    --accent-a10: #015309CF;
-    --accent-a11: #015209D1;
-    --accent-a12: #001C02D9;
-}
-
-:root {
-    --sy-c-surface: #30136709;
-    --sy-c-background: #F6F5F4;
-    --sy-c-foot-background: #30136709;
-    --sy-c-background-dropback: #F6F5F4cc;
+    --accent-a3: #23af6224;
+    --accent-a4: #23af6233;
+    --accent-a9: #1f8f52d0;
 }
 
 html.light {
-    --sy-c-surface: #30136709;
-    --sy-c-background: #F6F5F4;
-    --sy-c-foot-background: #30136709;
-    --sy-c-background-dropback: #F6F5F4cc;
-}
-
-html.light .sd-tab-content {
-    --code-block-caption-background: #3013674d;
+    --sy-c-background: #f7f8f6;
+    --sy-c-surface: #eef3ee;
+    --sy-c-foot-background: #eef3ee;
+    --sy-c-background-dropback: #f7f8f6cc;
 }
 
 :root {
+    --mc-green: #23af62;
+    --mc-green-dark: #17703f;
+    --mc-border: rgba(35, 175, 98, 0.25);
+    --mc-shadow: 0 6px 24px rgba(23, 112, 63, 0.10);
     --code-block-background: var(--sy-c-surface);
-    --code-block-caption-background: var(--accent-a3);
 }
 
-.yue {
-    font-size: 1.2 rem;
-    line-height: 1.75;
-    color: var(--yue-c-text);
-}
+/* ---------- typography ---------- */
+.yue { line-height: 1.75; }
+.yue h1 { font-weight: 800; letter-spacing: -0.02em; }
+.yue h2 { font-weight: 700; margin-top: 2.2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--mc-border); }
+.yue h3 { font-weight: 650; }
+.localtoc { font-size: 0.82rem; }
 
-.yue h1 {
-    color: var(--yue-c-heading);
-    font-weight: 800;
-    font-size: 2.75em;
-    margin-top: 0;
-    margin-bottom: 1.2em;
-    line-height: 1.1111111;
+/* ---------- home hero ---------- */
+.mc-hero {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+    margin: 0 0 1.5rem;
+    border-radius: 18px;
+    background:
+        radial-gradient(1200px 300px at 50% -40%, rgba(35, 175, 98, 0.18), transparent 70%),
+        var(--sy-c-surface);
+    border: 1px solid var(--mc-border);
 }
+.mc-hero-logo { width: min(420px, 85%); height: auto; margin: 0 auto 0.6rem; display: block; }
+.mc-hero-tagline { font-size: 1.35rem; font-weight: 700; margin: 0.3rem 0 0.6rem; color: var(--mc-green-dark); }
+html.dark .mc-hero-tagline { color: var(--mc-green); }
+.mc-hero-text { max-width: 46rem; margin: 0 auto 1.2rem; font-size: 1.02rem; opacity: 0.9; }
+.mc-hero-buttons { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.mc-btn {
+    display: inline-block; padding: 0.55rem 1.2rem; border-radius: 999px; font-weight: 600; text-decoration: none !important;
+    border: 1.5px solid var(--mc-green); color: var(--mc-green-dark) !important; transition: all 0.15s ease;
+}
+html.dark .mc-btn { color: var(--mc-green) !important; }
+.mc-btn:hover { background: rgba(35, 175, 98, 0.12); transform: translateY(-1px); }
+.mc-btn-primary { background: var(--mc-green); color: white !important; }
+html.dark .mc-btn-primary { color: white !important; }
+.mc-btn-primary:hover { background: var(--mc-green-dark); }
+.mc-badges { display: flex; gap: 0.45rem; justify-content: center; flex-wrap: wrap; }
+.mc-badge {
+    font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 999px;
+    background: rgba(35, 175, 98, 0.12); color: var(--mc-green-dark); border: 1px solid var(--mc-border);
+}
+html.dark .mc-badge { color: #9be3bb; }
+/* the page title is replaced by the hero logo on the home page */
+.yue section#microcosm > h1 { display: none; }
 
-.yue h2 {
-    color: var(--yue-c-heading);
-    font-weight: 700;
-    font-size: 1.75em;
-    margin-top: 1.5em;
-    margin-bottom: 1em;
-    line-height: 1.3333333;
+/* ---------- cards ---------- */
+.sd-card.mc-card, .sd-card.mc-card-small {
+    border: 1px solid var(--mc-border) !important; border-radius: 14px !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+.sd-card.mc-card:hover, .sd-card.mc-card-small:hover { transform: translateY(-3px); box-shadow: var(--mc-shadow); }
+.sd-card.mc-card .sd-card-title { font-size: 1.08rem; color: var(--mc-green-dark); }
+html.dark .sd-card.mc-card .sd-card-title { color: var(--mc-green); }
+.sd-card.mc-card-small .sd-card-title { font-size: 0.98rem; margin-bottom: 0.2rem; }
+.sd-card.mc-card-small .sd-card-text { font-size: 0.88rem; opacity: 0.85; }
 
-.yue h3 {
-    color: var(--yue-c-heading);
-    font-weight: 600;
-    font-size: 1.5em;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-    line-height: 1.6;
-}
+/* ---------- images and diagrams ---------- */
+img.mc-metromap { max-width: 100%; border-radius: 12px; border: 1px solid var(--mc-border); background: white; padding: 0.4rem; margin: 1.5rem 0; }
+.mermaid { text-align: center; margin: 1.5rem 0; }
+.mermaid svg { max-width: 100% !important; height: auto !important; }
+pre.mermaid, div.mermaid { min-height: 0 !important; }
 
-.yue h4 {
-    color: var(--yue-c-heading);
-    font-weight: 600;
-    font-size: 1.2em;
-    margin-top: 1.5em;
-    margin-bottom: 0.5em;
-    line-height: 1.5;
-}
+/* ---------- tables ---------- */
+.yue table { font-size: 0.9rem; border-radius: 10px; overflow: hidden; }
+.yue table thead th { background: rgba(35, 175, 98, 0.12); }
+.yue table td code, .yue table th code { white-space: nowrap; }
+.yue table td { vertical-align: top; }
 
-.yue h5 {
-    color: var(--yue-c-heading);
-    font-weight: 600;
-    font-size: 1.06em;
-}
+/* ---------- dropdowns (output files, parameter help) ---------- */
+.sd-dropdown { border-radius: 10px !important; border: 1px solid var(--mc-border) !important; }
+.sd-dropdown .sd-summary-title { font-weight: 600; }
 
-.localtoc {
-    font-size: 0.8rem;
-}
+/* ---------- light / dark logo ---------- */
+.mc-only-dark { display: none !important; }
+html.dark .mc-only-dark { display: block !important; }
+html.dark .mc-only-light { display: none !important; }
+.mc-icon { color: var(--mc-green); margin-right: 0.35rem; vertical-align: -0.15em; }
