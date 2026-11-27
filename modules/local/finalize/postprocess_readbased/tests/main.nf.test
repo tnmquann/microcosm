@@ -20,7 +20,8 @@ nextflow_process {
                     file("${projectDir}/modules/local/finalize/postprocess_readbased/tests/data/merged_sourmash_yacht.csv"),
                     []
                 )
-                input[1] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
+                input[1] = 'sequence_abundance'
+                input[2] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
                 """
             }
         }
@@ -56,7 +57,8 @@ nextflow_process {
                     file("${projectDir}/modules/local/finalize/postprocess_readbased/tests/data/merged_sourmash_yacht.csv"),
                     []
                 )
-                input[1] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
+                input[1] = 'sequence_abundance'
+                input[2] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
                 """
             }
         }
@@ -93,7 +95,8 @@ nextflow_process {
                         file("${projectDir}/modules/local/finalize/postprocess_readbased/tests/data/rgi/SAMPLE_002")
                     ]
                 )
-                input[1] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
+                input[1] = 'sequence_abundance'
+                input[2] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
                 """
             }
         }
@@ -130,7 +133,8 @@ nextflow_process {
                         file("${projectDir}/modules/local/finalize/postprocess_readbased/tests/data/rgi/SAMPLE_001")
                     ]
                 )
-                input[1] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
+                input[1] = 'sequence_abundance'
+                input[2] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
                 """
             }
         }
@@ -163,7 +167,8 @@ nextflow_process {
                     file("${projectDir}/modules/local/finalize/postprocess_readbased/tests/data/merged_sourmash_yacht.csv"),
                     []
                 )
-                input[1] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
+                input[1] = 'sequence_abundance'
+                input[2] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
                 """
             }
         }
@@ -171,6 +176,44 @@ nextflow_process {
         then {
             assert !process.success
             assert process.errorReport.contains('readbased_postprocess_options cannot override the module-managed argument')
+        }
+    }
+
+    test("taxonomic_abundance fills the phyloseq otu_table with f_taxonomic_at_rank") {
+        config "./nextflow.config"
+
+        when {
+            process {
+                """
+                input[0] = tuple(
+                    [id: 'batch'],
+                    'project_T',
+                    'all',
+                    false,
+                    false,
+                    '--min_coverage 0.05',
+                    file("${projectDir}/modules/local/finalize/postprocess_readbased/tests/data/merged_sourmash_yacht_fmatch.csv"),
+                    []
+                )
+                input[1] = 'taxonomic_abundance'
+                input[2] = file("${projectDir}/bin/py_scripts/read_based/post_processing.py")
+                """
+            }
+        }
+
+        then {
+            def otu = path("${process.out.phyloseq[0][1]}/otu_table.csv").readLines()
+            def processed = path("${process.out.default_output[0][1]}/project_T.processed_microcosm.csv").readLines()
+            assertAll(
+                { assert process.success },
+                { assert otu[0] == 'match_name,SAMPLE_001' },
+                { assert otu.size() == 3 },
+                { assert otu.any { line -> line.startsWith('Aspergillus big,0.333333333333333') } },
+                { assert otu.any { line -> line.startsWith('Escherichia small,0.666666666666667') } },
+                { assert !otu.any { line -> line.startsWith('unclassified') } },
+                { assert processed[0].contains('f_weighted_at_rank,f_taxonomic_at_rank,bp_match_at_rank,match_genome_bp') },
+                { assert processed.any { line -> line.startsWith('SAMPLE_001,unclassified') } }
+            )
         }
     }
 }

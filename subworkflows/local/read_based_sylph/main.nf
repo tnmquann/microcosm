@@ -88,6 +88,7 @@ workflow READ_BASED_SYLPH {
                     .map { _meta, rgi_dir -> rgi_dir }
                     .collect()
                     .map { rgi_dirs -> [[id: output_prefix], output_prefix, 'rgi_bwt', false, false, ' ', [], rgi_dirs] },
+                params.microcosm_datatype,
                 file("${projectDir}/bin/py_scripts/read_based/post_processing.py", checkIfExists: true)
             )
             versions_ch = versions_ch.mix(POSTPROCESS_READBASED.out.versions)

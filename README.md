@@ -251,7 +251,7 @@ nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
 | `--sylph_database` | sylph database(s) (`*.syldb` / `*.syl2db`), comma-separated for several |
 | `--sylph_args` | extra `sylph profile` arguments |
 | `--enable_sylphtax` | run `sylph-tax taxprof`; needs `--sylph_taxonomy` (one metadata file per database, comma-separated) |
-| `--sylph_datatype` | `taxonomic_abundance` (default) or `sequence_abundance` (estimated read counts) |
+| `--sylph_datatype` | `sequence_abundance` (default; share of reads, sylph runs with `--estimate-read-counts`) or `taxonomic_abundance` (share of genomes); fills the merged table and the phyloseq `otu_table.csv` |
 
 With `--enable_sylphtax`, `Readbased_Analysis/sylph/` holds `profile/`, `sylphtax/*.sylphmpa`,
 `<prefix>_sylphtax_<datatype>.tsv` and, with `--readbased_postprocess phyloseq|all`, `phyloseq/`.
@@ -280,6 +280,22 @@ With `--enable_sylphtax`, `Readbased_Analysis/sylph/` holds `profile/`, `sylphta
 - With `--readbased_taxotools sylph` alone, `phyloseq` comes from sylph-tax (`Readbased_Analysis/sylph/phyloseq/`), `rgi_bwt` still
   collects the RGI bwt folders, and `taxburst` is not available (it draws the sourmash + YACHT result).
 - Filters: `--readbased_postprocess_options` (default `--min_coverage 0.05`), e.g. `"--min_coverage 0.1 --use_average"`.
+- Sequence or taxonomic abundance: `--microcosm_datatype` (microcosm, like `--sylph_datatype` for sylph) picks the value of the
+  phyloseq `otu_table.csv`.
+
+| `--microcosm_datatype` | phyloseq `otu_table.csv` holds |
+|:---|:---|
+| `sequence_abundance` (default) | `n_unique_kmers`: k-mer pseudo-counts of each genome's share of the reads (as before) |
+| `taxonomic_abundance` | `f_taxonomic_at_rank`: each genome's share of the classified genomes (cells) |
+
+  The processed CSV (`all`) always has both: `f_weighted_at_rank` (share of reads, unchanged) and the new
+  `f_taxonomic_at_rank` = (`f_weighted_at_rank` / `match_genome_bp`), renormalised over the classified genomes of each
+  sample, where `match_genome_bp` = `unique_intersect_bp` / `f_match` is the genome size estimated by sourmash. Large
+  genomes (fungi) get a smaller taxonomic than sequence share. This is the same definition as sylph's taxonomic abundance
+  ([Sun et al. 2021](https://doi.org/10.1038/s41592-021-01141-3)).
+
+> [!NOTE]
+> `taxonomic_abundance` / `f_taxonomic_at_rank` is the share of classified genomes only. Unclassified reads have no genome size, so there is no unclassified row/value in this result (empty in the processed CSV, absent from the phyloseq `otu_table.csv`), and values sum to 100% of the classified part. Use `sequence_abundance` / `f_weighted_at_rank` to see the unclassified fraction. `f_taxonomic_at_rank` is a proportion, not a count: the `taxonomic_abundance` phyloseq table is not suitable for count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2); use `sequence_abundance` (k-mer pseudo-counts) for those.
 
 ## Assembly-based analysis
 

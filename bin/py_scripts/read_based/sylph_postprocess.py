@@ -94,7 +94,7 @@ def run(manifest: Path, datatype: str, outdir: Path, prefix: str, phyloseq: bool
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--manifest", type=Path, required=True)
-    parser.add_argument("--datatype", choices=sorted(DATATYPE_COLUMNS), default="taxonomic_abundance")
+    parser.add_argument("--datatype", choices=sorted(DATATYPE_COLUMNS), default="sequence_abundance")
     parser.add_argument("--outdir", type=Path, required=True)
     parser.add_argument("--prefix", required=True)
     parser.add_argument("--phyloseq", action="store_true")

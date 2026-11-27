@@ -38,7 +38,9 @@ RAW_MICROCOSM_STANDARD_COLUMNS = [
     "match_name",
     "unweighted_fraction",
     "f_weighted_at_rank",
+    "f_taxonomic_at_rank",
     "bp_match_at_rank",
+    "match_genome_bp",
     "total_weighted_hashes",
     "n_unique_kmers",
     "p_vals",
@@ -47,6 +49,19 @@ RAW_MICROCOSM_STANDARD_COLUMNS = [
     "min_coverage",
     "source_file",
 ]
+
+# --datatype: which value goes into the phyloseq otu_table.csv
+DATATYPE_OTU_COLUMNS = {
+    "sequence_abundance": "n_unique_kmers",
+    "taxonomic_abundance": "f_taxonomic_at_rank",
+}
+TAXONOMIC_ABUNDANCE_NOTE = (
+    "taxonomic_abundance / f_taxonomic_at_rank is the share of classified genomes only: unclassified reads have no "
+    "genome size, so the result has no unclassified row (empty in the processed CSV, absent from the phyloseq "
+    "otu_table.csv) and sums to 100% of the classified part. Use sequence_abundance / f_weighted_at_rank to see the "
+    "unclassified fraction. These are proportions, not counts: use sequence_abundance (k-mer pseudo-counts) for "
+    "count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2)."
+)
 
 RAW_MICROCOSM_TAXBURST_EXTRA_COLUMNS = [
     "n_unique_weighted_found",
@@ -59,6 +74,7 @@ RAW_MICROCOSM_NUMERIC_COLUMNS = [
     "average_abund",
     "median_abund",
     "unique_intersect_bp",
+    "f_match",
     "query_bp",
     "scaled",
     "relative_abundance",
@@ -88,6 +104,7 @@ RAW_MICROCOSM_REFERENCED_COLUMNS = [
     "organism_name",
     "f_unique_to_query",
     "unique_intersect_bp",
+    "f_match",
     "query_bp",
     "total_weighted_hashes",
     "average_abund",
@@ -238,6 +255,16 @@ def build_parser() -> argparse.ArgumentParser:
         default="default",
         help="Output layout for raw_microcosm processing. Supported: default, phyloseq, taxburst. Default: default.",
     )
+    parser.add_argument(
+        "--datatype",
+        choices=sorted(DATATYPE_OTU_COLUMNS),
+        default="sequence_abundance",
+        help=(
+            "Value written to the phyloseq otu_table.csv: sequence_abundance = n_unique_kmers (k-mer pseudo-counts, "
+            "default) or taxonomic_abundance = f_taxonomic_at_rank (genome-size-normalised share of classified "
+            "genomes; no unclassified row). The processed CSV always has both f_weighted_at_rank and f_taxonomic_at_rank."
+        ),
+    )
     return parser
 
 
@@ -286,6 +313,8 @@ def validate_cli_arguments(args: argparse.Namespace, parser: argparse.ArgumentPa
         )
     if args.min_coverage is not None and args.min_coverage < 0:
         parser.error("--min_coverage must be non-negative.")
+    if args.datatype == "taxonomic_abundance" and args.input_format == "raw_microcosm":
+        LOGGER.info("--datatype taxonomic_abundance: unclassified is excluded. %s", TAXONOMIC_ABUNDANCE_NOTE)
 
 
 def expand_input_paths(expressions: Sequence[str]) -> list[Path]:
@@ -790,6 +819,7 @@ def process_raw_microcosm_inputs(
             min_coverage=args.min_coverage,
             output_format=args.output_format,
             suppress_remove_unclassified_warning=args.output_format == "phyloseq",
+            require_taxonomic=args.datatype == "taxonomic_abundance",
         )
         for path in input_paths
     ]
@@ -849,7 +879,7 @@ def process_raw_microcosm_inputs(
                 output_target,
                 source_label=output_labels[result.source_path],
             )
-            write_phyloseq_outputs(result.dataframe, phyloseq_dir)
+            write_phyloseq_outputs(result.dataframe, phyloseq_dir, datatype=args.datatype)
             LOGGER.info("Wrote phyloseq outputs in %s", phyloseq_dir)
 
 
@@ -861,6 +891,7 @@ def process_raw_microcosm_file(
     min_coverage: float | None,
     output_format: str = "default",
     suppress_remove_unclassified_warning: bool = False,
+    require_taxonomic: bool = False,
 ) -> ProcessedResult:
     warning_collector = RawMicrocosmWarningCollector(input_path)
     dataframe = read_table(input_path)
@@ -989,6 +1020,13 @@ def process_raw_microcosm_file(
         )
 
     working["__abundance_for_output"] = abundance_for_output
+    working["__match_genome_bp"], working["__taxonomic_abundance"] = compute_taxonomic_abundance(
+        working,
+        input_path,
+        group_columns=synthetic_group_columns,
+        required=require_taxonomic,
+        collector=warning_collector,
+    )
 
     standardized = pd.DataFrame(
         {
@@ -1001,7 +1039,9 @@ def process_raw_microcosm_file(
             "match_name": working["organism_name"],
             "unweighted_fraction": working["f_unique_to_query"],
             "f_weighted_at_rank": working["__abundance_for_output"],
+            "f_taxonomic_at_rank": working["__taxonomic_abundance"],
             "bp_match_at_rank": working["unique_intersect_bp"],
+            "match_genome_bp": working["__match_genome_bp"],
             "total_weighted_hashes": working["total_weighted_hashes"],
             "n_unique_kmers": working["__n_unique_kmers"],
             "p_vals": working["p_vals"],
@@ -1036,6 +1076,61 @@ def process_raw_microcosm_file(
         source_path=input_path,
         wgs_ids_complete=wgs_ids_complete(post_filter_rows),
     )
+
+
+def compute_taxonomic_abundance(
+    working: pd.DataFrame,
+    input_path: Path,
+    *,
+    group_columns: Sequence[str],
+    required: bool,
+    collector: RawMicrocosmWarningCollector | None = None,
+) -> tuple[pd.Series, pd.Series]:
+    """Genome-size-normalised share of the classified genomes (sylph's taxonomic abundance).
+
+    match_genome_bp = unique_intersect_bp / f_match (= sketch hashes x scaled, from fastmultigather). sourmash
+    computes f_match from the unique (not yet assigned) overlap, so intersect_bp / f_match overestimates the size
+    of any genome that shares hashes with an earlier match; intersect_bp / f_match_orig gives the same value.
+    f_taxonomic_at_rank = (seq share / match_genome_bp) / sum over the classified rows of the same sample group.
+    """
+    blank = pd.Series(np.nan, index=working.index, dtype="float64")
+    if working.empty:
+        return blank, blank.copy()
+    missing_columns = [
+        column for column in ("unique_intersect_bp", "f_match") if not column_has_meaningful_values(working[column])
+    ]
+    if missing_columns:
+        message = (
+            f"{input_path} has no {' / '.join(missing_columns)} values, so f_taxonomic_at_rank and "
+            "match_genome_bp cannot be computed (sourmash fastmultigather writes both columns)."
+        )
+        if required:
+            raise ProcessingError(message + " --datatype taxonomic_abundance needs them.")
+        if collector is not None:
+            collector.add(message + " Both columns are left empty.")
+        else:
+            LOGGER.warning(message)
+        return blank, blank.copy()
+
+    invalid = working["unique_intersect_bp"].isna() | working["f_match"].isna() | (working["f_match"] <= 0)
+    if invalid.any():
+        examples = [
+            f"{sample} / {match} (unique_intersect_bp={format_value(bp)}, f_match={format_value(fm)})"
+            for sample, match, bp, fm in working.loc[
+                invalid, ["__sample_name", "organism_name", "unique_intersect_bp", "f_match"]
+            ].head(5).itertuples(index=False)
+        ]
+        raise ProcessingError(
+            f"{input_path}: cannot estimate the genome size (unique_intersect_bp / f_match) for {int(invalid.sum())} "
+            f"row(s); f_match must be > 0 and unique_intersect_bp present. Sample / match: {'; '.join(examples)}"
+        )
+
+    genome_bp = working["unique_intersect_bp"] / working["f_match"]
+    per_genome = working["__computed_relative_abundance"] / genome_bp
+    keys = [working[column] for column in group_columns]
+    totals = per_genome.groupby(keys, dropna=False).transform("sum")
+    taxonomic = per_genome / totals.where(totals > 0)
+    return genome_bp, taxonomic
 
 
 def apply_min_coverage_filter(
@@ -1480,20 +1575,37 @@ def write_split_outputs(
         LOGGER.info("Wrote %s", output_path)
 
 
-def write_phyloseq_outputs(dataframe: pd.DataFrame, output_dir: Path) -> None:
+def write_phyloseq_outputs(
+    dataframe: pd.DataFrame,
+    output_dir: Path,
+    *,
+    datatype: str = "sequence_abundance",
+) -> None:
     if "__source_sample_name__" in dataframe.columns:
         dataframe = dataframe.drop(columns="__source_sample_name__")
 
     validate_phyloseq_input(dataframe)
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    sample_data = build_sample_data(dataframe)
+    if datatype == "taxonomic_abundance":
+        # Synthetic unclassified rows have no genome size: they are left out of the taxonomic tables.
+        dataframe = dataframe[~is_synthetic_unclassified(dataframe)]
+        if dataframe["f_taxonomic_at_rank"].isna().any():
+            raise ProcessingError(
+                "Cannot write a taxonomic_abundance otu_table: some classified rows have no f_taxonomic_at_rank."
+            )
     tax_table = build_tax_table(dataframe)
-    otu_table = build_otu_table(dataframe)
+    otu_table = build_otu_table(dataframe, value_column=DATATYPE_OTU_COLUMNS[datatype])
     sample_data = build_sample_data(dataframe)
 
     write_csv(tax_table, output_dir / "tax_table.csv")
     write_csv(otu_table, output_dir / "otu_table.csv")
     write_csv(sample_data, output_dir / "sample_data.csv")
+
+
+def is_synthetic_unclassified(dataframe: pd.DataFrame) -> pd.Series:
+    return dataframe["lineage"].astype(str).eq("unclassified") & dataframe["match_name"].astype(str).eq("unclassified")
 
 
 def validate_phyloseq_input(dataframe: pd.DataFrame) -> None:
@@ -1532,18 +1644,19 @@ def build_tax_table(dataframe: pd.DataFrame) -> pd.DataFrame:
     return tax_table
 
 
-def build_otu_table(dataframe: pd.DataFrame) -> pd.DataFrame:
+def build_otu_table(dataframe: pd.DataFrame, value_column: str = "n_unique_kmers") -> pd.DataFrame:
     duplicates = dataframe.duplicated(subset=["match_name", "sample_name"], keep=False)
     if duplicates.any():
         LOGGER.warning(
-            "Multiple records share the same match_name/sample_name combination; phyloseq otu_table will sum n_unique_kmers within each combination."
+            "Multiple records share the same match_name/sample_name combination; phyloseq otu_table will sum %s within each combination.",
+            value_column,
         )
 
     otu = (
         dataframe.pivot_table(
             index="match_name",
             columns="sample_name",
-            values="n_unique_kmers",
+            values=value_column,
             aggfunc="sum",
             fill_value=0,
         )
