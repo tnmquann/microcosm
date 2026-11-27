@@ -90,9 +90,12 @@ large genome (a fungus of 30 Mb) takes a large share even when it has few cells.
 genomes of the sample, as sylph does for its `relative_abundance`. For genome $g$ of a sample:
 
 $$
-\text{match\_genome\_bp}_g = \frac{\text{unique\_intersect\_bp}_g}{\text{f\_match}_g}, \qquad
-\text{f\_taxonomic\_at\_rank}_g = \frac{\text{f\_weighted\_at\_rank}_g / \text{match\_genome\_bp}_g}
-{\sum_{h \in \text{classified}} \text{f\_weighted\_at\_rank}_h / \text{match\_genome\_bp}_h}
+\text{match\_genome\_bp}_g = \frac{\text{unique\_intersect\_bp}_g}{\text{f\_match}_g}
+$$
+
+$$
+\text{f\_taxonomic\_at\_rank}_g = \frac{\text{f\_weighted\_at\_rank}_g \,/\, \text{match\_genome\_bp}_g}
+{\sum_{h \in \text{classified}} \text{f\_weighted\_at\_rank}_h \,/\, \text{match\_genome\_bp}_h}
 $$
 
 `match_genome_bp` is the genome size seen by sourmash (sketch hashes × `scaled`). Higher ranks are the sums of their genomes.
