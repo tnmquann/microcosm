@@ -32,6 +32,13 @@ First release under the name **microcosm** (formerly **metaflow**; the GitHub re
   with `--sylph_taxonomy` (sylph-tax `taxprof`, one metadata file per database), `--sylph_datatype`
   (`taxonomic_abundance` or `sequence_abundance`). Outputs in `Readbased_Analysis/sylph/` (profiles, `.sylphmpa`,
   clade × sample table, phyloseq tables with `--readbased_postprocess phyloseq|all`). RGI-BWT also runs with sylph alone.
+- **Taxonomic (genome-size-normalised) abundance for microcosm:** the processed CSV gains `f_taxonomic_at_rank` (share of
+  the classified genomes: `f_weighted_at_rank` / `match_genome_bp`, renormalised per sample, as sylph's taxonomic
+  abundance) and `match_genome_bp` (genome size = `unique_intersect_bp` / `f_match`, so values can be checked); all other
+  columns are unchanged. New `--microcosm_datatype sequence_abundance|taxonomic_abundance` (default
+  `sequence_abundance` = `n_unique_kmers` as before) chooses the value of the microcosm phyloseq `otu_table.csv`;
+  `post_processing.py --datatype` (module-managed, cannot be set through `--readbased_postprocess_options`).
+  `taxonomic_abundance` / `f_taxonomic_at_rank` is the share of classified genomes only. Unclassified reads have no genome size, so there is no unclassified row/value in this result (empty in the processed CSV, absent from the phyloseq `otu_table.csv`), and values sum to 100% of the classified part. Use `sequence_abundance` / `f_weighted_at_rank` to see the unclassified fraction. `f_taxonomic_at_rank` is a proportion, not a count: the `taxonomic_abundance` phyloseq table is not suitable for count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2); use `sequence_abundance` (k-mer pseudo-counts) for those.
 - Several sourmash databases (`--sourmash_database db1.zip,db2.zip` with one taxonomy each in
   `--sourmash_taxonomy_csv`); YACHT, which takes one database, is skipped in that case.
 - Per-sample YACHT in single-sketch mode; `--enable_copymergedseqs`, `--enable_copysketch`,
@@ -97,6 +104,9 @@ First release under the name **microcosm** (formerly **metaflow**; the GitHub re
 - Every local module has a pinned container for Docker / Singularity / Apptainer and a Conda definition; short
   `biocontainers/` image names resolve on quay.io.
 - Read-based post-processing applies `--min_coverage 0.05` by default.
+- `--sylph_datatype` now defaults to `sequence_abundance` (was `taxonomic_abundance`), matching the new
+  `--microcosm_datatype`; both profilers report the share of reads unless `taxonomic_abundance` is asked for. To keep the
+  previous sylph tables, add `--sylph_datatype taxonomic_abundance`.
 - Copyright: 2026 TON NGOC MINH QUAN.
 
 ### Fixed

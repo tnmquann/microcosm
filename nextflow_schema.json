@@ -400,6 +400,13 @@
                     "description": "Additional supported command-line options passed safely to bin/py_scripts/read_based/post_processing.py. Defaults to filtering YACHT results at min_coverage 0.05.",
                     "help_text": "Default: --min_coverage 0.05. Override this string to use another supported threshold or option, such as --min_coverage 0.1 --use_average. Module-managed input, input_format, output, and output_format arguments cannot be overridden. Options must be compatible with every selected output mode (--remove_unclassified is not passed to taxburst, which already leaves unclassified out). The microcosm MultiQC section follows the same --min_coverage and --remove_unclassified (Unclassified left out, taxa rescaled to 100 %)."
                 },
+                "microcosm_datatype": {
+                    "type": "string",
+                    "default": "sequence_abundance",
+                    "enum": ["sequence_abundance", "taxonomic_abundance"],
+                    "description": "microcosm (sourmash + YACHT) value written to the phyloseq otu_table.csv",
+                    "help_text": "sequence_abundance (default): n_unique_kmers, k-mer pseudo-counts of the read (sequence) share, as before. taxonomic_abundance: f_taxonomic_at_rank, the share of genomes (sequence share divided by the genome size match_genome_bp = unique_intersect_bp / f_match, renormalised per sample), like sylph's relative_abundance. The processed CSV (--readbased_postprocess all) always has both f_weighted_at_rank and f_taxonomic_at_rank. taxonomic_abundance / f_taxonomic_at_rank is the share of classified genomes only. Unclassified reads have no genome size, so there is no unclassified row/value in this result (empty in the processed CSV, absent from the phyloseq otu_table.csv), and values sum to 100% of the classified part. Use sequence_abundance / f_weighted_at_rank to see the unclassified fraction. f_taxonomic_at_rank is a proportion, not a count: the taxonomic_abundance phyloseq table is not suitable for count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2); use sequence_abundance (k-mer pseudo-counts) for those."
+                },
                 "enable_rgi_bwt": {
                     "type": "boolean",
                     "default": false,
@@ -1026,10 +1033,10 @@
                 },
                 "sylph_datatype": {
                     "type": "string",
-                    "default": "taxonomic_abundance",
-                    "enum": ["taxonomic_abundance", "sequence_abundance"],
+                    "default": "sequence_abundance",
+                    "enum": ["sequence_abundance", "taxonomic_abundance"],
                     "description": "sylph value used for the merged sylph-tax table and the phyloseq otu_table",
-                    "help_text": "taxonomic_abundance uses sylph-tax relative_abundance; sequence_abundance runs sylph profile with --estimate-read-counts and uses the estimated read counts."
+                    "help_text": "sequence_abundance (default) runs sylph profile with --estimate-read-counts and uses the sylph-tax sequence_abundance column (share of reads). taxonomic_abundance uses sylph-tax relative_abundance (share of genomes: sequence share divided by genome size, renormalised). The chosen column fills the merged table <prefix>_sylphtax_<datatype>.tsv and the phyloseq otu_table.csv. For the microcosm (sourmash + YACHT) result see --microcosm_datatype."
                 },
                 "enable_sylphtax": {
                     "type": "boolean",

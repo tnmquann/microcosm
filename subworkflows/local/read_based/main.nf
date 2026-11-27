@@ -202,7 +202,7 @@ workflow READ_BASED {
                     ]
                 }
 
-            POSTPROCESS_READBASED(postprocess_input_ch, postprocess_script)
+            POSTPROCESS_READBASED(postprocess_input_ch, params.microcosm_datatype, postprocess_script)
             versions_ch = versions_ch.mix(POSTPROCESS_READBASED.out.versions)
             ch_postprocess_default = POSTPROCESS_READBASED.out.default_output
             ch_postprocess_phyloseq = POSTPROCESS_READBASED.out.phyloseq

@@ -16,7 +16,7 @@ workflow {
     ])
     def postprocess_script = file("${projectDir}/../../../../../bin/py_scripts/read_based/post_processing.py", checkIfExists: true)
 
-    POSTPROCESS_READBASED(postprocess_input_ch, postprocess_script)
+    POSTPROCESS_READBASED(postprocess_input_ch, 'sequence_abundance', postprocess_script)
 
     POSTPROCESS_READBASED.out.default_output.view { _meta, default_dir ->
         "DEFAULT_DIR=${default_dir}"
