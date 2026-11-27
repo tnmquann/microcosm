@@ -7,6 +7,7 @@ process POSTPROCESS_READBASED {
 
     input:
     tuple val(meta), val(output_prefix), val(mode), val(single_sample_layout), val(rgi_gene_mapping_only), env('POSTPROCESS_OPTIONS'), path(merged_sourmash_yacht, stageAs: 'merged_sourmash_yacht.csv', arity: '0..*'), path(rgi_results, stageAs: 'rgi_inputs/*', arity: '0..*')
+    val datatype // sequence_abundance | taxonomic_abundance: value of the phyloseq otu_table (--microcosm_datatype)
     path postprocess_script, stageAs: 'post_processing.py'
 
     output:
@@ -32,7 +33,7 @@ process POSTPROCESS_READBASED {
         local output_format="\$1"
         local mode_tmp="\$2"
 
-        POSTPROCESS_OUTPUT_FORMAT="\${output_format}" POSTPROCESS_TMP_DIR="\${mode_tmp}" python - <<'PY'
+        POSTPROCESS_OUTPUT_FORMAT="\${output_format}" POSTPROCESS_TMP_DIR="\${mode_tmp}" POSTPROCESS_DATATYPE="${datatype}" python - <<'PY'
     import os
     import shlex
     import subprocess
@@ -42,7 +43,7 @@ process POSTPROCESS_READBASED {
     # taxburst already leaves synthetic unclassified rows out and post_processing.py rejects the flag there
     if os.environ["POSTPROCESS_OUTPUT_FORMAT"] == "taxburst":
         extra_args = [argument for argument in extra_args if argument != "--remove_unclassified"]
-    reserved = ("--input", "--input_format", "--output", "--output_format")
+    reserved = ("--input", "--input_format", "--output", "--output_format", "--datatype")
     for argument in extra_args:
         if argument in reserved or any(argument.startswith(f"{flag}=") for flag in reserved):
             raise SystemExit(
@@ -61,6 +62,8 @@ process POSTPROCESS_READBASED {
         os.environ["POSTPROCESS_TMP_DIR"],
         "--output_format",
         os.environ["POSTPROCESS_OUTPUT_FORMAT"],
+        "--datatype",
+        os.environ["POSTPROCESS_DATATYPE"],
     ]
     subprocess.run(command, check=True)
     PY
