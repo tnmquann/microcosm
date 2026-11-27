@@ -13,6 +13,9 @@
   var STORE_KEY = 'microcosm-builder-v1';
   var DOCS = SCRIPT.src.replace(/_static\/builder\/builder\.js.*$/, '');
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // View Transitions (Chromium, Safari 18, Firefox 144+): the card resizes smoothly, fields glide to their new place,
+  // new options fade in. Reduced motion keeps a short cross-fade instead of switching the effects off.
+  var VT = typeof document.startViewTransition === 'function';
 
   /* ------------------------------------------------------------------ schema */
 
@@ -113,7 +116,72 @@
   /* ------------------------------------------------------------------ controls */
 
   // Structural changes re-render the step; typing only refreshes the output.
-  function commit(structural) { if (structural) renderStep(); refresh(); save(); }
+  function commit(structural) {
+    if (structural) transition('morph', function () { renderStep(); refresh(); });
+    else refresh();
+    save();
+  }
+
+  /* ------------------------------------------------------------------ motion */
+
+  var vtRunning = null;
+  // Blocks of the step card that keep their identity across a re-render (same key = same element).
+  function cardBlocks() {
+    if (!els.stage) return [];
+    return Array.prototype.slice.call(els.stage.querySelectorAll(
+      '.mcb-card-head, .mcb-card-foot, .mcb-card-body > *, .mcb-section > *'));
+  }
+  function blockKey(el, used) {
+    var tag = el.querySelector('.mcb-flag, .mcb-section-title, .mcb-label, .mcb-opt-title, summary');
+    var text = (el.classList[0] || 'b') + '-' + (tag ? tag.textContent : el.textContent.slice(0, 40));
+    var base = 'mcbk-' + text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+    var n = used[base] = (used[base] || 0) + 1;
+    return n > 1 ? base + '-' + n : base;
+  }
+  function nameBlocks(on) {
+    var used = {};
+    cardBlocks().forEach(function (el) { el.style.viewTransitionName = on ? blockKey(el, used) : ''; });
+  }
+  function blockKeys() { var used = {}; return cardBlocks().map(function (el) { return blockKey(el, used); }); }
+
+  // kind: 'next' | 'back' (step change), 'morph' (options added/removed), 'tab' (output format)
+  function transition(kind, update) {
+    if (!mount.dataset.ready || document.hidden) { update(); return; }
+    if (!VT) { fallbackTransition(kind, update); return; }
+    var root = document.documentElement;
+    var mode = REDUCED ? 'fade' : kind;
+    if (vtRunning) vtRunning.skipTransition();
+    if (kind === 'morph') nameBlocks(true);
+    root.setAttribute('data-mcb-vt', mode);
+    var vt;
+    try {
+      vt = document.startViewTransition(function () { update(); if (kind === 'morph') nameBlocks(true); });
+    } catch (e) { root.removeAttribute('data-mcb-vt'); nameBlocks(false); update(); return; }
+    vtRunning = vt;
+    vt.finished.catch(function () {}).then(function () {
+      if (vtRunning !== vt) return;
+      vtRunning = null;
+      root.removeAttribute('data-mcb-vt');
+      nameBlocks(false);
+    });
+  }
+  // Without View Transitions: tween the card height and fade in what is new.
+  function fallbackTransition(kind, update) {
+    var stage = els.stage, from = stage.offsetHeight, before = kind === 'morph' ? blockKeys() : null;
+    update();
+    if (kind === 'tab') { els.panel.classList.remove('is-swap'); void els.panel.offsetWidth; els.panel.classList.add('is-swap'); return; }
+    if (before) {
+      var used = {};
+      cardBlocks().forEach(function (el) { if (before.indexOf(blockKey(el, used)) < 0) el.classList.add('mcb-in'); });
+    }
+    var to = stage.offsetHeight;
+    if (Math.abs(to - from) < 2) return;
+    stage.style.height = from + 'px'; stage.style.overflow = 'hidden';
+    void stage.offsetHeight;
+    stage.style.transition = 'height ' + (REDUCED ? 0.12 : 0.24) + 's cubic-bezier(0.2, 0.7, 0.2, 1)';
+    stage.style.height = to + 'px';
+    setTimeout(function () { stage.style.height = ''; stage.style.overflow = ''; stage.style.transition = ''; }, REDUCED ? 140 : 260);
+  }
 
   function field(opts, control) {
     var id = control.id || (control.id = nextId('f'));
@@ -1401,11 +1469,11 @@
   function go(id) {
     clearTimeout(autoAdvance);
     if (!BYID[id] || !BYID[id].when()) return;
+    var dir = stepIndex(id) < stepIndex(S.step) ? 'back' : 'next';
     S.seen[S.step] = true;
     S.step = id;
     S.seen[id] = true;
-    renderStep(true);
-    refresh();
+    transition(dir, function () { renderStep(true); refresh(); });
     save();
     var top = mount.getBoundingClientRect().top + window.scrollY - 80;
     if (window.scrollY > top) window.scrollTo({ top: top, behavior: REDUCED ? 'auto' : 'smooth' });
@@ -1416,7 +1484,8 @@
     problems().forEach(function (p) { if (p.level === 'error') errsBy[p.step] = (errsBy[p.step] || 0) + 1; });
     var act = activeSteps();
     var cur = stepIndex(S.step);
-    var list = h('ol', { class: 'mcb-stations' + (S.route ? ' route-' + S.route : '') });
+    var list = h('ol', { class: 'mcb-stations' + (S.route ? ' route-' + S.route : '') + (els.rail.dataset.shown ? '' : ' is-first') });
+    els.rail.dataset.shown = '1';
     act.forEach(function (s, i) {
       var state = i === cur ? 'is-current' : (S.seen[s.id] ? 'is-done' : 'is-todo');
       var sum = S.seen[s.id] || i === cur ? s.summary() : '';
@@ -1438,7 +1507,7 @@
     var step = BYID[S.step];
     if (!step || !step.when()) { S.step = 'route'; step = BYID.route; }
     var act = activeSteps(), i = stepIndex(step.id);
-    var card = h('div', { class: 'mcb-card' + (animate && !REDUCED ? ' is-entering' : '') },
+    var card = h('div', { class: 'mcb-card' + (animate && !VT ? ' is-entering' : '') },
       h('header', { class: 'mcb-card-head' },
         h('p', { class: 'mcb-kicker' }, S.route ? 'Step ' + (i + 1) + ' of ' + act.length : 'Start here'),
         h('h2', { class: 'mcb-card-title', tabindex: '-1', id: 'mcb-title' }, step.lead),
@@ -1470,11 +1539,11 @@
     var tabs = h('div', { class: 'mcb-tabs', role: 'tablist', 'aria-label': 'Output format' });
     [['cmd', 'Command'], ['yaml', 'params.yaml'], ['cfg', '+ config']].forEach(function (t) {
       tabs.appendChild(h('button', { type: 'button', role: 'tab', id: 'mcb-tab-' + t[0], 'aria-controls': 'mcb-panel',
-        class: 'mcb-tab', onclick: function () { S.fmt = t[0]; refresh(); save(); },
+        class: 'mcb-tab', onclick: function () { if (S.fmt === t[0]) return; S.fmt = t[0]; transition('tab', refresh); save(); },
         onkeydown: function (e) {
           var order = ['cmd', 'yaml', 'cfg'], i = order.indexOf(S.fmt);
           if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-            S.fmt = order[(i + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; refresh(); save();
+            S.fmt = order[(i + (e.key === 'ArrowRight' ? 1 : 2)) % 3]; transition('tab', refresh); save();
             document.getElementById('mcb-tab-' + S.fmt).focus();
           }
         } }, t[1]));
@@ -1496,7 +1565,7 @@
     var before = lastLines[key] || null;
     var pre = h('pre', { class: 'mcb-code', tabindex: '0', 'aria-label': title });
     pre.innerHTML = lines.map(function (l, i) {
-      var fresh = before && before.indexOf(raw[i]) < 0 && !REDUCED;
+      var fresh = before && before.indexOf(raw[i]) < 0;
       return '<span class="mcb-line' + (fresh ? ' is-new' : '') + '">' + l + '</span>';
     }).join('');
     lastLines[key] = raw;
@@ -1601,7 +1670,7 @@
     S = freshState();
     lastLines = {};
     try { localStorage.removeItem(STORE_KEY); } catch (e) { /* storage off */ }
-    renderStep(true); refresh();
+    transition('back', function () { renderStep(true); refresh(); });
   }
 
   /* ------------------------------------------------------------------ start */

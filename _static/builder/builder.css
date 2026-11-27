@@ -60,7 +60,8 @@ html.dark .mcb {
     content: ""; position: absolute; left: 9px; top: 14px; bottom: 14px; width: 3px; border-radius: 2px;
     background: var(--b-line);
 }
-.mcb-station { position: relative; margin: 0; animation: mcb-rise 0.35s var(--b-ease) both; animation-delay: calc(var(--i) * 25ms); }
+.mcb-station { position: relative; margin: 0; }
+.mcb-stations.is-first .mcb-station { animation: mcb-rise 0.35s var(--b-ease) both; animation-delay: calc(var(--i) * 25ms); }
 .mcb-station-btn {
     display: flex; gap: 12px; align-items: flex-start; width: 100%; min-height: 44px; padding: 7px 8px 7px 0;
     background: none; border: 0; text-align: left; cursor: pointer; border-radius: 8px;
@@ -90,7 +91,13 @@ html.dark .mcb {
     background: var(--b-panel); border: 1px solid var(--b-line); border-radius: var(--b-radius);
     padding: 26px 28px 20px;
 }
-.mcb-card.is-entering { animation: mcb-enter 0.32s var(--b-ease) both; }
+.mcb-card.is-entering { animation: mcb-enter 0.26s var(--b-ease) both; }
+.mcb-card { view-transition-name: mcb-card; }
+.mcb-rail { view-transition-name: mcb-rail; }
+.mcb-out { view-transition-name: mcb-out; }
+.mcb-panel { view-transition-name: mcb-panel; }
+.mcb-in { animation: mcb-rise 0.22s var(--b-ease) both; }
+.mcb-panel.is-swap { animation: mcb-swap 0.2s var(--b-ease) both; }
 .mcb-kicker { margin: 0 0 4px; font-size: 0.78rem; font-weight: 600; color: var(--b-accent-strong); letter-spacing: 0.02em; }
 .yue .mcb-card-title, .mcb-card-title {
     margin: 0 0 18px; padding: 0; border: 0; font-family: var(--sy-f-heading); font-size: 1.45rem; line-height: 1.25;
@@ -320,8 +327,45 @@ html.dark .mcb-btn.is-primary { color: #08130d; }
     0% { background: rgba(127, 224, 166, 0.22); border-left-color: #7fe0a6; }
     100% { background: transparent; border-left-color: transparent; }
 }
+@keyframes mcb-swap { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+
+/* View Transitions (set by builder.js on <html data-mcb-vt="...">): only the builder moves, the page stays put. */
+html[data-mcb-vt]::view-transition-old(root),
+html[data-mcb-vt]::view-transition-new(root) { animation: none; }
+html[data-mcb-vt]::view-transition-group(*) { animation-duration: 0.26s; animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1); }
+html[data-mcb-vt]::view-transition-old(*),
+html[data-mcb-vt]::view-transition-new(*) { animation-duration: 0.18s; }
+/* next / back: the old card slides away, the new one comes in from the side we are heading to */
+html[data-mcb-vt="next"]::view-transition-old(mcb-card) { animation: mcb-vt-out-l 0.12s cubic-bezier(0.4, 0, 1, 1) both; }
+html[data-mcb-vt="next"]::view-transition-new(mcb-card) { animation: mcb-vt-in-r 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) 0.06s both; }
+html[data-mcb-vt="back"]::view-transition-old(mcb-card) { animation: mcb-vt-out-r 0.12s cubic-bezier(0.4, 0, 1, 1) both; }
+html[data-mcb-vt="back"]::view-transition-new(mcb-card) { animation: mcb-vt-in-l 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) 0.06s both; }
+/* morph: fields glide to their new place, new ones rise in, removed ones fade out */
+html[data-mcb-vt="morph"]::view-transition-new(*):only-child { animation: mcb-vt-rise 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) 0.04s both; }
+html[data-mcb-vt="morph"]::view-transition-old(*):only-child { animation: mcb-vt-fade-out 0.12s ease both; }
+/* tab: the code panel swaps with a short slide */
+html[data-mcb-vt="tab"]::view-transition-old(mcb-panel) { animation: mcb-vt-fade-out 0.1s ease both; }
+html[data-mcb-vt="tab"]::view-transition-new(mcb-panel) { animation: mcb-vt-in-r 0.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.03s both; }
+/* reduced motion: a plain short cross-fade, nothing moves */
+html[data-mcb-vt="fade"]::view-transition-group(*) { animation-duration: 0s; }
+html[data-mcb-vt="fade"]::view-transition-old(*),
+html[data-mcb-vt="fade"]::view-transition-new(*) { animation-duration: 0.14s; }
+@keyframes mcb-vt-out-l { to { opacity: 0; transform: translateX(-24px); } }
+@keyframes mcb-vt-out-r { to { opacity: 0; transform: translateX(24px); } }
+@keyframes mcb-vt-in-r { from { opacity: 0; transform: translateX(28px); } }
+@keyframes mcb-vt-in-l { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes mcb-vt-rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes mcb-vt-fade-out { to { opacity: 0; } }
+
+/* Reduced motion: keep short fades (they help to see what changed), drop movement and bounce. */
 @media (prefers-reduced-motion: reduce) {
-    .mcb *, .mcb *::before, .mcb *::after { animation: none !important; transition: none !important; }
+    .mcb *, .mcb *::before, .mcb *::after { transition-duration: 0.12s !important; }
+    @keyframes mcb-enter { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes mcb-rise { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes mcb-swap { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes mcb-pop { from { opacity: 0.6; } to { opacity: 1; } }
+    @keyframes mcb-tick { from { opacity: 0; transform: rotate(45deg); } to { opacity: 1; transform: rotate(45deg); } }
+    .mcb-station, .mcb-card.is-entering, .mcb-in { animation-duration: 0.16s !important; animation-delay: 0s !important; }
 }
 
 /* ---------- smaller screens ---------- */
