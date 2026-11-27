@@ -146,7 +146,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#rgi-bwt">RGI_BWT</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#read-based-post-processing">Read-based post-processing</a></li>
+<li><a class="reference internal" href="#read-based-post-processing">Read-based post-processing</a><ul>
+<li><a class="reference internal" href="#sequence-or-taxonomic-abundance">Sequence or taxonomic abundance</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#sylph-read-based-profiling">sylph read-based profiling</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -297,8 +300,8 @@ YACHT is then skipped.</p>
 <ul class="simple">
 <li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Readbased_Analysis/Post_processing/</span></code> (batch mode)</p>
 <ul>
-<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[prefix]_default/[prefix].processed_microcosm.csv</span></code>: one standard table (taxonomy per rank, relative abundance per sample); written by <code class="docutils literal notranslate"><span class="pre">default</span></code> and <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p></li>
-<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[prefix]_phyloseq/{otu_table,tax_table,sample_data}.csv</span></code>: tables for <a class="reference external" href="https://joey711.github.io/phyloseq/"><code class="docutils literal notranslate"><span class="pre">phyloseq</span></code></a> (<code class="docutils literal notranslate"><span class="pre">otu_table()</span></code>, <code class="docutils literal notranslate"><span class="pre">tax_table()</span></code>, <code class="docutils literal notranslate"><span class="pre">sample_data()</span></code>).</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[prefix]_default/[prefix].processed_microcosm.csv</span></code>: one standard table (one row per sample and genome, plus a synthetic <code class="docutils literal notranslate"><span class="pre">unclassified</span></code> row per sample) with <code class="docutils literal notranslate"><span class="pre">f_weighted_at_rank</span></code>, <code class="docutils literal notranslate"><span class="pre">f_taxonomic_at_rank</span></code>, <code class="docutils literal notranslate"><span class="pre">match_genome_bp</span></code> and <code class="docutils literal notranslate"><span class="pre">n_unique_kmers</span></code> (see below); written by <code class="docutils literal notranslate"><span class="pre">default</span></code> and <code class="docutils literal notranslate"><span class="pre">all</span></code>.</p></li>
+<li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[prefix]_phyloseq/{otu_table,tax_table,sample_data}.csv</span></code>: tables for <a class="reference external" href="https://joey711.github.io/phyloseq/"><code class="docutils literal notranslate"><span class="pre">phyloseq</span></code></a> (<code class="docutils literal notranslate"><span class="pre">otu_table()</span></code>, <code class="docutils literal notranslate"><span class="pre">tax_table()</span></code>, <code class="docutils literal notranslate"><span class="pre">sample_data()</span></code>); <code class="docutils literal notranslate"><span class="pre">otu_table.csv</span></code> follows <code class="docutils literal notranslate"><span class="pre">--microcosm_datatype</span></code>.</p></li>
 <li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[prefix]_taxburst/*.taxburst.csv</span></code>, <code class="docutils literal notranslate"><span class="pre">*.taxburst.split.csv</span></code>: input tables for <code class="docutils literal notranslate"><span class="pre">taxburst</span></code> charts, merged and per sample.</p></li>
 <li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">[prefix]_rgi_bwt/</span></code>: RGI bwt gene tables collected over the samples (needs <code class="docutils literal notranslate"><span class="pre">--enable_rgi_bwt</span></code>).</p></li>
 </ul>
@@ -306,7 +309,54 @@ YACHT is then skipped.</p>
 <li><p class="sd-card-text"><code class="docutils literal notranslate"><span class="pre">Readbased_Analysis/Post_processing/[sample_id]/{default,phyloseq,taxburst,rgi_bwt}/</span></code> (single-sketch mode, <code class="docutils literal notranslate"><span class="pre">--enable_singlesketch</span></code>), plus the all-sample aggregates.</p></li>
 </ul>
 </div>
-</details></section>
+</details><section id="sequence-or-taxonomic-abundance">
+<h3>Sequence or taxonomic abundance<a class="headerlink" href="#sequence-or-taxonomic-abundance" title="Link to this heading">¶</a></h3>
+<p>The two numbers answer different questions. <strong>Sequence abundance</strong> is the share of the <em>reads</em> that come from a genome, so a
+large genome (a fungus of 30 Mb) takes a large share even when it has few cells. <strong>Taxonomic abundance</strong> is the share of the
+<em>genomes</em> (cells): each sequence share is divided by the genome size and the result is renormalised over the classified
+genomes of the sample, as sylph does for its <code class="docutils literal notranslate"><span class="pre">relative_abundance</span></code>. For genome <span class="math notranslate nohighlight">\(g\)</span> of a sample:</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+\text{match\_genome\_bp}_g = \frac{\text{unique\_intersect\_bp}_g}{\text{f\_match}_g}
+\]</div>
+</div>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[
+\text{f\_taxonomic\_at\_rank}_g = \frac{\text{f\_weighted\_at\_rank}_g \,/\, \text{match\_genome\_bp}_g}
+{\sum_{h \in \text{classified}} \text{f\_weighted\_at\_rank}_h \,/\, \text{match\_genome\_bp}_h}
+\]</div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">match_genome_bp</span></code> is the genome size seen by sourmash (sketch hashes × <code class="docutils literal notranslate"><span class="pre">scaled</span></code>). Higher ranks are the sums of their genomes.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p><code class="docutils literal notranslate"><span class="pre">--microcosm_datatype</span></code></p></th>
+<th class="head text-left"><p>phyloseq <code class="docutils literal notranslate"><span class="pre">otu_table.csv</span></code> holds</p></th>
+<th class="head text-left"><p>Use for</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code> (default)</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">n_unique_kmers</span></code>, k-mer pseudo-counts of the read share</p></td>
+<td class="text-left"><p>count-based differential abundance; seeing the unclassified part</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">f_taxonomic_at_rank</span></code>, share of classified genomes; no <code class="docutils literal notranslate"><span class="pre">unclassified</span></code> row</p></td>
+<td class="text-left"><p>composition plots, diversity, comparison with sylph</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The processed CSV always has both columns. <code class="docutils literal notranslate"><span class="pre">--sylph_datatype</span></code> makes the same choice for sylph and also defaults to
+<code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code> / <code class="docutils literal notranslate"><span class="pre">f_taxonomic_at_rank</span></code> is the share of classified genomes only. Unclassified reads have no genome size, so there is no unclassified row/value in this result (empty in the processed CSV, absent from the phyloseq <code class="docutils literal notranslate"><span class="pre">otu_table.csv</span></code>), and values sum to 100% of the classified part. Use <code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code> / <code class="docutils literal notranslate"><span class="pre">f_weighted_at_rank</span></code> to see the unclassified fraction. <code class="docutils literal notranslate"><span class="pre">f_taxonomic_at_rank</span></code> is a proportion, not a count: the <code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code> phyloseq table is not suitable for count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2); use <code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code> (k-mer pseudo-counts) for those.</p>
+</div>
+</section>
+</section>
 <section id="sylph-read-based-profiling">
 <h2>sylph read-based profiling<a class="headerlink" href="#sylph-read-based-profiling" title="Link to this heading">¶</a></h2>
 <p><a class="reference external" href="https://github.com/bluenote-1577/sylph">sylph</a> profiles the paired reads of each sample directly against a sylph database (<code class="docutils literal notranslate"><span class="pre">--readbased_taxotools</span> <span class="pre">sylph</span></code> or <code class="docutils literal notranslate"><span class="pre">microcosm,sylph</span></code>). With <code class="docutils literal notranslate"><span class="pre">--enable_sylphtax</span></code>, <a class="reference external" href="https://github.com/bluenote-1577/sylph-tax">sylph-tax</a> adds the taxonomy.</p>
@@ -384,5 +434,7 @@ YACHT is then skipped.</p>
       <script src="../../_static/togglebutton.js?v=1ae7504c"></script>
       <script src="../../_static/design-tabs.js?v=f930bc37"></script>
       <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-      <script src="../../_static/shibuya.js?v=cac61aee"></script></body>
+      <script src="../../_static/shibuya.js?v=cac61aee"></script>
+      <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script></body>
 </html>

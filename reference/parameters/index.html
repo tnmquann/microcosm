@@ -704,7 +704,12 @@ Run <code class="docutils literal notranslate"><span class="pre">nextflow</span>
 <td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--min_coverage</span> <span class="pre">0.05</span></code></p></td>
 <td class="text-left"><p>Additional supported command-line options passed safely to bin/py_scripts/read_based/post_processing.py. Defaults to filtering YACHT results at min_coverage 0.05. <a class="reference internal" href="#help-readbased-postprocess-options"><span class="std std-ref">more</span></a></p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--enable_rgi_bwt</span></code></p></td>
+<tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--microcosm_datatype</span></code></p></td>
+<td class="text-left"><p>string</p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code></p></td>
+<td class="text-left"><p>microcosm (sourmash + YACHT) value written to the phyloseq otu_table.csv. Choices: <code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code>, <code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code>. <a class="reference internal" href="#help-microcosm-datatype"><span class="std std-ref">more</span></a></p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--enable_rgi_bwt</span></code></p></td>
 <td class="text-left"><p>boolean</p></td>
 <td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
 <td class="text-left"><p>Enable RGI BWT analysis for antimicrobial resistance genes</p></td>
@@ -731,6 +736,11 @@ Run <code class="docutils literal notranslate"><span class="pre">nextflow</span>
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">--readbased_postprocess_options</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
 <p class="sd-card-text">Default: --min_coverage 0.05. Override this string to use another supported threshold or option, such as --min_coverage 0.1 --use_average. Module-managed input, input_format, output, and output_format arguments cannot be overridden. Options must be compatible with every selected output mode (--remove_unclassified is not passed to taxburst, which already leaves unclassified out). The microcosm MultiQC section follows the same --min_coverage and --remove_unclassified (Unclassified left out, taxa rescaled to 100 %).</p>
+</div>
+</details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="help-microcosm-datatype">
+<summary class="sd-summary-title sd-card-header">
+<span class="sd-summary-text">--microcosm_datatype</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
+<p class="sd-card-text">sequence_abundance (default): n_unique_kmers, k-mer pseudo-counts of the read (sequence) share, as before. taxonomic_abundance: f_taxonomic_at_rank, the share of genomes (sequence share divided by the genome size match_genome_bp = unique_intersect_bp / f_match, renormalised per sample), like sylph's relative_abundance. The processed CSV (--readbased_postprocess all) always has both f_weighted_at_rank and f_taxonomic_at_rank. taxonomic_abundance / f_taxonomic_at_rank is the share of classified genomes only. Unclassified reads have no genome size, so there is no unclassified row/value in this result (empty in the processed CSV, absent from the phyloseq otu_table.csv), and values sum to 100% of the classified part. Use sequence_abundance / f_weighted_at_rank to see the unclassified fraction. f_taxonomic_at_rank is a proportion, not a count: the taxonomic_abundance phyloseq table is not suitable for count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2); use sequence_abundance (k-mer pseudo-counts) for those.</p>
 </div>
 </details></section>
 <section id="assembly-options">
@@ -1417,8 +1427,8 @@ Run <code class="docutils literal notranslate"><span class="pre">nextflow</span>
 </tr>
 <tr class="row-odd"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--sylph_datatype</span></code></p></td>
 <td class="text-left"><p>string</p></td>
-<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code></p></td>
-<td class="text-left"><p>sylph value used for the merged sylph-tax table and the phyloseq otu_table. Choices: <code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code>, <code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code>. <a class="reference internal" href="#help-sylph-datatype"><span class="std std-ref">more</span></a></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code></p></td>
+<td class="text-left"><p>sylph value used for the merged sylph-tax table and the phyloseq otu_table. Choices: <code class="docutils literal notranslate"><span class="pre">sequence_abundance</span></code>, <code class="docutils literal notranslate"><span class="pre">taxonomic_abundance</span></code>. <a class="reference internal" href="#help-sylph-datatype"><span class="std std-ref">more</span></a></p></td>
 </tr>
 <tr class="row-even"><td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">--enable_sylphtax</span></code></p></td>
 <td class="text-left"><p>boolean</p></td>
@@ -1466,7 +1476,7 @@ Run <code class="docutils literal notranslate"><span class="pre">nextflow</span>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="help-sylph-datatype">
 <summary class="sd-summary-title sd-card-header">
 <span class="sd-summary-text">--sylph_datatype</span><span class="sd-summary-state-marker sd-summary-chevron-right"><svg version="1.1" width="1.5em" height="1.5em" class="sd-octicon sd-octicon-chevron-right" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.72 18.78a.75.75 0 0 1 0-1.06L14.44 12 8.72 6.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z"></path></svg></span></summary><div class="sd-summary-content sd-card-body docutils">
-<p class="sd-card-text">taxonomic_abundance uses sylph-tax relative_abundance; sequence_abundance runs sylph profile with --estimate-read-counts and uses the estimated read counts.</p>
+<p class="sd-card-text">sequence_abundance (default) runs sylph profile with --estimate-read-counts and uses the sylph-tax sequence_abundance column (share of reads). taxonomic_abundance uses sylph-tax relative_abundance (share of genomes: sequence share divided by genome size, renormalised). The chosen column fills the merged table <prefix><em>sylphtax</em><datatype>.tsv and the phyloseq otu_table.csv. For the microcosm (sourmash + YACHT) result see --microcosm_datatype.</p>
 </div>
 </details><details class="sd-sphinx-override sd-dropdown sd-card sd-mb-3" id="help-enable-sylphtax">
 <summary class="sd-summary-title sd-card-header">
