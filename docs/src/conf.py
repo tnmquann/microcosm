@@ -40,8 +40,16 @@ html_static_path = ["_static", "../images"]
 html_css_files = ["css/custom.css"]
 
 # -- HTML output
-# Site root (GitHub Pages serves the docs under /microcosm/); used for the logo and the top navigation links
-BASE = os.environ.get("DOCS_BASEURL", "https://tnmquann.github.io/microcosm/")
+# Site root, used for the logo, the top navigation links and the canonical URL. The same sources build two sites:
+# Read the Docs (docpage branch, https://microcosm.readthedocs.io/en/<version>/; RTD sets READTHEDOCS_CANONICAL_URL)
+# and GitHub Pages (gh-pages branch, built by hand, https://tnmquann.github.io/microcosm/). DOCS_BASEURL overrides both.
+BASE = (
+    os.environ.get("DOCS_BASEURL")
+    or os.environ.get("READTHEDOCS_CANONICAL_URL")
+    or "https://tnmquann.github.io/microcosm/"
+)
+if not BASE.endswith("/"):
+    BASE += "/"
 html_baseurl = BASE
 html_title = "microcosm"
 html_theme = "shibuya"
