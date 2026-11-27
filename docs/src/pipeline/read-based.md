@@ -75,11 +75,38 @@ With `--readbased_postprocess all|phyloseq|taxburst|rgi_bwt`, the sourmash + YAC
 
 :::{dropdown} Output files
 - `Readbased_Analysis/Post_processing/` (batch mode)
-  - `[prefix]_default/[prefix].processed_microcosm.csv`: one standard table (taxonomy per rank, relative abundance per sample); written by `default` and `all`.
-  - `[prefix]_phyloseq/{otu_table,tax_table,sample_data}.csv`: tables for [`phyloseq`](https://joey711.github.io/phyloseq/) (`otu_table()`, `tax_table()`, `sample_data()`).
+  - `[prefix]_default/[prefix].processed_microcosm.csv`: one standard table (one row per sample and genome, plus a synthetic `unclassified` row per sample) with `f_weighted_at_rank`, `f_taxonomic_at_rank`, `match_genome_bp` and `n_unique_kmers` (see below); written by `default` and `all`.
+  - `[prefix]_phyloseq/{otu_table,tax_table,sample_data}.csv`: tables for [`phyloseq`](https://joey711.github.io/phyloseq/) (`otu_table()`, `tax_table()`, `sample_data()`); `otu_table.csv` follows `--microcosm_datatype`.
   - `[prefix]_taxburst/*.taxburst.csv`, `*.taxburst.split.csv`: input tables for `taxburst` charts, merged and per sample.
   - `[prefix]_rgi_bwt/`: RGI bwt gene tables collected over the samples (needs `--enable_rgi_bwt`).
 - `Readbased_Analysis/Post_processing/[sample_id]/{default,phyloseq,taxburst,rgi_bwt}/` (single-sketch mode, `--enable_singlesketch`), plus the all-sample aggregates.
+:::
+
+### Sequence or taxonomic abundance
+
+The two numbers answer different questions. **Sequence abundance** is the share of the *reads* that come from a genome, so a
+large genome (a fungus of 30 Mb) takes a large share even when it has few cells. **Taxonomic abundance** is the share of the
+*genomes* (cells): each sequence share is divided by the genome size and the result is renormalised over the classified
+genomes of the sample, as sylph does for its `relative_abundance`. For genome $g$ of a sample:
+
+$$
+\text{match\_genome\_bp}_g = \frac{\text{unique\_intersect\_bp}_g}{\text{f\_match}_g}, \qquad
+\text{f\_taxonomic\_at\_rank}_g = \frac{\text{f\_weighted\_at\_rank}_g / \text{match\_genome\_bp}_g}
+{\sum_{h \in \text{classified}} \text{f\_weighted\_at\_rank}_h / \text{match\_genome\_bp}_h}
+$$
+
+`match_genome_bp` is the genome size seen by sourmash (sketch hashes × `scaled`). Higher ranks are the sums of their genomes.
+
+| `--microcosm_datatype` | phyloseq `otu_table.csv` holds | Use for |
+|:---|:---|:---|
+| `sequence_abundance` (default) | `n_unique_kmers`, k-mer pseudo-counts of the read share | count-based differential abundance; seeing the unclassified part |
+| `taxonomic_abundance` | `f_taxonomic_at_rank`, share of classified genomes; no `unclassified` row | composition plots, diversity, comparison with sylph |
+
+The processed CSV always has both columns. `--sylph_datatype` makes the same choice for sylph and also defaults to
+`sequence_abundance`.
+
+:::{note}
+`taxonomic_abundance` / `f_taxonomic_at_rank` is the share of classified genomes only. Unclassified reads have no genome size, so there is no unclassified row/value in this result (empty in the processed CSV, absent from the phyloseq `otu_table.csv`), and values sum to 100% of the classified part. Use `sequence_abundance` / `f_weighted_at_rank` to see the unclassified fraction. `f_taxonomic_at_rank` is a proportion, not a count: the `taxonomic_abundance` phyloseq table is not suitable for count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2); use `sequence_abundance` (k-mer pseudo-counts) for those.
 :::
 
 ## sylph read-based profiling

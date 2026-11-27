@@ -436,7 +436,8 @@
       when: reads,
       summary: function () { return get('readbased_postprocess') || 'none'; },
       params: [always('readbased_postprocess'),
-        cond('readbased_postprocess_options', function () { return !!get('readbased_postprocess') && useMicrocosm(); })],
+        cond('readbased_postprocess_options', function () { return !!get('readbased_postprocess') && useMicrocosm(); }),
+        cond('microcosm_datatype', microcosmPhyloseq)],
       render: renderPostprocess
     },
     {
@@ -774,7 +775,8 @@
         paramToggle('enable_sylphtax', 'Add the full lineage (phylum to species) to sylph results?', 'sylph alone reports reference genomes; sylph-tax turns them into taxa. Needed for phyloseq tables from sylph.'),
         on('enable_sylphtax') ? textInput('sylph_taxonomy', { label: 'sylph-tax metadata', placeholder: '/db/gtdb_r226_metadata.tsv.gz', required: true, wide: true,
           help: 'One file per sylph database, in the same order, separated by commas.' }) : null,
-        paramSeg('sylph_datatype', 'Which abundance should the tables show?', [{ value: 'taxonomic_abundance', label: 'Share of cells (taxonomic)' }, { value: 'sequence_abundance', label: 'Share of reads (sequence)' }])
+        paramSeg('sylph_datatype', 'Which abundance should the sylph tables show?', ABUNDANCE_CHOICES,
+          'Share of reads: a big genome (a fungus) weighs more. Share of cells: divided by genome size, for composition and diversity.')
       ]));
     }
     out.push(h('p', { class: 'mcb-help' }, 'No database yet? See ', link('getting-started/databases/', 'Databases'), ' for download links.'));
@@ -824,6 +826,12 @@
     return { gives: 'Everything that applies: ' + parts.join(', ') + '.' + (missing.length ? ' Not made: ' + missing.join('; ') + '.' : ''), same: !mic && !rgi ? 'phyloseq' : null };
   }
 
+  var ABUNDANCE_CHOICES = [{ value: 'sequence_abundance', label: 'Share of reads (sequence)' }, { value: 'taxonomic_abundance', label: 'Share of cells (taxonomic)' }];
+
+  function microcosmPhyloseq() {
+    return useMicrocosm() && ['phyloseq', 'all'].indexOf(get('readbased_postprocess') || '') >= 0;
+  }
+
   function renderPostprocess() {
     var current = get('readbased_postprocess') || '';
     var modes = [['', 'No'], ['phyloseq', 'Tables for R (phyloseq)'], ['taxburst', 'Interactive charts (taxburst)'],
@@ -853,6 +861,15 @@
       out.push(textInput('readbased_postprocess_options', { label: 'Post-processing options', wide: true,
         help: 'Passed to the post-processing script as typed, e.g. --min_coverage 0.1 --remove_unclassified.' +
           (useSylph() ? ' They apply to the sourmash + YACHT tables; the sylph tables have no options.' : '') }));
+    }
+    if (microcosmPhyloseq()) {
+      out.push(paramSeg('microcosm_datatype', 'Should the sourmash + YACHT phyloseq table count reads or cells?', ABUNDANCE_CHOICES,
+        'Share of reads (k-mer counts): what count-based tests such as DESeq2, ANCOM-BC2 or ALDEx2 expect, and it keeps the unclassified part. ' +
+        'Share of cells: each read share divided by the genome size, like sylph; better for composition plots and diversity. The processed table of "All that apply" always has both.'));
+      if (get('microcosm_datatype') === 'taxonomic_abundance') {
+        out.push(note('info', 'Share of cells covers the classified genomes only: there is no "unclassified" entry and the values add up to 100 % of what was identified. ' +
+          'These are proportions, not counts, so do not feed this table to DESeq2, ANCOM-BC2 or ALDEx2.'));
+      }
     }
     return out;
   }

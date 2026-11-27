@@ -76,7 +76,7 @@ nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
 ```
 
 - Without `--enable_sylphtax`, you get the sylph profiles (`Readbased_Analysis/sylph/profile/`) and a MultiQC section per reference genome.
-- `--sylph_datatype sequence_abundance` reports estimated read counts instead of taxonomic abundance.
+- `--sylph_datatype` is `sequence_abundance` by default (share of reads, with `--estimate-read-counts`); `--sylph_datatype taxonomic_abundance` reports the share of genomes instead.
 - `--enable_rgi_bwt` also works with sylph alone.
 
 
@@ -89,6 +89,15 @@ nextflow run tnmquann/microcosm -r 2.0.0 -profile singularity \
     --readbased_postprocess all \
     --readbased_postprocess_options "--min_coverage 0.1 --remove_unclassified"
 ```
+
+Sequence or taxonomic abundance? The read share (`sequence_abundance`, default) gives large genomes (fungi) a large share; the
+share of genomes (`taxonomic_abundance`) divides by genome size, as sylph does. Add `--microcosm_datatype taxonomic_abundance`
+to put the taxonomic share into the phyloseq `otu_table.csv`; the processed CSV always has both (`f_weighted_at_rank`,
+`f_taxonomic_at_rank`). See [Read-based analysis](../pipeline/read-based.md#sequence-or-taxonomic-abundance).
+
+:::{note}
+`taxonomic_abundance` / `f_taxonomic_at_rank` is the share of classified genomes only. Unclassified reads have no genome size, so there is no unclassified row/value in this result (empty in the processed CSV, absent from the phyloseq `otu_table.csv`), and values sum to 100% of the classified part. Use `sequence_abundance` / `f_weighted_at_rank` to see the unclassified fraction. `f_taxonomic_at_rank` is a proportion, not a count: the `taxonomic_abundance` phyloseq table is not suitable for count-based differential abundance tools (DESeq2, ANCOM-BC2, ALDEx2); use `sequence_abundance` (k-mer pseudo-counts) for those.
+:::
 
 `all` writes `project_A.processed_microcosm.csv`, the phyloseq tables and the taxburst tables below `Readbased_Analysis/Post_processing/` (plus RGI bwt tables with `--enable_rgi_bwt`). In R:
 
